@@ -5,8 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public record UpdateClientRequest(string FirstName, string LastName);
-public record UpdateClientResponse(Guid Id, string FirstName, string LastName);
+public record UpdateClientRequest(
+    string FirstName,
+    string LastName,
+    string Email,
+    string Phone);
+
+public record UpdateClientResponse(
+    Guid Id,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Phone);
 
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
 {
@@ -37,6 +47,8 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         client.FirstName = request.FirstName;
         client.LastName = request.LastName;
+        client.Email = request.Email;
+        client.Phone = request.Phone;
 
         _context.Clients.Update(client);
 
@@ -45,6 +57,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new(client.Id, client.FirstName, client.LastName), cancellation: cancellationToken);
+        await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone),
+            cancellation: cancellationToken);
     }
 }
