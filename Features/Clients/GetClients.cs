@@ -9,6 +9,8 @@ public record GetClientResponse(
     Guid Id,
     string FirstName,
     string LastName,
+    string Email,
+    string Phone,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
@@ -54,7 +56,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>
             var clientUserResponse = new ClientUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
 
             var roleResponse = new GetClientResponse(client.Id,
-                client.FirstName, client.LastName,
+                client.FirstName, client.LastName, client.Email,
+                client.Phone,
                 client.CreatedAt,
                 client.UpdatedAt,
                 client.IsDeleted, clientUserResponse);

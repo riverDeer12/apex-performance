@@ -10,13 +10,17 @@ public record CreateClientRequest(
     string Username,
     string Password,
     string FirstName,
-    string LastName
+    string LastName,
+    string Email,
+    string Phone
 );
 
 public record CreateClientResponse(
     Guid Id,
     string FirstName,
-    string LastName
+    string LastName,
+    string Email,
+    string Phone
 );
 
 public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientResponse>
@@ -39,15 +43,16 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
 
     public override async Task HandleAsync(CreateClientRequest request, CancellationToken cancellationToken)
     {
-        var userAccount =
-            await _userService.CreateUserAccount(request.Username, request.Password, request.Username,
-                cancellationToken);
+        var user = await _userService.CreateUserAccount(request.Username,
+            request.Password, request.Email, cancellationToken);
 
         var newClient = new Client
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
-            User = userAccount
+            Email = request.Email,
+            Phone = request.Phone,
+            User = user
         };
 
         _context.Clients.Add(newClient);
@@ -57,7 +62,9 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new CreateClientResponse(newClient.Id, newClient.FirstName, newClient.LastName),
+        await SendAsync(
+            new CreateClientResponse(newClient.Id, newClient.FirstName, newClient.LastName, request.Email,
+                request.Phone),
             cancellation: cancellationToken);
     }
 }
