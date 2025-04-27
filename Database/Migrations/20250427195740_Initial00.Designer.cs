@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApexPerformance.API.Database.Migrations
 {
     [DbContext(typeof(ApexPerformanceContext))]
-    [Migration("20250422195339_ChangedPermissions00")]
-    partial class ChangedPermissions00
+    [Migration("20250427195740_Initial00")]
+    partial class Initial00
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -93,13 +93,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d2444856-56fc-48ac-a11d-416f66576625"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(590), new TimeSpan(0, 2, 0, 0, 0)),
+                            Id = new Guid("0a10fcd9-d21e-42c5-9e2d-dce3271663ad"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1860), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             FirstName = "Super",
                             IsDeleted = false,
                             LastName = "Admin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(590), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1860), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserId = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
@@ -120,16 +120,38 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodEnd");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodStart");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -145,7 +167,18 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
+
+                    b.ToTable(tb => tb.IsTemporal(ttb =>
+                            {
+                                ttb.UseHistoryTable("ClientsHistory");
+                                ttb
+                                    .HasPeriodStart("PeriodStart")
+                                    .HasColumnName("PeriodStart");
+                                ttb
+                                    .HasPeriodEnd("PeriodEnd")
+                                    .HasColumnName("PeriodEnd");
+                            }));
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Permission", b =>
@@ -301,12 +334,12 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(540), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1810), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Description = "Role with all access.",
                             IsDeleted = false,
                             Name = "SuperAdmin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(540), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1810), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
                 });
@@ -397,13 +430,13 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(70), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1310), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Email = "superadmin@mail.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             Password = "685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 22, 21, 53, 38, 857, DateTimeKind.Unspecified).AddTicks(130), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 4, 27, 21, 57, 40, 167, DateTimeKind.Unspecified).AddTicks(1370), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserName = "superadmin"
                         });
