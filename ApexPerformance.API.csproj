@@ -11,6 +11,7 @@
     <PackageReference Include="EFCore.BulkExtensions" Version="8.0.0" />
     <PackageReference Include="FastEndpoints" Version="5.32.0" />
     <PackageReference Include="FastEndpoints.Security" Version="5.32.0" />
+    <PackageReference Include="MailKit" Version="4.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <Folder Include="Constants\" />
+    <Folder Include="Templates\" />
   </ItemGroup>
 
 </Project>
