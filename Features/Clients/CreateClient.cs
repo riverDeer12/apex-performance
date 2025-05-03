@@ -1,10 +1,11 @@
-using System.Net;
-using System.Net.Mail;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
+using MailKit.Net.Smtp;
+using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace ApexPerformance.API.Features.Clients;
 
@@ -29,7 +30,8 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
     private readonly IUserService _userService;
     private readonly IConfiguration _configuration;
 
-    public CreateClientEndpoint(ApexPerformanceContext context, IUserService userService, IConfiguration configuration)
+    public CreateClientEndpoint(ApexPerformanceContext context, IUserService userService,
+        IConfiguration configuration)
     {
         _context = context;
         _userService = userService;
@@ -76,48 +78,40 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
 
     private void SendEmailWithCredentials(Client client, string password)
     {
-        Console.WriteLine($"Address: {_configuration.GetSection("MailSettings:Host").Value}");        
-        Console.WriteLine($"Port: {int.Parse(_configuration.GetSection("MailSettings:Port").Value!)}");
-        Console.WriteLine($"Password: {_configuration.GetSection("MailSettings:Password").Value}");
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+        message.To.Add(new MailboxAddress(client.FullName, client.Email));
+        message.Subject = "You Have Been Registered to Apex Performance";
+        
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CredentialsEmail.html");
+        
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{ClientFullName}}", client.FullName);
+        
+        html = html.Replace("{{Username}}", client.Email);
+        
+        html = html.Replace("{{Password}}", password);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        using var smtpClient = new SmtpClient();
 
         try
         {
-            var smtpClient = new SmtpClient(_configuration.GetSection("MailSettings:Host").Value,
-                int.Parse(_configuration.GetSection("MailSettings:Port").Value!))
-            {
-                Credentials = new NetworkCredential(_configuration.GetSection("MailSettings:Username").Value,
-                    _configuration.GetSection("MailSettings:Password").Value),
-                EnableSsl = true
-            };
-
-            var mail = new MailMessage
-            {
-                From = new MailAddress(_configuration.GetSection("MailSettings:Address").Value!),
-                Subject = "You Have Been Registered to Apex Performance",
-                Body = $"""
-
-                        <!DOCTYPE html>
-                        <html lang='en'>
-                        <head>
-                            <meta charset='UTF-8'>
-                            <title>Registration Info</title>
-                        </head>
-                        <body>
-                            <p>Username: {client.Email}</p>
-                            <p>Password: {password}</p>
-                        </body>
-                        </html>
-                        """,
-                IsBodyHtml = true
-            };
-
-            mail.To.Add(client.Email);
-
-            smtpClient.Send(mail);
+            smtpClient.Connect(_configuration["MailConfiguration::Host"],
+                int.Parse(_configuration["MailConfiguration::Port"]!),
+                MailKit.Security.SecureSocketOptions.StartTls);
+            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
+                _configuration["MailConfiguration::Password"]);
+            smtpClient.Send(message);
+            smtpClient.Disconnect(true);
+            Console.WriteLine("Email sent successfully!");
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error sending email: " + ex.Message);
+            Console.WriteLine($"Failed to send email: {ex.Message}");
         }
     }
 }
