@@ -16,7 +16,10 @@ public class ApexPerformanceContext : DbContext
     }
     
     public DbSet<Administrator> Administrators { get; set; }
+    public DbSet<Appointment> Appointment { get; set; }
+    public DbSet<AppointmentType> AppointmentTypes { get; set; }
     public DbSet<Client> Clients { get; set; }
+    public DbSet<ClientAppointment> ClientAppointments { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
