@@ -3,6 +3,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
+using FluentValidation;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -113,5 +114,16 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
         {
             Console.WriteLine($"Failed to send email: {ex.Message}");
         }
+    }
+}
+
+public sealed class CreateClientValidator : Validator<CreateClientRequest>
+{
+    public CreateClientValidator()
+    {
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }
