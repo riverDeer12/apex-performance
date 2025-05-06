@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
@@ -59,5 +60,16 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone),
             cancellation: cancellationToken);
+    }
+}
+
+public sealed class UpdateClientValidator : Validator<UpdateClientRequest>
+{
+    public UpdateClientValidator()
+    {
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }
