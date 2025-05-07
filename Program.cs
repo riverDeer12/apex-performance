@@ -27,6 +27,7 @@ builder.Services.AddDbContext<ApexPerformanceContext>(options =>
         .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
         .EnableSensitiveDataLogging());
 
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
