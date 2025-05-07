@@ -15,7 +15,7 @@ public record UpdateAppointmentRequest(
 );
 
 public record UpdateAppointmentResponse(
-    Guid AppointmentId,
+    Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<AppointmentClientDto> Clients

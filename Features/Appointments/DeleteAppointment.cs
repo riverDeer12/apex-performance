@@ -1,10 +1,15 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public record DeleteAppointmentResponse();
+public record DeleteAppointmentResponse(
+    Guid Id,
+    DateTimeOffset StartTime,
+    DateTimeOffset EndTime
+    );
 
 public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmentResponse>
 {
@@ -22,8 +27,27 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
         Options(x => x.WithTags("Appointments"));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        await base.HandleAsync(ct);
+        var appointmentId = Route<Guid>("id", isRequired: true);
+
+        var appointment =
+            await _context.Appointments
+                .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
+
+        if (appointment is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        appointment.Delete();
+
+        _context.Appointments.Update(appointment);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorMessages.SavingError);
+
+        await SendAsync(new DeleteAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime),
+            cancellation: cancellationToken);
     }
 }

@@ -80,9 +80,12 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
     private void SendEmailWithCredentials(Client client, string password)
     {
         var message = new MimeMessage();
+        
         message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
             _configuration["MailConfiguration::FromAddress"]));
+        
         message.To.Add(new MailboxAddress(client.FullName, client.Email));
+        
         message.Subject = "You Have Been Registered to Apex Performance";
         
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CredentialsEmail.html");
