@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -30,10 +31,12 @@ public record AppointmentClientDto(
 public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, CreateAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IAppointmentService _appointmentService;
 
-    public CreateAppointmentEndpoint(ApexPerformanceContext context)
+    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
     {
         _context = context;
+        _appointmentService = appointmentService;
     }
 
     public override void Configure()
@@ -58,6 +61,9 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
+        
+        if(! await _appointmentService.CheckAppointment())
+            ThrowError(ValidationMessages.NotValid);
 
         var appointment = new Appointment
         {
