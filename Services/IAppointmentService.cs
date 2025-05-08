@@ -2,5 +2,11 @@
 
 public interface IAppointmentService
 {
-    Task<bool> CheckAppointment();
+    /// <summary>
+    /// Check if there is available time slot for new appointment.
+    /// </summary>
+    /// <param name="appointmentStartTime"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<bool> CheckFreeTimeSlot(DateTimeOffset appointmentStartTime, CancellationToken cancellationToken);
 }

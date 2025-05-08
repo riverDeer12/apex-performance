@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -24,10 +25,12 @@ public record UpdateAppointmentResponse(
 public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, UpdateAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IAppointmentService _appointmentService;
 
-    public UpdateAppointmentEndpoint(ApexPerformanceContext context)
+    public UpdateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
     {
         _context = context;
+        _appointmentService = appointmentService;
     }
 
     public override void Configure()
@@ -47,6 +50,9 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
+        
+        if(! await _appointmentService.CheckFreeTimeSlot(request.StartTime, cancellationToken))
+            ThrowError(ValidationMessages.NotValid);
 
         appointment.StartTime = request.StartTime;
         appointment.EndTime = request.EndTime;
