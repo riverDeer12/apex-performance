@@ -12,7 +12,7 @@ public class AppointmentService : IAppointmentService
         _context = context;
     }
     
-    public async Task<bool> CheckFreeTimeSlot(DateTimeOffset appointmentStartTime, CancellationToken cancellationToken)
+    public async Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, CancellationToken cancellationToken)
     {
         var appointmentsInTimeSlot = await _context.Appointments
             .Where(x => x.StartTime < appointmentStartTime && x.EndTime > appointmentStartTime)

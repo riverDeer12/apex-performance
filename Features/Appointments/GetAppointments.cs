@@ -23,9 +23,9 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmen
     
     public override void Configure()
     {
-        Get("api/appointments)");
+        Get("api/appointments");
         Permissions(nameof(UserPermissions.CanGetAppointments));
-        Options(x => x.WithTags("Appointments)"));
+        Options(x => x.WithTags("Appointments"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

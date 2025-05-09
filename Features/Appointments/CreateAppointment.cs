@@ -62,7 +62,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
         
-        if(! await _appointmentService.CheckFreeTimeSlot(request.StartTime, cancellationToken))
+        if(! await _appointmentService.CheckFreeSlot(request.StartTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
         var appointment = new Appointment
