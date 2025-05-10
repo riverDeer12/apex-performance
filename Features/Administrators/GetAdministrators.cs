@@ -34,7 +34,8 @@ public sealed class GetAdministratorsEndpoint : EndpointWithoutRequest<List<GetA
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var administrators = await _context.Administrators.Include(userType => userType.User)
+        var administrators = await _context.Administrators
+            .Include(userType => userType.User)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (administrators.Count is 0)
@@ -50,10 +51,10 @@ public sealed class GetAdministratorsEndpoint : EndpointWithoutRequest<List<GetA
             var adminUser = administrator.User;
 
             if (adminUser == null) continue;
-            
+
             var adminUserResponse = new AdminUserDto(adminUser.Id, adminUser.UserName, adminUser.Email);
 
-            var roleResponse = new GetAdministratorResponse(administrator.Id, 
+            var roleResponse = new GetAdministratorResponse(administrator.Id,
                 administrator.FirstName, administrator.LastName,
                 administrator.CreatedAt,
                 administrator.UpdatedAt,

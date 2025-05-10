@@ -45,6 +45,26 @@ public static class UserPermissions
             "Allows deleting appointment.",
             "Appointments");
     
+    public static readonly Permission CanGetAppointmentTypes =
+        Permission.Init("5591667e-38c2-4056-bfc6-f8644c31d30a", nameof(CanGetAppointmentTypes),
+            "Allows viewing appointment types.",
+            "AppointmentTypes");
+
+    public static readonly Permission CanCreateAppointmentType =
+        Permission.Init("9ecc7bdf-c144-4a6b-b10b-0885f09fb06b", nameof(CanCreateAppointmentType),
+            "Allows creating appointment type.",
+            "AppointmentTypes");
+
+    public static readonly Permission CanUpdateAppointmentType =
+        Permission.Init("4b6bc0dd-8bc8-42b1-ade2-c37ad49d34d0", nameof(CanUpdateAppointmentType),
+            "Allows updating appointment type.",
+            "AppointmentTypes");
+
+    public static readonly Permission CanDeleteAppointmentType =
+        Permission.Init("6df626b0-2937-4a3e-8f81-0f52375e85a5", nameof(CanDeleteAppointmentType),
+            "Allows deleting appointment type.",
+            "AppointmentTypes");
+    
     public static readonly Permission CanGetUsers =
         Permission.Init("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81", nameof(CanGetUsers),
             "Allows viewing users.",
