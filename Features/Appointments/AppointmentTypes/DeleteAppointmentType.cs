@@ -24,7 +24,7 @@ public class DeleteAppointmentTypeEndpoint : EndpointWithoutRequest<DeleteAppoin
     {
         Delete("api/appointment-types/{id}");
         Permissions(nameof(UserPermissions.CanDeleteAppointmentType));
-        Options(x => x.WithTags("Appointments"));
+        Options(x => x.WithTags("AppointmentTypes"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
