@@ -9,8 +9,15 @@ public record GetAppointmentResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
+    AppointmentTypeDto AppointmentType,
     List<AppointmentClientDto> Clients
-    );
+);
+
+public record AppointmentTypeDto(
+    Guid Id,
+    string Name,
+    string Description
+);
 
 public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmentResponse>>
 {
@@ -20,7 +27,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmen
     {
         _context = context;
     }
-    
+
     public override void Configure()
     {
         Get("api/appointments");
@@ -33,6 +40,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmen
         var appointments = await _context.Appointments
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
+            .Include(appointment => appointment.AppointmentType)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)
@@ -47,12 +55,15 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmen
         {
             var appointmentClientsResponse = appointment
                 .Clients
-                .Select(client => 
+                .Select(client =>
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
 
+            var appointmentTypeResponse = new AppointmentTypeDto(appointment.AppointmentType.Id,
+                appointment.AppointmentType.Name, appointment.AppointmentType.Description);
+
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentClientsResponse);
+                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentClientsResponse);
 
             appointmentResponseList.Add(appointmentResponse);
         }
