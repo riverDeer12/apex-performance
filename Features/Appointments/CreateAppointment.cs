@@ -32,11 +32,14 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
+    private readonly IClientService _clientService;
 
-    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
+    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
+        IClientService clientService)
     {
         _context = context;
         _appointmentService = appointmentService;
+        _clientService = clientService;
     }
 
     public override void Configure()
@@ -61,8 +64,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
-        
-        if(! await _appointmentService.CheckFreeSlot(request.StartTime, cancellationToken))
+
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
         var appointment = new Appointment
@@ -98,6 +101,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         var clientsResponse = clients
             .Select(client => new AppointmentClientDto(client.Id, client.FirstName, client.LastName))
             .ToList();
+
+        await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
         await SendAsync(
             new CreateAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime,

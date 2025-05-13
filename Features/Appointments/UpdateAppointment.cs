@@ -26,11 +26,14 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
+    private readonly IClientService _clientService;
 
-    public UpdateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
+    public UpdateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
+        IClientService clientService)
     {
         _context = context;
         _appointmentService = appointmentService;
+        _clientService = clientService;
     }
 
     public override void Configure()
@@ -56,7 +59,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         var appointmentType = await _context.AppointmentTypes.FirstOrDefaultAsync(
             x => x.Id == request.AppointmentType, cancellationToken: cancellationToken);
-        
+
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
 
@@ -75,6 +78,10 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
             .Where(clientAppointment => clientAppointment.AppointmentId == appointment.Id)
             .ExecuteDeleteAsync(cancellationToken);
 
+        var deletedClients = await _clientService.GetClientsByAppointmentId(appointmentId, cancellationToken);
+
+        await _clientService.AddClientsCredits(deletedClients, 1, cancellationToken);
+
         _context.Appointments.Update(appointment);
 
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
@@ -89,6 +96,8 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         var clientsResponse = clients
             .Select(client => new AppointmentClientDto(client.Id, client.FirstName, client.LastName))
             .ToList();
+        
+        await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
         await SendAsync(
             new UpdateAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime, clientsResponse),

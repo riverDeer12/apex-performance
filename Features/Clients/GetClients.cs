@@ -26,7 +26,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>
     {
         _context = context;
     }
-
+    
     public override void Configure()
     {
         Get("api/clients");
