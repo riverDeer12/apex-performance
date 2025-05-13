@@ -10,14 +10,17 @@ public record UpdateClientRequest(
     string FirstName,
     string LastName,
     string Email,
-    string Phone);
+    string Phone,
+    int Credits
+);
 
 public record UpdateClientResponse(
     Guid Id,
     string FirstName,
     string LastName,
     string Email,
-    string Phone);
+    string Phone,
+    int Credits);
 
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
 {
@@ -50,6 +53,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         client.LastName = request.LastName;
         client.Email = request.Email;
         client.Phone = request.Phone;
+        client.Credits = request.Credits;
 
         _context.Clients.Update(client);
 
@@ -58,7 +62,8 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone),
+        await SendAsync(new(client.Id, client.FirstName, 
+                client.LastName, client.Email, client.Phone, client.Credits),
             cancellation: cancellationToken);
     }
 }

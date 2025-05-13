@@ -8,7 +8,9 @@ public class Client : UserType
     public string LastName { get; set; }
     public string Email { get; set; }
     public string Phone { get; set; }
-    
+
+    public int Credits { get; set; }
+
     public ICollection<ClientAppointment> Appointments { get; set; }
 
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
