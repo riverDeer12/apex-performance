@@ -19,7 +19,12 @@ public record AppointmentTypeDto(
     string Description
 );
 
-public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmentResponse>>
+public record AppointmentsByDayDto(
+    DateTimeOffset Day,
+    List<GetAppointmentResponse> Appointments
+);
+
+public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsByDayDto>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -68,6 +73,18 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmen
             appointmentResponseList.Add(appointmentResponse);
         }
 
-        await SendAsync(appointmentResponseList, cancellation: cancellationToken);
+        var appointmentsByDay = GroupAppointmentsByDay(appointmentResponseList);
+
+        await SendAsync(appointmentsByDay, cancellation: cancellationToken);
+    }
+
+    private List<AppointmentsByDayDto> GroupAppointmentsByDay(List<GetAppointmentResponse> appointmentResponseList)
+    {
+        // Group by date
+        var itemsByDay = appointmentResponseList
+            .GroupBy(item => item.StartTime.Date)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return itemsByDay.Select(x => new AppointmentsByDayDto(x.Key, x.Value)).ToList();
     }
 }
