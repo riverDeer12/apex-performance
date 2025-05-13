@@ -1,4 +1,5 @@
 ﻿using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Services;
@@ -11,7 +12,7 @@ public class AppointmentService : IAppointmentService
     {
         _context = context;
     }
-    
+
     public async Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, CancellationToken cancellationToken)
     {
         var appointmentsInTimeSlot = await _context.Appointments

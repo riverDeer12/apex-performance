@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,17 +10,22 @@ public record DeleteAppointmentResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime
-    );
+);
 
 public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IClientService _clientService;
+    private readonly IAppointmentService _appointmentService;
 
-    public DeleteAppointmentEndpoint(ApexPerformanceContext context)
+    public DeleteAppointmentEndpoint(ApexPerformanceContext context, IClientService clientService,
+        IAppointmentService appointmentService)
     {
         _context = context;
+        _clientService = clientService;
+        _appointmentService = appointmentService;
     }
-    
+
     public override void Configure()
     {
         Delete("api/appointments/{id}");
@@ -32,7 +38,7 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
         var appointmentId = Route<Guid>("id", isRequired: true);
 
         var appointment =
-            await _context.Appointments
+            await _context.Appointments.Include(appointment => appointment.Clients)
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
@@ -47,7 +53,12 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new DeleteAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime),
+        var clients = await _clientService.GetClientsByAppointmentId(appointmentId, cancellationToken);
+
+        await _clientService.AddClientsCredits(clients, 1, cancellationToken);
+            
+        await  SendAsync(
+            new DeleteAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime),
             cancellation: cancellationToken);
     }
 }
