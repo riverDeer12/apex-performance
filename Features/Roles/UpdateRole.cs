@@ -84,6 +84,5 @@ public sealed class UpdateRoleValidator : Validator<UpdateRoleRequest>
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Permissions).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Users).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

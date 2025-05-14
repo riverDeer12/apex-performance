@@ -80,7 +80,6 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsB
 
     private List<AppointmentsByDayDto> GroupAppointmentsByDay(List<GetAppointmentResponse> appointmentResponseList)
     {
-        // Group by date
         var itemsByDay = appointmentResponseList
             .GroupBy(item => item.StartTime.Date)
             .ToDictionary(g => g.Key, g => g.ToList());
