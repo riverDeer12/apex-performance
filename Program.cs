@@ -28,6 +28,7 @@ builder.Services.AddDbContext<ApexPerformanceContext>(options =>
         .EnableSensitiveDataLogging());
 
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 

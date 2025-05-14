@@ -49,16 +49,19 @@ public sealed class CreateRoleEndpoint : Endpoint<CreateRoleRequest, CreateRoleR
             RoleId = newRole.Id,
             PermissionId = permissionId
         }).ToList();
-
-        var roleUsers = request.Users.Select(userId => new UserRole
+        
+        if (request.Users.Count is not 0)
         {
-            RoleId = newRole.Id,
-            UserId = userId
-        }).ToList();
+            var roleUsers = request.Users.Select(userId => new UserRole
+            {
+                RoleId = newRole.Id,
+                UserId = userId
+            }).ToList();
+            
+            _context.UserRoles.AddRange(roleUsers);
+        }
 
         _context.RolePermissions.AddRange(rolePermissions);
-
-        _context.UserRoles.AddRange(roleUsers);
 
         var relationsResult = await _context.SaveChangesAsync(cancellationToken);
 
@@ -76,6 +79,5 @@ public sealed class CreateRoleValidator : Validator<CreateRoleRequest>
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Permissions).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Users).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

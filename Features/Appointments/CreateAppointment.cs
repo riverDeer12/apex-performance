@@ -5,6 +5,7 @@ using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using IClientService = ApexPerformance.API.Services.IClientService;
 
 namespace ApexPerformance.API.Features.Appointments;
 
