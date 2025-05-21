@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="Constants\" />
-    <Folder Include="Templates\" />
   </ItemGroup>
 
 </Project>
