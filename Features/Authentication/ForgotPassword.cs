@@ -10,19 +10,19 @@ using MimeKit;
 
 namespace ApexPerformance.API.Features.Authentication;
 
-public record ResetPasswordRequest(
+public record ForgotPasswordRequest(
     string Email
 );
 
-public record ResetPasswordResponse(
+public record ForgotPasswordResponse(
 );
 
-public class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, ResetPasswordResponse>
+public class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, ForgotPasswordResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
 
-    public ResetPasswordEndpoint(ApexPerformanceContext context, IConfiguration configuration)
+    public ForgotPasswordEndpoint(ApexPerformanceContext context, IConfiguration configuration)
     {
         _context = context;
         _configuration = configuration;
@@ -30,27 +30,28 @@ public class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, ResetPasswor
 
     public override void Configure()
     {
-        Post("api/authentication/reset-password");
+        Post("api/authentication/forgot-password");
+        AllowAnonymous();
         Options(x => x.WithTags("Authentication"));
     }
 
-    public override async Task HandleAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
+    public override async Task HandleAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken);
 
         if (user == null)
         {
-            await SendAsync(new ResetPasswordResponse(), cancellation: cancellationToken);
+            await SendAsync(new ForgotPasswordResponse(), cancellation: cancellationToken);
             return;
         }
 
-        SendResetPasswordEmail(user);
+        SendForgotPasswordEmail(user);
         
-        await SendAsync(new ResetPasswordResponse(), cancellation: cancellationToken);
+        await SendAsync(new ForgotPasswordResponse(), cancellation: cancellationToken);
     }
 
-    private void SendResetPasswordEmail(User user)
+    private void SendForgotPasswordEmail(User user)
     {
         var message = new MimeMessage();
         
@@ -59,9 +60,9 @@ public class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, ResetPasswor
         
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
         
-        message.Subject = "Reset Password Link";
+        message.Subject = "Forgot Password Link";
         
-        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ResetPasswordEmail.html");
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ForgotPasswordEmail.html");
         
         var html = File.ReadAllText(templatePath);
 
@@ -102,6 +103,6 @@ public class ResetPasswordEndpoint : Endpoint<ResetPasswordRequest, ResetPasswor
             });
             
             
-        return  $"{_configuration["WebAppUrl"]}/authentication/reset-password?token={token}";
+        return  $"{_configuration["WebAppUrl"]}/authentication/reset-password/{token}";
     }
 }
