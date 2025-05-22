@@ -52,7 +52,7 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
             options: o =>
             {
                 o.SigningKey = _configuration["JWTSecretKey"] ?? string.Empty;
-                o.ExpireAt = DateTime.Now.AddDays(1);
+                o.ExpireAt = DateTime.Now.AddDays(request.RememberMe ? 30 : 1);
                 o.User.Roles.AddRange(roles);
                 o.User.Permissions.AddRange(permissions);
                 o.User.Claims.Add(("name", request.Username),
