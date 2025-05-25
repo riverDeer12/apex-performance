@@ -12,6 +12,7 @@ public class Client : UserType
     public int Credits { get; set; }
 
     public ICollection<ClientAppointment> Appointments { get; set; }
+    public ICollection<BodyMeasurement> BodyMeasurements { get; set; }
 
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 }

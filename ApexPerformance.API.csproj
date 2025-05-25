@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <Folder Include="Constants\" />
+    <Folder Include="Features\BodyMeasurements\" />
   </ItemGroup>
 
 </Project>
