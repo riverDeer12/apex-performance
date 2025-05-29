@@ -35,7 +35,9 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var bodyMeasurements = await _context.BodyMeasurements.ToListAsync(cancellationToken: cancellationToken);
+        var bodyMeasurements = await _context.BodyMeasurements
+            .Include(x => x.Client)
+            .ToListAsync(cancellationToken: cancellationToken);
 
         if (bodyMeasurements.Count is 0)
         {
@@ -43,6 +45,10 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
             return;
         }
         
-        await SendAsync([], cancellation: cancellationToken);
+        await SendAsync(bodyMeasurements
+            .Select(x => 
+                new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, 
+                    new BodyMeasurementClientDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
+            .ToList(), cancellation: cancellationToken);
     }
 }
