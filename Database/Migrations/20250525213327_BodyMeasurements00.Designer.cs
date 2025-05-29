@@ -4,6 +4,7 @@ using ApexPerformance.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApexPerformance.API.Database.Migrations
 {
     [DbContext(typeof(ApexPerformanceContext))]
-    partial class ApexPerformanceContextModelSnapshot : ModelSnapshot
+    [Migration("20250525213327_BodyMeasurements00")]
+    partial class BodyMeasurements00
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,13 +93,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("92dfd50d-c21f-42bd-867d-d45c2992250e"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 467, DateTimeKind.Unspecified).AddTicks(10), new TimeSpan(0, 2, 0, 0, 0)),
+                            Id = new Guid("ea41ccb7-ba3d-4ae6-83f4-5ce1eb2e63ea"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3850), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             FirstName = "Super",
                             IsDeleted = false,
                             LastName = "Admin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 467, DateTimeKind.Unspecified).AddTicks(20), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3860), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserId = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
@@ -484,31 +487,31 @@ namespace ApexPerformance.API.Database.Migrations
                         },
                         new
                         {
-                            Id = new Guid("3f8c91de-49e7-4af7-b3f4-8d5c7ff1a9ae"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows viewing body measurements.",
-                            Name = "CanGetBodyMeasurements"
+                            Id = new Guid("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81"),
+                            Category = "Users",
+                            Description = "Allows viewing users.",
+                            Name = "CanGetUsers"
                         },
                         new
                         {
-                            Id = new Guid("c7a1738d-e20f-4931-a2f1-d3c0dcf64c5f"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows creating body measurements.",
-                            Name = "CanCreateBodyMeasurement"
+                            Id = new Guid("a4e62d67-676d-4f53-9ace-b4c600ea9718"),
+                            Category = "Users",
+                            Description = "Allows creating user.",
+                            Name = "CanCreateUser"
                         },
                         new
                         {
-                            Id = new Guid("a412e56f-5d9c-4e1d-97e4-1c31f7aa2e59"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows updating body measurements.",
-                            Name = "CanUpdateBodyMeasurement"
+                            Id = new Guid("2fe1ad9e-4229-411f-8095-e8f289777455"),
+                            Category = "Users",
+                            Description = "Allows updating user.",
+                            Name = "CanUpdateUser"
                         },
                         new
                         {
-                            Id = new Guid("8b13e0cb-4c27-497f-bf13-b2101d8f0efb"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows deleting body measurements.",
-                            Name = "CanDeleteBodyMeasurement"
+                            Id = new Guid("f250b493-7826-4a43-968f-d1392d925b96"),
+                            Category = "Users",
+                            Description = "Allows deleting user.",
+                            Name = "CanDeleteUser"
                         },
                         new
                         {
@@ -537,34 +540,6 @@ namespace ApexPerformance.API.Database.Migrations
                             Category = "Clients",
                             Description = "Allows deleting client.",
                             Name = "CanDeleteClient"
-                        },
-                        new
-                        {
-                            Id = new Guid("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81"),
-                            Category = "Users",
-                            Description = "Allows viewing users.",
-                            Name = "CanGetUsers"
-                        },
-                        new
-                        {
-                            Id = new Guid("a4e62d67-676d-4f53-9ace-b4c600ea9718"),
-                            Category = "Users",
-                            Description = "Allows creating user.",
-                            Name = "CanCreateUser"
-                        },
-                        new
-                        {
-                            Id = new Guid("2fe1ad9e-4229-411f-8095-e8f289777455"),
-                            Category = "Users",
-                            Description = "Allows updating user.",
-                            Name = "CanUpdateUser"
-                        },
-                        new
-                        {
-                            Id = new Guid("f250b493-7826-4a43-968f-d1392d925b96"),
-                            Category = "Users",
-                            Description = "Allows deleting user.",
-                            Name = "CanDeleteUser"
                         });
                 });
 
@@ -610,12 +585,12 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9940), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3790), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Description = "Role with all access.",
                             IsDeleted = false,
                             Name = "SuperAdmin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9940), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3790), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
                 });
@@ -706,13 +681,13 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9440), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3290), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Email = "superadmin@mail.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             Password = "685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9510), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 25, 23, 33, 26, 983, DateTimeKind.Unspecified).AddTicks(3350), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserName = "superadmin"
                         });

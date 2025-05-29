@@ -5,6 +5,10 @@ namespace ApexPerformance.API.Constants;
 
 public static class UserPermissions
 {
+    /**
+     * Administrators Permissions
+     */
+    
     public static readonly Permission CanGetAdministrators =
         Permission.Init("3808be7c-782b-4fcf-8d2b-b9cd3a2bb8ee", nameof(CanGetAdministrators),
             "Allows viewing administrators.",
@@ -24,6 +28,10 @@ public static class UserPermissions
         Permission.Init("2070c041-997a-43d6-8a01-ba04c8f1b1ed", nameof(CanDeleteAdministrator),
             "Allows deleting administrator.",
             "Administrators");
+    
+    /**
+     * Appointments Permissions
+     */
     
     public static readonly Permission CanGetAppointments =
         Permission.Init("c1a4f730-9c92-47c0-97b0-9ce7e94fc20a", nameof(CanGetAppointments),
@@ -45,6 +53,10 @@ public static class UserPermissions
             "Allows deleting appointment.",
             "Appointments");
     
+    /**
+     * Appointment Types Permissions
+     */
+    
     public static readonly Permission CanGetAppointmentTypes =
         Permission.Init("5591667e-38c2-4056-bfc6-f8644c31d30a", nameof(CanGetAppointmentTypes),
             "Allows viewing appointment types.",
@@ -65,25 +77,33 @@ public static class UserPermissions
             "Allows deleting appointment type.",
             "AppointmentTypes");
     
-    public static readonly Permission CanGetUsers =
-        Permission.Init("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81", nameof(CanGetUsers),
-            "Allows viewing users.",
-            "Users");
+    /**
+     * Body Measurements Permissions
+     */
+    
+    public static readonly Permission CanGetBodyMeasurements =
+        Permission.Init("3f8c91de-49e7-4af7-b3f4-8d5c7ff1a9ae", nameof(CanGetBodyMeasurements),
+            "Allows viewing body measurements.",
+            "BodyMeasurements");
 
-    public static readonly Permission CanCreateUser =
-        Permission.Init("a4e62d67-676d-4f53-9ace-b4c600ea9718", nameof(CanCreateUser),
-            "Allows creating user.",
-            "Users");
+    public static readonly Permission CanCreateBodyMeasurement =
+        Permission.Init("c7a1738d-e20f-4931-a2f1-d3c0dcf64c5f", nameof(CanCreateBodyMeasurement),
+            "Allows creating body measurements.",
+            "BodyMeasurements");
 
-    public static readonly Permission CanUpdateUser =
-        Permission.Init("2fe1ad9e-4229-411f-8095-e8f289777455", nameof(CanUpdateUser),
-            "Allows updating user.",
-            "Users");
+    public static readonly Permission CanUpdateBodyMeasurement =
+        Permission.Init("a412e56f-5d9c-4e1d-97e4-1c31f7aa2e59", nameof(CanUpdateBodyMeasurement),
+            "Allows updating body measurements.",
+            "BodyMeasurements");
 
-    public static readonly Permission CanDeleteUser =
-        Permission.Init("f250b493-7826-4a43-968f-d1392d925b96", nameof(CanDeleteUser),
-            "Allows deleting user.",
-            "Users");
+    public static readonly Permission CanDeleteBodyMeasurement =
+        Permission.Init("8b13e0cb-4c27-497f-bf13-b2101d8f0efb", nameof(CanDeleteBodyMeasurement),
+            "Allows deleting body measurements.",
+            "BodyMeasurements");
+    
+    /**
+     * Clients Permissions
+     */
     
     public static readonly Permission CanGetClients =
         Permission.Init("17ef9141-208a-491a-9cb7-84d4f8375fb9", nameof(CanGetClients),
@@ -104,6 +124,30 @@ public static class UserPermissions
         Permission.Init("b22c672f-6d69-4674-b9cd-5fbb8d497e7a", nameof(CanDeleteClient),
             "Allows deleting client.",
             "Clients");
+    
+    /**
+     * Users Permissions
+     */
+
+    public static readonly Permission CanGetUsers =
+        Permission.Init("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81", nameof(CanGetUsers),
+            "Allows viewing users.",
+            "Users");
+
+    public static readonly Permission CanCreateUser =
+        Permission.Init("a4e62d67-676d-4f53-9ace-b4c600ea9718", nameof(CanCreateUser),
+            "Allows creating user.",
+            "Users");
+
+    public static readonly Permission CanUpdateUser =
+        Permission.Init("2fe1ad9e-4229-411f-8095-e8f289777455", nameof(CanUpdateUser),
+            "Allows updating user.",
+            "Users");
+
+    public static readonly Permission CanDeleteUser =
+        Permission.Init("f250b493-7826-4a43-968f-d1392d925b96", nameof(CanDeleteUser),
+            "Allows deleting user.",
+            "Users");
 
 
     public static List<Permission> GetUserPermissions()
