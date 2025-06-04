@@ -36,7 +36,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsB
     public override void Configure()
     {
         Get("api/appointments");
-        Permissions(nameof(UserPermissions.CanGetAppointments));
+        Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Appointments"));
     }
 

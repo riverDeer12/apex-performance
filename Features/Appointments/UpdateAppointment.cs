@@ -96,7 +96,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         var clientsResponse = clients
             .Select(client => new AppointmentClientDto(client.Id, client.FirstName, client.LastName))
             .ToList();
-        
+
         await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
         await SendAsync(
