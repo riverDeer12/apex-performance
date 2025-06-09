@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
 public record UpdateBodyMeasurementRequest(
-    Guid ClientId,
+    Guid Client,
     decimal Height,
     decimal Weight,
     decimal Shoulders,
@@ -58,7 +58,7 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
             ThrowError(ErrorMessages.NotFound);
 
         var client =
-            await _context.Clients.FirstOrDefaultAsync(x => x.Id == request.ClientId,
+            await _context.Clients.FirstOrDefaultAsync(x => x.Id == request.Client,
                 cancellationToken: cancellationToken);
 
         if (client is null)
@@ -102,7 +102,7 @@ public sealed class UpdateBodyMeasurementValidator : Validator<UpdateBodyMeasure
 {
     public UpdateBodyMeasurementValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Client).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Height).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Weight).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ValidationMessages.Required);
