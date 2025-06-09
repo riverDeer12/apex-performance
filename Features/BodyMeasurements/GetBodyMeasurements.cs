@@ -15,9 +15,16 @@ public record GetBodyMeasurementsResponse(
     decimal Waist,
     decimal Thigh,
     decimal Calves,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
     BodyMeasurementClientDto Client);
 
-public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMeasurementsResponse>>
+public record BodyMeasurementsByDayDto(
+    DateTimeOffset Day,
+    List<GetBodyMeasurementsResponse> BodyMeasurements
+);
+
+public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<BodyMeasurementsByDayDto>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -29,7 +36,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
     public override void Configure()
     {
         Get("api/body-measurements");
-        Permissions(nameof(UserPermissions.CanGetBodyMeasurements));
+        Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("BodyMeasurements"));
     }
 
@@ -44,11 +51,25 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
             await SendAsync([], cancellation: cancellationToken);
             return;
         }
-        
-        await SendAsync(bodyMeasurements
-            .Select(x => 
-                new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, 
+
+        var bodyMeasurementsList = bodyMeasurements
+            .Select(x =>
+                new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist,
+                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt,
                     new BodyMeasurementClientDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
-            .ToList(), cancellation: cancellationToken);
+            .ToList();
+
+        var bodyMeasurementsByDay = GroupBodyMeasurementsByDay(bodyMeasurementsList);
+
+        await SendAsync(bodyMeasurementsByDay, cancellation: cancellationToken);
+    }
+    
+    private List<BodyMeasurementsByDayDto> GroupBodyMeasurementsByDay(List<GetBodyMeasurementsResponse> bodyMeasurementsList)
+    {
+        var itemsByDay = bodyMeasurementsList
+            .GroupBy(item => item.CreatedAt.Date)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return itemsByDay.Select(x => new BodyMeasurementsByDayDto(x.Key, x.Value)).ToList();
     }
 }
