@@ -25,6 +25,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(b => b.User)
             .HasForeignKey<Client>(b => b.UserId);
         
+        builder
+            .HasOne(a => a.Coach)
+            .WithOne(b => b.User)
+            .HasForeignKey<Coach>(b => b.UserId);
+        
         builder.ToTable("Users", c => c.IsTemporal());
     }
     

@@ -14,6 +14,8 @@ public class User : BaseEntity
     public Administrator Administrator { get; set; } = null!;
     
     public Client Client { get; set; } = null!;
+    
+    public Coach Coach { get; set; } = null!;
 
     public static User Init(string username, string password, string email)
         => new()

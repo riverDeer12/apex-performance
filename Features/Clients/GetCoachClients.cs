@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public record GetClientResponse(
+public record GetCoachClientsEndpointResponse(
     Guid Id,
     string FirstName,
     string LastName,
@@ -19,25 +19,27 @@ public record GetClientResponse(
 
 public sealed record ClientUserDto(Guid Id, string Username, string Email);
 
-public class GetClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>>
+public class GetCoachClientsEndpoint : EndpointWithoutRequest<List<GetCoachClientsEndpointResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
-    public GetClientsEndpoint(ApexPerformanceContext context)
+    public GetCoachClientsEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
-    
+
     public override void Configure()
     {
-        Get("api/clients");
-        Permissions(nameof(UserPermissions.CanGetClients));
+        Get("api/clients/coach/{id}");
+        Permissions([nameof(UserPermissions.CanGetClients)]);
         Options(x => x.WithTags("Clients"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var clients = await _context.Clients.Include(userType => userType.User)
+        var clients = await _context.Clients
+            .Where(x => !x.IsDeleted)
+            .Include(userType => userType.User)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count is 0)
@@ -46,7 +48,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>
             return;
         }
 
-        var response = new List<GetClientResponse>();
+        var response = new List<GetCoachClientsEndpointResponse>();
 
         foreach (var client in clients)
         {
@@ -56,7 +58,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>
 
             var clientUserResponse = new ClientUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
 
-            var roleResponse = new GetClientResponse(client.Id,
+            var roleResponse = new GetCoachClientsEndpointResponse(client.Id,
                 client.FirstName, client.LastName, client.Email,
                 client.Phone,
                 client.Credits,
