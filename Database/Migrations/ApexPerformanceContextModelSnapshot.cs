@@ -90,13 +90,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("92dfd50d-c21f-42bd-867d-d45c2992250e"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 467, DateTimeKind.Unspecified).AddTicks(10), new TimeSpan(0, 2, 0, 0, 0)),
+                            Id = new Guid("fc5d1d4c-2159-404c-92c1-b31965faf864"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(5510), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             FirstName = "Super",
                             IsDeleted = false,
                             LastName = "Admin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 467, DateTimeKind.Unspecified).AddTicks(20), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(5510), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserId = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
@@ -373,6 +373,97 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("ClientAppointments");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodEnd");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodStart");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Coaches", (string)null);
+
+                    b.ToTable(tb => tb.IsTemporal(ttb =>
+                            {
+                                ttb.UseHistoryTable("CoachesHistory");
+                                ttb
+                                    .HasPeriodStart("PeriodStart")
+                                    .HasColumnName("PeriodStart");
+                                ttb
+                                    .HasPeriodEnd("PeriodEnd")
+                                    .HasColumnName("PeriodEnd");
+                            }));
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachClient", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CoachId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ClientId", "CoachId");
+
+                    b.HasIndex("CoachId");
+
+                    b.ToTable("CoachClients");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Permission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -610,12 +701,12 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9940), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(5440), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Description = "Role with all access.",
                             IsDeleted = false,
                             Name = "SuperAdmin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9940), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(5450), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
                 });
@@ -706,13 +797,13 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9440), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(4940), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Email = "superadmin@mail.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             Password = "685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 5, 29, 1, 17, 0, 466, DateTimeKind.Unspecified).AddTicks(9510), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 12, 23, 17, 50, 519, DateTimeKind.Unspecified).AddTicks(5000), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserName = "superadmin"
                         });
@@ -803,6 +894,36 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
+                        .WithOne("Coach")
+                        .HasForeignKey("ApexPerformance.API.Database.Entities.Coach", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachClient", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
+                        .WithMany("Coaches")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.Coach", "Coach")
+                        .WithMany("Clients")
+                        .HasForeignKey("CoachId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Coach");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.RolePermission", b =>
                 {
                     b.HasOne("ApexPerformance.API.Database.Entities.Permission", "Permission")
@@ -856,6 +977,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("BodyMeasurements");
+
+                    b.Navigation("Coaches");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
+                {
+                    b.Navigation("Clients");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Permission", b =>
@@ -876,6 +1004,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Client")
+                        .IsRequired();
+
+                    b.Navigation("Coach")
                         .IsRequired();
 
                     b.Navigation("Roles");

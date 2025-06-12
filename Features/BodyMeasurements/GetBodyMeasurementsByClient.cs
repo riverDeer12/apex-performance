@@ -44,7 +44,8 @@ public class GetBodyMeasurementsByClientEndpoint : EndpointWithoutRequest<List<G
         if (client is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var bodyMeasurements = await _context.BodyMeasurements.Where(x => x.ClientId == clientId)
+        var bodyMeasurements = await _context.BodyMeasurements
+            .Where(x => x.ClientId == clientId && !x.IsDeleted)
             .Include(bodyMeasurement => bodyMeasurement.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 

@@ -35,7 +35,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<BodyMeasu
 
     public override void Configure()
     {
-        Get("api/body-measurements");
+        Get("api/body-measurements/by-day");
         Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("BodyMeasurements"));
     }
@@ -43,6 +43,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<BodyMeasu
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var bodyMeasurements = await _context.BodyMeasurements
+            .Where(x => !x.IsDeleted)
             .Include(x => x.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 

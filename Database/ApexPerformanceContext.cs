@@ -9,18 +9,23 @@ public class ApexPerformanceContext : DbContext
 {
     private readonly ICurrentUserService _currentUserService;
 
-    public ApexPerformanceContext(DbContextOptions<ApexPerformanceContext> options, ICurrentUserService currentUserService)
+    public ApexPerformanceContext(DbContextOptions<ApexPerformanceContext> options,
+        ICurrentUserService currentUserService)
         : base(options)
     {
         _currentUserService = currentUserService;
     }
-    
+
     public DbSet<Administrator> Administrators { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<AppointmentType> AppointmentTypes { get; set; }
     public DbSet<BodyMeasurement> BodyMeasurements { get; set; }
-    public DbSet<Client> Clients { get; set; }
+    public DbSet<Client> Clients { get; set; } 
     public DbSet<ClientAppointment> ClientAppointments { get; set; }
+   
+    public DbSet<Coach> Coaches { get; set; }
+    
+    public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }

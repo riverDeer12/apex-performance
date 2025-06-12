@@ -5,37 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public record GetAppointmentResponse(
-    Guid Id,
-    DateTimeOffset StartTime,
-    DateTimeOffset EndTime,
-    AppointmentTypeDto AppointmentType,
-    List<AppointmentClientDto> Clients
-);
-
-public record AppointmentTypeDto(
-    Guid Id,
-    string Name,
-    string Description
-);
-
-public record AppointmentsByDayDto(
-    DateTimeOffset Day,
-    List<GetAppointmentResponse> Appointments
-);
-
-public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsByDayDto>>
+public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmentResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
-    public GetAppointmentsEndpoint(ApexPerformanceContext context)
+    public GetAllAppointmentsEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
 
     public override void Configure()
     {
-        Get("api/appointments/by-day");
+        Get("api/appointments");
         Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Appointments"));
     }
@@ -73,17 +54,6 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsB
             appointmentResponseList.Add(appointmentResponse);
         }
 
-        var appointmentsByDay = GroupAppointmentsByDay(appointmentResponseList);
-
-        await SendAsync(appointmentsByDay, cancellation: cancellationToken);
-    }
-
-    private List<AppointmentsByDayDto> GroupAppointmentsByDay(List<GetAppointmentResponse> appointmentResponseList)
-    {
-        var itemsByDay = appointmentResponseList
-            .GroupBy(item => item.StartTime.Date)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        return itemsByDay.Select(x => new AppointmentsByDayDto(x.Key, x.Value)).ToList();
+        await SendAsync(appointmentResponseList, cancellation: cancellationToken);
     }
 }
