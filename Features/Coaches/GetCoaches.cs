@@ -7,11 +7,17 @@ namespace ApexPerformance.API.Features.Coaches;
 
 public record GetCoachResponse(
     Guid Id,
-    string FirstName,
+    string Firstname,
     string Lastname,
+    string Email,
+    string Phone,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt
+    DateTimeOffset UpdatedAt,
+    bool IsDeleted,
+    CoachUserDto User
 );
+
+public record CoachUserDto(Guid Id, string Username, string Email);
 
 public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 {
@@ -31,7 +37,9 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var coaches = await _context.Coaches.ToListAsync(cancellationToken: cancellationToken);
+        var coaches = await _context.Coaches
+            .Include(userType => userType.User)
+            .ToListAsync(cancellationToken: cancellationToken);
 
         if (coaches.Count == 0)
         {
@@ -39,8 +47,27 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
             return;
         }
 
-        await SendAsync(coaches
-            .Select(x => new GetCoachResponse(x.Id, 
-                x.FirstName, x.LastName, x.CreatedAt, x.UpdatedAt)).ToList(), cancellation: cancellationToken);
+        var response = new List<GetCoachResponse>();
+
+        foreach (var coach in coaches)
+        {
+            var clientUser = coach.User;
+
+            if (clientUser == null) continue;
+
+            var clientUserResponse = new CoachUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
+
+            var coachResponse = new GetCoachResponse(coach.Id,
+                coach.FirstName, coach.LastName, coach.Email,
+                coach.Phone,
+                coach.CreatedAt,
+                coach.UpdatedAt,
+                coach.IsDeleted, clientUserResponse);
+
+            response.Add(coachResponse);
+        }
+
+        await SendAsync(response,
+            cancellation: cancellationToken);
     }
 }
