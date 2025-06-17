@@ -14,10 +14,13 @@ public record GetCoachResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
+    List<CoachClientDto> Clients,
     CoachUserDto User
 );
 
 public record CoachUserDto(Guid Id, string Username, string Email);
+
+public record CoachClientDto(Guid Id, string Firstname, string Lastname);
 
 public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 {
@@ -39,6 +42,8 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
     {
         var coaches = await _context.Coaches
             .Include(userType => userType.User)
+            .Include(coach => coach.Clients)
+            .ThenInclude(coachClient => coachClient.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (coaches.Count == 0)
@@ -51,18 +56,29 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 
         foreach (var coach in coaches)
         {
-            var clientUser = coach.User;
+            var coachUser = coach.User;
 
-            if (clientUser == null) continue;
+            if (coachUser == null) continue;
 
-            var clientUserResponse = new CoachUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
+            var clientUserResponse = new CoachUserDto(coachUser.Id, coachUser.UserName, coachUser.Email);
+
+            var coachClients = new List<CoachClientDto>();
+
+            if (coach.Clients.Count != 0)
+            {
+                coachClients.AddRange(coach.Clients.Select(coachClient =>
+                    new CoachClientDto(coachClient.Client.Id, coachClient.Client.FirstName,
+                        coachClient.Client.LastName)));
+            }
 
             var coachResponse = new GetCoachResponse(coach.Id,
                 coach.FirstName, coach.LastName, coach.Email,
                 coach.Phone,
                 coach.CreatedAt,
                 coach.UpdatedAt,
-                coach.IsDeleted, clientUserResponse);
+                coach.IsDeleted,
+                coachClients,
+                clientUserResponse);
 
             response.Add(coachResponse);
         }
