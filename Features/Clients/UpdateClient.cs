@@ -88,5 +88,6 @@ public sealed class UpdateClientValidator : Validator<UpdateClientRequest>
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }
