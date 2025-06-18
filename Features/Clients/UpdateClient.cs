@@ -1,5 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
+using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,8 @@ public record UpdateClientRequest(
     string LastName,
     string Email,
     string Phone,
-    int Credits
+    int Credits,
+    List<Guid> Coaches
 );
 
 public record UpdateClientResponse(
@@ -61,6 +64,15 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
+        
+        var clientCoaches = request.Coaches
+            .Select(coachId => new CoachClient
+            {
+                ClientId = client.Id,
+                CoachId = coachId,
+            }).ToList();
+
+        await _context.BulkInsertOrUpdateAsync(clientCoaches, cancellationToken: cancellationToken);
 
         await SendAsync(new(client.Id, client.FirstName, 
                 client.LastName, client.Email, client.Phone, client.Credits),
