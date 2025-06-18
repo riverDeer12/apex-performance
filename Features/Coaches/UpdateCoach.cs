@@ -94,5 +94,6 @@ public sealed class UpdateCoachValidator : Validator<UpdateCoachRequest>
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }
