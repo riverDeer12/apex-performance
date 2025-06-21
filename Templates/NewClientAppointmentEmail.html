@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Account Details</title>
+  <style>
+    body {
+      background-color: #11111142;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.7);
+    }
+
+    .header {
+      background-color: #ffffff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header img {
+      max-width: 100px;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .content h2 {
+      color: #0074D9;
+      margin-bottom: 10px;
+    }
+
+    .content p {
+      color: #ccc;
+      line-height: 1.6;
+    }
+
+    .credentials {
+      background-color: #222;
+      border: 1px solid #0074D9;
+      border-radius: 6px;
+      padding: 20px;
+      margin-top: 20px;
+      color: #fff;
+    }
+
+    .credentials p {
+      margin: 10px 0;
+      font-size: 15px;
+    }
+
+    .credentials span {
+      font-weight: bold;
+      color: #0074D9;
+      display: inline-block;
+      width: 90px;
+    }
+
+    .footer {
+      background-color: #000;
+      color: #666;
+      font-size: 12px;
+      text-align: center;
+      padding: 15px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://apex-performance.fit/images/logo_transparent.png" alt="Company Logo" />
+    </div>
+    <div class="content">
+      <h2>Hello, {{ClientFullName}}</h2>
+      <p>You have new appointment scheduled. Please find appointment details below:</p>
+
+      <div class="credentials">
+        <p><span>Appointment Type:</span> {{Type}}</p>
+        <p><span>Day:</span> {{Day}}</p>
+        <p><span>Time:</span> {{StartTime}} - {{EndTime}}</p>
+      </div>
+    </div>
+    <div class="footer">
+      &copy; Apex Performance. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

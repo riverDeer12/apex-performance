@@ -54,7 +54,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
 
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, cancellationToken))
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
         var appointmentType = await _context.AppointmentTypes.FirstOrDefaultAsync(

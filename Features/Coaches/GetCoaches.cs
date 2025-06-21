@@ -7,8 +7,8 @@ namespace ApexPerformance.API.Features.Coaches;
 
 public record GetCoachResponse(
     Guid Id,
-    string Firstname,
-    string Lastname,
+    string FirstName,
+    string LastName,
     string Email,
     string Phone,
     DateTimeOffset CreatedAt,
@@ -20,7 +20,7 @@ public record GetCoachResponse(
 
 public record CoachUserDto(Guid Id, string Username, string Email);
 
-public record CoachClientDto(Guid Id, string Firstname, string Lastname);
+public record CoachClientDto(Guid Id, string FirstName, string LastName);
 
 public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 {

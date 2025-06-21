@@ -64,17 +64,23 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
-        
-        var clientCoaches = request.Coaches
-            .Select(coachId => new CoachClient
+
+        var coaches = await _context.Coaches
+            .Where(x => request.Coaches.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        var clientCoaches = coaches
+            .Select(coach => new CoachClient
             {
+                Client = client,
                 ClientId = client.Id,
-                CoachId = coachId,
+                CoachId = coach.Id,
+                Coach = coach
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(clientCoaches, cancellationToken: cancellationToken);
 
-        await SendAsync(new(client.Id, client.FirstName, 
+        await SendAsync(new(client.Id, client.FirstName,
                 client.LastName, client.Email, client.Phone, client.Credits),
             cancellation: cancellationToken);
     }

@@ -1,6 +1,4 @@
 ﻿using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Services;
 
@@ -13,12 +11,11 @@ public class AppointmentService : IAppointmentService
         _context = context;
     }
 
-    public async Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, CancellationToken cancellationToken)
+    public Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, DateTimeOffset appointmentEndTime,
+        CancellationToken cancellationToken)
     {
-        var appointmentsInTimeSlot = await _context.Appointments
-            .Where(x => x.StartTime < appointmentStartTime && x.EndTime > appointmentStartTime)
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        return appointmentsInTimeSlot.Count == 0;
+        return Task.FromResult(!_context.Appointments.Any(existing =>
+            appointmentStartTime < existing.EndTime && appointmentEndTime > existing.StartTime
+        ));
     }
 }

@@ -13,8 +13,8 @@ public record AssignClientsRequest(
 
 public record AssignClientsResponse(
     Guid Id,
-    string Firstname,
-    string Lastname
+    string FirstName,
+    string LastName
 );
 
 public class AssignClientsEndpoint : Endpoint<AssignClientsRequest, List<AssignClientsResponse>>
