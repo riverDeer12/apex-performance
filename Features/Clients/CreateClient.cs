@@ -6,6 +6,7 @@ using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
 using MailKit.Net.Smtp;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 
 namespace ApexPerformance.API.Features.Clients;
@@ -73,11 +74,17 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
         
-        var clientCoaches = request.Coaches
-            .Select(coachId => new CoachClient
+        var coaches = await _context.Coaches
+            .Where(x => request.Coaches.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        var clientCoaches = coaches
+            .Select(coach => new CoachClient
             {
+                Client = newClient,
                 ClientId = newClient.Id,
-                CoachId = coachId,
+                CoachId = coach.Id,
+                Coach = coach
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(clientCoaches, cancellationToken: cancellationToken);
@@ -92,44 +99,7 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
 
     private void SendEmailWithCredentials(Client client, string password)
     {
-        var message = new MimeMessage();
         
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
-        
-        message.To.Add(new MailboxAddress(client.FullName, client.Email));
-        
-        message.Subject = "You Have Been Registered to Apex Performance";
-        
-        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CredentialsEmail.html");
-        
-        var html = File.ReadAllText(templatePath);
-
-        html = html.Replace("{{ClientFullName}}", client.FullName);
-        
-        html = html.Replace("{{Username}}", client.Email);
-        
-        html = html.Replace("{{Password}}", password);
-
-        message.Body = new TextPart("html") { Text = html };
-
-        using var smtpClient = new SmtpClient();
-
-        try
-        {
-            smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                int.Parse(_configuration["MailConfiguration::Port"]!),
-                MailKit.Security.SecureSocketOptions.StartTls);
-            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                _configuration["MailConfiguration::Password"]);
-            smtpClient.Send(message);
-            smtpClient.Disconnect(true);
-            Console.WriteLine("Email sent successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to send email: {ex.Message}");
-        }
     }
 }
 

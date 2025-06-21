@@ -8,8 +8,8 @@ namespace ApexPerformance.API.Features.Clients;
 public record GetClientCreditsResponse(
     Guid Id,
     decimal Credits,
-    string Firstname,
-    string Lastname
+    string FirstName,
+    string LastName
 );
 
 public class GetClientCreditsEndpoint : EndpointWithoutRequest<List<GetClientCreditsResponse>>

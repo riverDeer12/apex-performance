@@ -34,8 +34,8 @@ public record CreateBodyMeasurementResponse(
 
 public record BodyMeasurementClientDto(
     Guid Id,
-    string Firstname,
-    string Lastname
+    string FirstName,
+    string LastName
 );
 
 public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementRequest, CreateBodyMeasurementResponse>

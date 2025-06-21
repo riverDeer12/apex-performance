@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Features.Coaches;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,14 @@ public record GetClientResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
+    List<ClientCoachDto> Coaches,
     ClientUserDto User);
+
+public record ClientCoachDto(
+    Guid Id,
+    string FirstName,
+    string LastName
+);
 
 public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>>
 {
@@ -25,7 +33,7 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
     {
         _context = context;
     }
-    
+
     public override void Configure()
     {
         Get("api/clients");
@@ -37,6 +45,8 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
     {
         var clients = await _context.Clients
             .Include(userType => userType.User)
+            .Include(client => client.Coaches)
+            .ThenInclude(coachClient => coachClient.Coach)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count is 0)
@@ -53,6 +63,15 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
 
             if (clientUser == null) continue;
 
+            var clientCoaches = new List<ClientCoachDto>();
+
+            if (client.Coaches.Count != 0)
+            {
+                clientCoaches.AddRange(client.Coaches.Select(clientCoach =>
+                    new ClientCoachDto(clientCoach.Coach.Id, clientCoach.Coach.FirstName,
+                        clientCoach.Coach.LastName)));
+            }
+
             var clientUserResponse = new ClientUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
 
             var roleResponse = new GetClientResponse(client.Id,
@@ -61,7 +80,9 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
                 client.Credits,
                 client.CreatedAt,
                 client.UpdatedAt,
-                client.IsDeleted, clientUserResponse);
+                client.IsDeleted,
+                clientCoaches,
+                clientUserResponse);
 
             response.Add(roleResponse);
         }

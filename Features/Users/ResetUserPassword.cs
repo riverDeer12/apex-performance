@@ -62,40 +62,7 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
 
     private void SendResetPasswordEmail(User user)
     {
-        var message = new MimeMessage();
-
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
-
-        message.To.Add(new MailboxAddress(user.UserName, user.Email));
-
-        message.Subject = "Password Changed Successfully";
-
-        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ResetUserPasswordEmail.html");
-
-        var html = File.ReadAllText(templatePath);
-
-        html = html.Replace("{{Username}}", user.UserName);
-
-        message.Body = new TextPart("html") { Text = html };
-
-        using var smtpClient = new SmtpClient();
-
-        try
-        {
-            smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                int.Parse(_configuration["MailConfiguration::Port"]!),
-                MailKit.Security.SecureSocketOptions.StartTls);
-            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                _configuration["MailConfiguration::Password"]);
-            smtpClient.Send(message);
-            smtpClient.Disconnect(true);
-            Console.WriteLine("Email sent successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to send email: {ex.Message}");
-        }
+        
     }
 }
 

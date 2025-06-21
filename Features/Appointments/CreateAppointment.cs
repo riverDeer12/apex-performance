@@ -25,8 +25,8 @@ public record CreateAppointmentResponse(
 
 public record AppointmentClientDto(
     Guid Id,
-    string Firstname,
-    string Lastname
+    string FirstName,
+    string LastName
 );
 
 public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, CreateAppointmentResponse>
@@ -34,13 +34,15 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
     private readonly IClientService _clientService;
+    private readonly IEmailService _emailService;
 
     public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
-        IClientService clientService)
+        IClientService clientService, IEmailService emailService)
     {
         _context = context;
         _appointmentService = appointmentService;
         _clientService = clientService;
+        _emailService = emailService;
     }
 
     public override void Configure()
@@ -66,7 +68,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
 
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, cancellationToken))
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
         var appointment = new Appointment
@@ -104,6 +106,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             .ToList();
 
         await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+
+        _emailService.SendAppointmentEmailToClients(clients, appointment);
 
         await SendAsync(
             new CreateAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime,
