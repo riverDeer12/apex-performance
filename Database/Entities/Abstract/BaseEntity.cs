@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ApexPerformance.API.Database.Entities;
+namespace ApexPerformance.API.Database.Entities.Abstract;
 
 public abstract class BaseEntity
 {

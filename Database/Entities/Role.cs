@@ -1,3 +1,5 @@
+using ApexPerformance.API.Database.Entities.Abstract;
+
 namespace ApexPerformance.API.Database.Entities;
 
 public class Role : BaseEntity

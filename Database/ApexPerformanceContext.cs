@@ -1,5 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Abstract;
+using ApexPerformance.API.Database.Entities.Catalogs;
 using ApexPerformance.API.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,7 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<Administrator> Administrators { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<AppointmentStatus> AppointmentStatuses { get; set; }
     public DbSet<AppointmentType> AppointmentTypes { get; set; }
     public DbSet<BodyMeasurement> BodyMeasurements { get; set; }
     public DbSet<Client> Clients { get; set; } 

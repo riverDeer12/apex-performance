@@ -23,7 +23,7 @@ public class DeleteAppointmentTypeEndpoint : EndpointWithoutRequest<DeleteAppoin
     public override void Configure()
     {
         Delete("api/appointment-types/{id}");
-        Permissions(nameof(UserPermissions.CanDeleteAppointmentType));
+        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("AppointmentTypes"));
     }
 
