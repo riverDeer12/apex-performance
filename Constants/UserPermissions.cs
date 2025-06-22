@@ -50,6 +50,16 @@ public static class UserPermissions
         Permission.Init("6a6c1fd6-8c28-49cf-8a71-91bead303a6f", nameof(CanDeleteAppointment),
             "Allows deleting appointment.",
             "Appointments");
+    
+    public static readonly Permission CanApproveAppointment =
+        Permission.Init("5a0c2c49-6e9a-4c45-a6db-d50f802816ef", nameof(CanApproveAppointment),
+            "Allows approving appointment.",
+            "Appointments");
+    
+    public static readonly Permission CanDeclineAppointment =
+        Permission.Init("3a3f30a7-c0fc-43e7-aac0-861a53836479", nameof(CanDeclineAppointment),
+            "Allows declining appointment.",
+            "Appointments");
 
     /**
      * Body Measurements Permissions

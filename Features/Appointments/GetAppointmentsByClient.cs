@@ -50,7 +50,8 @@ public class GetAppointmentsByClientEndpoint : EndpointWithoutRequest<List<GetAp
         }
 
         var clientAppointments = await _context.Appointments
-            .Where(appointment => appointmentRelations.Contains(appointment.Id))
+            .Where(appointment => appointmentRelations.Contains(appointment.Id) &&
+                                  appointment.AppointmentStatus.Name == Status.Approved)
             .Include(appointment => appointment.AppointmentType)
             .ToListAsync(cancellationToken);
 

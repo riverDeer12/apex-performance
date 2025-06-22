@@ -4,12 +4,12 @@ namespace ApexPerformance.API.Database.Entities;
 
 public class Role : BaseEntity
 {
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
-    public ICollection<UserRole> Users { get; set; }
-    public ICollection<RolePermission> Permissions { get; set; }
+    public ICollection<UserRole> Users { get; set; } = null!;
+    public ICollection<RolePermission> Permissions { get; set; } = null!;
 
     public static Role Init(string roleName, string description)
         => new()
