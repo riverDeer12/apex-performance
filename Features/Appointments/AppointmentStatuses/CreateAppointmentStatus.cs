@@ -1,48 +1,47 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalogs;
 using FastEndpoints;
 using FluentValidation;
 
-namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
+namespace ApexPerformance.API.Features.Appointments.AppointmentStatuses;
 
-public record CreateAppointmentTypeRequest(
+public record CreateAppointmentStatusRequest(
     string Name,
     string Description
 );
 
-public record CreateAppointmentTypeResponse(
+public record CreateAppointmentStatusResponse(
     Guid Id,
     string Name,
     string Description
 );
 
-public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeRequest, CreateAppointmentTypeResponse>
+public class CreateAppointmentStatusEndpoint : Endpoint<CreateAppointmentStatusRequest, CreateAppointmentStatusResponse>
 {
     private readonly ApexPerformanceContext _context;
 
-    public CreateAppointmentTypeEndpoint(ApexPerformanceContext context)
+    public CreateAppointmentStatusEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
 
     public override void Configure()
     {
-        Post("api/appointment-types");
+        Post("api/appointment-statuses");
         Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
-        Options(x => x.WithTags("AppointmentTypes"));
+        Options(x => x.WithTags("AppointmentStatuses"));
     }
 
-    public override async Task HandleAsync(CreateAppointmentTypeRequest request, CancellationToken cancellationToken)
+    public override async Task HandleAsync(CreateAppointmentStatusRequest request, CancellationToken cancellationToken)
     {
-        var appointmentType = new AppointmentType
+        var appointmentStatus = new AppointmentStatus
         {
             Name = request.Name,
             Description = request.Description,
         };
 
-        _context.AppointmentTypes.Add(appointmentType);
+        _context.AppointmentStatuses.Add(appointmentStatus);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
 
@@ -50,14 +49,15 @@ public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeReque
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new CreateAppointmentTypeResponse(appointmentType.Id, appointmentType.Name, appointmentType.Description),
+            new CreateAppointmentStatusResponse(appointmentStatus.Id, appointmentStatus.Name,
+                appointmentStatus.Description),
             cancellation: cancellationToken);
     }
 }
 
-public sealed class CreateAppointmentTypeValidator : Validator<CreateAppointmentTypeRequest>
+public sealed class CreateAppointmentStatusValidator : Validator<CreateAppointmentStatusRequest>
 {
-    public CreateAppointmentTypeValidator()
+    public CreateAppointmentStatusValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);

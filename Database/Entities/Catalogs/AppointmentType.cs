@@ -1,4 +1,6 @@
-namespace ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Abstract;
+
+namespace ApexPerformance.API.Database.Entities.Catalogs;
 
 public class AppointmentType : BaseEntity
 {

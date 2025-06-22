@@ -29,7 +29,7 @@ public class UpdateAppointmentTypeEndpoint : Endpoint<UpdateAppointmentTypeReque
     public override void Configure()
     {
         Put("api/appointment-types/{id}");
-        Permissions(nameof(UserPermissions.CanUpdateAppointmentType));
+        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("AppointmentTypes"));
     }
 

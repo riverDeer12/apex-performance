@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using ApexPerformance.API.Database.Entities.Abstract;
 
 namespace ApexPerformance.API.Database.Entities;
 

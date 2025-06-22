@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Database.Entities;
+namespace ApexPerformance.API.Database.Entities.Abstract;
 
 public abstract class UserType : BaseEntity
 {

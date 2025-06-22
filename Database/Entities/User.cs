@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using ApexPerformance.API.Database.Entities.Abstract;
 
 namespace ApexPerformance.API.Database.Entities;
 
