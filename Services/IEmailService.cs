@@ -18,9 +18,10 @@ public interface IEmailService
     /// Send email to coach for new
     /// appointment request.
     /// </summary>
-    /// <param name="coachEmail">Coach email value.</param>
+    /// <param name="coach">Coach that needs to get email.</param>
+    /// <param name="appointment">Appointment from request.</param>
     /// <returns></returns>
-    void SendAppointmentToCoach(string coachEmail);
+    void SendAppointmentRequestEmail(Coach coach, Appointment appointment);
 
     /// <summary>
     /// Send email to user for resetting

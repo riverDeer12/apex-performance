@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>New Appointment Request</title>
+  <title>Your Account Details</title>
   <style>
     body {
       background-color: #11111142;
@@ -74,6 +74,34 @@
       padding: 15px;
     }
 
+    button {
+      background-color: #0074D9;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #0090dd;
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.4);
+    }
+    
+    button .icon {
+      margin-left: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #ffffff;
+      width: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -82,13 +110,18 @@
       <img src="https://apex-performance.fit/images/logo_transparent.png" alt="Company Logo" />
     </div>
     <div class="content">
-      <h2>Hello, {{ClientFullName}}</h2>
-      <p>You have new appointment scheduled. Please find appointment details below:</p>
+      <h2>Hello, {{CoachFullName}}</h2>
+      <p>You have new appointment request. Please find appointment details below:</p>
 
       <div class="credentials">
+        <p><span>Clients:</span> {{Clients}}</p>
         <p><span>Appointment Type:</span> {{Type}}</p>
         <p><span>Day:</span> {{Day}}</p>
         <p><span>Time:</span> {{StartTime}} - {{EndTime}}</p>
+        <p style="margin-top: 2rem">
+          <button type="button">Approve<span class="icon">&check;</span></button>
+          <button type="button" style="background-color: rgba(214, 32, 32, 1);">Decline<span class="icon">&times;</span></button>
+        </p>
       </div>
     </div>
     <div class="footer">
