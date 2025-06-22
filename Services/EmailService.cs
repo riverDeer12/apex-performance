@@ -63,9 +63,63 @@ public class EmailService : IEmailService
         }
     }
 
-    public void SendAppointmentToCoach(string coachEmail)
+    public void SendAppointmentRequestEmail(Coach coach, Appointment appointment)
     {
-        throw new NotImplementedException();
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
+
+        message.Subject = "You Have New Appointment Request";
+
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates",
+            "NewAppointmentRequestEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        var clientsNames = string.Join(",", appointment.Clients.Select(x => x.Client.FullName));
+
+        html = html.Replace("{{CoachFullName}}", coach.FullName);
+        
+        html = html.Replace("{{Clients}}", clientsNames);
+
+        html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
+
+        html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
+
+        html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
+
+        html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
+
+        var approveLink = "";
+        
+        var declineLink = "";
+        
+        html = html.Replace("{{ApproveLink}}", approveLink);
+        
+        html = html.Replace("{{DeclineLink}}", declineLink);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        using var smtpClient = new SmtpClient();
+
+        try
+        {
+            smtpClient.Connect(_configuration["MailConfiguration::Host"],
+                int.Parse(_configuration["MailConfiguration::Port"]!),
+                MailKit.Security.SecureSocketOptions.StartTls);
+            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
+                _configuration["MailConfiguration::Password"]);
+            smtpClient.Send(message);
+            smtpClient.Disconnect(true);
+            Console.WriteLine("Email sent successfully!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send email: {ex.Message}");
+        }
     }
 
     public void SendResetPasswordEmail(User user)

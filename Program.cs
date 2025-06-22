@@ -30,6 +30,7 @@ builder.Services.AddDbContext<ApexPerformanceContext>(options =>
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Host.UseSerilog((context, config) 
