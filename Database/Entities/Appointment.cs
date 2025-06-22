@@ -7,8 +7,9 @@ public class Appointment : BaseEntity
 {
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
-    public AppointmentType AppointmentType { get; set; }
+    public required AppointmentType AppointmentType { get; set; }
     public Guid AppointmentTypeId { get; set; }
-    public AppointmentStatus Status { get; set; }
-    public ICollection<ClientAppointment> Clients { get; set; }
+    public required AppointmentStatus AppointmentStatus { get; set; }
+    public Guid AppointmentStatusId { get; set; }
+    public ICollection<ClientAppointment> Clients { get; set; } = null!;
 }

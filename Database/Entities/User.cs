@@ -10,12 +10,12 @@ public class User : BaseEntity
     public required string Email { get; set; }
     public required string Password { get; set; }
     public bool EmailConfirmed { get; set; }
-    public ICollection<UserRole> Roles { get; set; }
-    
+    public ICollection<UserRole> Roles { get; set; } = null!;
+
     public Administrator Administrator { get; set; } = null!;
-    
+
     public Client Client { get; set; } = null!;
-    
+
     public Coach Coach { get; set; } = null!;
 
     public static User Init(string username, string password, string email)
@@ -25,8 +25,8 @@ public class User : BaseEntity
             Email = email,
             Password = HashPassword(password),
         };
-    
-    public bool IsValidPassword(string password) 
+
+    public bool IsValidPassword(string password)
         => HashPassword(password) == Password;
 
     public static string HashPassword(string password) =>

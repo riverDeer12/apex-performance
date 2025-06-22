@@ -11,6 +11,7 @@ namespace ApexPerformance.API.Features.Appointments;
 
 public record CreateAppointmentRequest(
     Guid AppointmentType,
+    Guid AppointmentStatus,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients
@@ -70,12 +71,20 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
+        
+        var appointmentStatus = await _context.AppointmentStatuses
+            .FirstOrDefaultAsync(x => x.Id == request.AppointmentStatus,
+                cancellationToken: cancellationToken);
+
+        if (appointmentStatus is null)
+            ThrowError(ErrorMessages.NotFound);
 
         var appointment = new Appointment
         {
             StartTime = request.StartTime,
             EndTime = request.EndTime,
-            AppointmentType = appointmentType
+            AppointmentType = appointmentType,
+            AppointmentStatus = appointmentStatus
         };
 
         _context.Appointments.Add(appointment);

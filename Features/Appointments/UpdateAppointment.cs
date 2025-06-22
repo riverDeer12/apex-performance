@@ -10,6 +10,7 @@ namespace ApexPerformance.API.Features.Appointments;
 
 public record UpdateAppointmentRequest(
     Guid AppointmentType,
+    Guid AppointmentStatus,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients
@@ -62,10 +63,17 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
+        
+        var appointmentStatus = await _context.AppointmentStatuses.FirstOrDefaultAsync(
+            x => x.Id == request.AppointmentStatus, cancellationToken: cancellationToken);
+
+        if (appointmentStatus is null)
+            ThrowError(ErrorMessages.NotFound);
 
         appointment.StartTime = request.StartTime;
         appointment.EndTime = request.EndTime;
         appointment.AppointmentType = appointmentType;
+        appointment.AppointmentStatus = appointmentStatus;
 
         appointment.Clients = new List<ClientAppointment>(
             request.Clients.Select(clientId => new ClientAppointment
