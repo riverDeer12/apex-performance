@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +10,9 @@ public record GetAppointmentResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
-    AppointmentTypeDto AppointmentType,
+    CatalogDataDto AppointmentType,
+    CatalogDataDto AppointmentStatus,
     List<AppointmentClientDto> Clients
-);
-
-public record AppointmentTypeDto(
-    Guid Id,
-    string Name,
-    string Description
 );
 
 public record AppointmentsByDayDto(
@@ -24,11 +20,11 @@ public record AppointmentsByDayDto(
     List<GetAppointmentResponse> Appointments
 );
 
-public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsByDayDto>>
+public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<AppointmentsByDayDto>>
 {
     private readonly ApexPerformanceContext _context;
 
-    public GetAppointmentsEndpoint(ApexPerformanceContext context)
+    public GetAppointmentsByDayEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
@@ -45,7 +41,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsB
         var appointments = await _context.Appointments
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
-            .Include(appointment => appointment.AppointmentType)
+            .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.AppointmentStatus)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)
@@ -64,11 +60,15 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<List<AppointmentsB
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
 
-            var appointmentTypeResponse = new AppointmentTypeDto(appointment.AppointmentType.Id,
+            var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
 
+            var appointmentStatusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
+                appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
+
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentClientsResponse);
+                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusResponse,
+                appointmentClientsResponse);
 
             appointmentResponseList.Add(appointmentResponse);
         }

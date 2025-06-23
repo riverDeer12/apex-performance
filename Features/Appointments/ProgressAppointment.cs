@@ -5,24 +5,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public record DeclineAppointmentResponse(
+public record ProgressAppointmentResponse(
     Guid Id,
-    bool IsDeclined
+    bool InProgress
 );
 
-public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointmentResponse>
+public class ProgressAppointmentEndpoint : EndpointWithoutRequest<ProgressAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
 
-    public DeclineAppointmentEndpoint(ApexPerformanceContext context)
+    public ProgressAppointmentEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
 
     public override void Configure()
     {
-        Get("api/appointments/decline/{id}");
-        Permissions(nameof(UserPermissions.CanDeclineAppointment));
+        Get("api/appointments/progress/{id}");
+        Permissions(nameof(UserPermissions.CanProgressAppointment));
         Options(x => x.WithTags("Appointments"));
     }
 
@@ -38,7 +38,7 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Declined),
+            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.InProgress.Name,
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)
@@ -54,7 +54,7 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new DeclineAppointmentResponse(appointment.Id, true),
+            new ProgressAppointmentResponse(appointment.Id, true),
             cancellation: cancellationToken);
     }
 }

@@ -60,6 +60,11 @@ public static class UserPermissions
         Permission.Init("3a3f30a7-c0fc-43e7-aac0-861a53836479", nameof(CanDeclineAppointment),
             "Allows declining appointment.",
             "Appointments");
+    
+    public static readonly Permission CanProgressAppointment =
+        Permission.Init("b8f6cb70-ccf7-4a1c-8e6a-3f4a13c2735d", nameof(CanProgressAppointment),
+            "Allows progressing appointment.",
+            "Appointments");
 
     /**
      * Body Measurements Permissions

@@ -5,7 +5,6 @@ using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using IClientService = ApexPerformance.API.Services.IClientService;
 
 namespace ApexPerformance.API.Features.Appointments;
 
@@ -84,7 +83,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             AppointmentType = appointmentType,
-            AppointmentStatus = appointmentStatus
+            AppointmentStatus = BusinessStatuses.Pending
         };
 
         _context.Appointments.Add(appointment);

@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,7 @@ public record GetAppointmentsByClientResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
-    AppointmentTypeDto AppointmentType
+    CatalogDataDto AppointmentType
 );
 
 public class GetAppointmentsByClientEndpoint : EndpointWithoutRequest<List<GetAppointmentsByClientResponse>>
@@ -51,7 +52,7 @@ public class GetAppointmentsByClientEndpoint : EndpointWithoutRequest<List<GetAp
 
         var clientAppointments = await _context.Appointments
             .Where(appointment => appointmentRelations.Contains(appointment.Id) &&
-                                  appointment.AppointmentStatus.Name == nameof(Constants.BusinessStatuses.Approved))
+                                  appointment.AppointmentStatus.Name == nameof(BusinessStatuses.Approved))
             .Include(appointment => appointment.AppointmentType)
             .ToListAsync(cancellationToken);
 
@@ -63,7 +64,7 @@ public class GetAppointmentsByClientEndpoint : EndpointWithoutRequest<List<GetAp
 
         await SendAsync(clientAppointments
             .Select(x => new GetAppointmentsByClientResponse(x.Id, x.StartTime, x.EndTime,
-                new AppointmentTypeDto(x.AppointmentType.Id, x.AppointmentType.Name, x.AppointmentType.Description)))
+                new CatalogDataDto(x.AppointmentType.Id, x.AppointmentType.Name, x.AppointmentType.Description)))
             .ToList(), cancellation: cancellationToken);
     }
 }
