@@ -13,7 +13,6 @@ builder.Services.AddCors();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var configuration = builder.Configuration;
 
 builder.Services
