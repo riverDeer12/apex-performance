@@ -1,4 +1,5 @@
-using ApexPerformance.API.Database.Entities.Catalogs;
+using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,5 +11,6 @@ public class AppointmentStatusConfiguration : IEntityTypeConfiguration<Appointme
     {
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(200);
+        builder.ToTable("AppointmentStatuses");
     }
 }

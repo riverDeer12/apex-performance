@@ -38,7 +38,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == Status.Approved,
+            .FirstOrDefaultAsync(x => x.Name == Constants.BusinessStatuses.Approved.Name,
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)

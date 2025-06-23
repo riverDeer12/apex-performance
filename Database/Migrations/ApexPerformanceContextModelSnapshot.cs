@@ -90,13 +90,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("bffde944-25cf-4cfa-a8ba-59bf14b49843"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(9220), new TimeSpan(0, 2, 0, 0, 0)),
+                            Id = new Guid("a4a7de2e-c126-4a31-995b-c6b363775ad2"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2840), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             FirstName = "Super",
                             IsDeleted = false,
                             LastName = "Admin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(9220), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2840), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserId = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
@@ -106,6 +106,9 @@ namespace ApexPerformance.API.Database.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentStatusId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AppointmentTypeId")
@@ -147,6 +150,8 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AppointmentStatusId");
+
                     b.HasIndex("AppointmentTypeId");
 
                     b.ToTable("Appointments", (string)null);
@@ -180,14 +185,16 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -197,7 +204,7 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AppointmentTypes");
+                    b.ToTable("AppointmentTypes", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.BodyMeasurement", b =>
@@ -277,6 +284,91 @@ namespace ApexPerformance.API.Database.Migrations
                                     .HasPeriodEnd("PeriodEnd")
                                     .HasColumnName("PeriodEnd");
                             }));
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppointmentStatuses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("9f1a0b47-1f9d-4a6d-bcfc-5ed5e91cdaf7"),
+                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Approved status.",
+                            IsDeleted = false,
+                            Name = "Approved",
+                            UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("4f82c9d9-3346-4c53-8d36-2f6e7186e1a3"),
+                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Declined status.",
+                            IsDeleted = false,
+                            Name = "Declined",
+                            UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("6a79d224-c6a5-4f14-90ad-ec9e7a2743c2"),
+                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "In Progress status.",
+                            IsDeleted = false,
+                            Name = "InProgress",
+                            UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("27c2b8b8-d95d-4e35-8df6-90f8b31a22aa"),
+                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Pending status.",
+                            IsDeleted = false,
+                            Name = "Pending",
+                            UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        });
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Client", b =>
@@ -547,31 +639,17 @@ namespace ApexPerformance.API.Database.Migrations
                         },
                         new
                         {
-                            Id = new Guid("5591667e-38c2-4056-bfc6-f8644c31d30a"),
-                            Category = "AppointmentTypes",
-                            Description = "Allows viewing appointment types.",
-                            Name = "CanGetAppointmentTypes"
+                            Id = new Guid("5a0c2c49-6e9a-4c45-a6db-d50f802816ef"),
+                            Category = "Appointments",
+                            Description = "Allows approving appointment.",
+                            Name = "CanApproveAppointment"
                         },
                         new
                         {
-                            Id = new Guid("9ecc7bdf-c144-4a6b-b10b-0885f09fb06b"),
-                            Category = "AppointmentTypes",
-                            Description = "Allows creating appointment type.",
-                            Name = "CanCreateAppointmentType"
-                        },
-                        new
-                        {
-                            Id = new Guid("4b6bc0dd-8bc8-42b1-ade2-c37ad49d34d0"),
-                            Category = "AppointmentTypes",
-                            Description = "Allows updating appointment type.",
-                            Name = "CanUpdateAppointmentType"
-                        },
-                        new
-                        {
-                            Id = new Guid("6df626b0-2937-4a3e-8f81-0f52375e85a5"),
-                            Category = "AppointmentTypes",
-                            Description = "Allows deleting appointment type.",
-                            Name = "CanDeleteAppointmentType"
+                            Id = new Guid("3a3f30a7-c0fc-43e7-aac0-861a53836479"),
+                            Category = "Appointments",
+                            Description = "Allows declining appointment.",
+                            Name = "CanDeclineAppointment"
                         },
                         new
                         {
@@ -729,12 +807,12 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(9140), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2770), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Description = "Role with all access.",
                             IsDeleted = false,
                             Name = "SuperAdmin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(9140), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2770), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
                 });
@@ -825,13 +903,13 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(8600), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2220), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Email = "superadmin@mail.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             Password = "685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 14, 19, 4, 2, 221, DateTimeKind.Unspecified).AddTicks(8670), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2270), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserName = "superadmin"
                         });
@@ -872,11 +950,19 @@ namespace ApexPerformance.API.Database.Migrations
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Appointment", b =>
                 {
+                    b.HasOne("ApexPerformance.API.Database.Entities.Catalog.AppointmentStatus", "AppointmentStatus")
+                        .WithMany("Appointments")
+                        .HasForeignKey("AppointmentStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ApexPerformance.API.Database.Entities.AppointmentType", "AppointmentType")
                         .WithMany("Appointments")
                         .HasForeignKey("AppointmentTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AppointmentStatus");
 
                     b.Navigation("AppointmentType");
                 });
@@ -996,6 +1082,11 @@ namespace ApexPerformance.API.Database.Migrations
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.AppointmentType", b =>
+                {
+                    b.Navigation("Appointments");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentStatus", b =>
                 {
                     b.Navigation("Appointments");
                 });

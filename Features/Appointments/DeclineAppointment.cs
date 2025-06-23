@@ -38,7 +38,7 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == Status.Declined,
+            .FirstOrDefaultAsync(x => x.Name == nameof(Constants.BusinessStatuses.Declined),
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)

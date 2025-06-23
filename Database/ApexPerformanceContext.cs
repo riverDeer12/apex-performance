@@ -1,7 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Abstract;
-using ApexPerformance.API.Database.Entities.Catalogs;
+using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,11 +23,9 @@ public class ApexPerformanceContext : DbContext
     public DbSet<AppointmentStatus> AppointmentStatuses { get; set; }
     public DbSet<AppointmentType> AppointmentTypes { get; set; }
     public DbSet<BodyMeasurement> BodyMeasurements { get; set; }
-    public DbSet<Client> Clients { get; set; } 
+    public DbSet<Client> Clients { get; set; }
     public DbSet<ClientAppointment> ClientAppointments { get; set; }
-   
     public DbSet<Coach> Coaches { get; set; }
-    
     public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -96,7 +94,6 @@ public class ApexPerformanceContext : DbContext
         });
 
         // Seed Permissions
-
         var permissions = UserPermissions.GetUserPermissions()
             .Select(permission => new Permission
             {
@@ -108,6 +105,18 @@ public class ApexPerformanceContext : DbContext
             .ToList();
 
         modelBuilder.Entity<Permission>().HasData(permissions);
+        
+        // Seed Statuses
+        var appointmentStatuses = BusinessStatuses.GetBusinessStatuses()
+            .Select(status => new AppointmentStatus()
+            {
+                Id = status.Id,
+                Name = status.Name,
+                Description = status.Description,
+            })
+            .ToList();
+        
+        modelBuilder.Entity<AppointmentStatus>().HasData(appointmentStatuses);
 
         base.OnModelCreating(modelBuilder);
     }

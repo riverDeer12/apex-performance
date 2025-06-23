@@ -1,5 +1,5 @@
 using ApexPerformance.API.Database.Entities.Abstract;
-using ApexPerformance.API.Database.Entities.Catalogs;
+using ApexPerformance.API.Database.Entities.Catalog;
 
 namespace ApexPerformance.API.Database.Entities;
 
