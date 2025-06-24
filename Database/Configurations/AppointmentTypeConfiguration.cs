@@ -1,4 +1,5 @@
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
