@@ -1,6 +1,6 @@
 using ApexPerformance.API.Database.Entities.Abstract;
 
-namespace ApexPerformance.API.Database.Entities;
+namespace ApexPerformance.API.Database.Entities.Catalog;
 
 public class AppointmentType : BaseEntity
 {

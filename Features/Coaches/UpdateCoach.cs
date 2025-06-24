@@ -35,7 +35,7 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
 
     public override void Configure()
     {
-        Put("api/coaches/{id}"); 
+        Put("api/coaches/{id}");
         Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Coaches"));
     }
@@ -62,15 +62,26 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
-        
+
         var clients = await _context.Clients
             .Where(x => request.Clients.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count == 0)
             ThrowError(ErrorMessages.NotFound);
+
+        await AddCoachClients(request.Clients, coach, cancellationToken);
+
+        await SendAsync(new(coach.Id, coach.FirstName,
+                coach.LastName, coach.Email, coach.Phone),
+            cancellation: cancellationToken);
+    }
+
+    private async Task AddCoachClients(List<Guid> clientsIds, Coach coach, CancellationToken cancellationToken)
+    {
+        if(clientsIds.Count == 0) return;
         
-        var coachClients = request.Clients
+        var coachClients = clientsIds
             .Select(clientId => new CoachClient
             {
                 ClientId = clientId,
@@ -79,10 +90,6 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(coachClients, cancellationToken: cancellationToken);
-        
-        await SendAsync(new(coach.Id, coach.FirstName,
-                coach.LastName, coach.Email, coach.Phone),
-            cancellation: cancellationToken);
     }
 }
 
@@ -94,6 +101,5 @@ public sealed class UpdateCoachValidator : Validator<UpdateCoachRequest>
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

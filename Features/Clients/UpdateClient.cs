@@ -65,8 +65,19 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
+        await AddClientCoaches(client, request.Coaches, cancellationToken);
+
+        await SendAsync(new(client.Id, client.FirstName,
+                client.LastName, client.Email, client.Phone, client.Credits),
+            cancellation: cancellationToken);
+    }
+
+    private async Task AddClientCoaches(Client client, List<Guid> coachesIds, CancellationToken cancellationToken)
+    {
+        if (coachesIds.Count == 0) return;
+
         var coaches = await _context.Coaches
-            .Where(x => request.Coaches.Contains(x.Id))
+            .Where(x => coachesIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
 
         var clientCoaches = coaches
@@ -79,10 +90,6 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(clientCoaches, cancellationToken: cancellationToken);
-
-        await SendAsync(new(client.Id, client.FirstName,
-                client.LastName, client.Email, client.Phone, client.Credits),
-            cancellation: cancellationToken);
     }
 }
 
