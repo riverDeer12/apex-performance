@@ -11,11 +11,12 @@ public class AppointmentService : IAppointmentService
         _context = context;
     }
 
-    public Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, DateTimeOffset appointmentEndTime,
-        CancellationToken cancellationToken)
+    public Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime,
+        DateTimeOffset appointmentEndTime, CancellationToken cancellationToken, Guid? appointmentId = null)
     {
         return Task.FromResult(!_context.Appointments.Any(existing =>
-            appointmentStartTime < existing.EndTime && appointmentEndTime > existing.StartTime
+            appointmentStartTime < existing.EndTime && appointmentEndTime > existing.StartTime &&
+            existing.Id != appointmentId
         ));
     }
 }
