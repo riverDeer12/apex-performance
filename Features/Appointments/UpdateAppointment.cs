@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
+using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Appointments;
 
 public record UpdateAppointmentRequest(
-    Guid AppointmentType,
-    Guid AppointmentStatus,
+    Guid Type,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients
@@ -55,11 +55,12 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
 
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime,
+                cancellationToken, appointmentId))
             ThrowError(ValidationMessages.NotValid);
 
         var appointmentType = await _context.AppointmentTypes.FirstOrDefaultAsync(
-            x => x.Id == request.AppointmentType, cancellationToken: cancellationToken);
+            x => x.Id == request.Type, cancellationToken: cancellationToken);
 
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
@@ -68,7 +69,14 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         appointment.EndTime = request.EndTime;
         appointment.AppointmentType = appointmentType;
 
-        appointment.Clients = new List<ClientAppointment>(
+        _context.Appointments.Update(appointment);
+
+        var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorMessages.SavingError);
+
+        var appointmentClients = new List<ClientAppointment>(
             request.Clients.Select(clientId => new ClientAppointment
             {
                 ClientId = clientId,
@@ -79,16 +87,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
             .Where(clientAppointment => clientAppointment.AppointmentId == appointment.Id)
             .ExecuteDeleteAsync(cancellationToken);
 
-        var deletedClients = await _clientService.GetClientsByAppointmentId(appointmentId, cancellationToken);
-
-        await _clientService.AddClientsCredits(deletedClients, 1, cancellationToken);
-
-        _context.Appointments.Update(appointment);
-
-        var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
-
-        if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+        await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
 
         var clients = await _context.Clients
             .Where(x => request.Clients.Contains(x.Id))
@@ -110,7 +109,7 @@ public sealed class UpdateAppointmentValidator : Validator<UpdateAppointmentRequ
 {
     public UpdateAppointmentValidator()
     {
-        RuleFor(x => x.AppointmentType).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);

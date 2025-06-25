@@ -10,8 +10,8 @@ public record GetAppointmentResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
-    CatalogDataDto AppointmentType,
-    CatalogDataDto AppointmentStatus,
+    CatalogDataDto Type,
+    CatalogDataDto Status,
     List<AppointmentClientDto> Clients
 );
 
