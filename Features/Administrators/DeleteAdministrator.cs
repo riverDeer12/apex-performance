@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Administrators;
 
-public sealed record DeleteAdministratorResponse(Guid Id, string FullName);
+public sealed record DeleteAdministratorResponse(Guid Id);
 
 public sealed class DeleteAdministratorEndpoint : EndpointWithoutRequest<DeleteAdministratorResponse>
 {
@@ -43,6 +43,6 @@ public sealed class DeleteAdministratorEndpoint : EndpointWithoutRequest<DeleteA
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new DeleteAdministratorResponse(administrator.Id, administrator.FullName), cancellation: cancellationToken);
+        await SendAsync(new DeleteAdministratorResponse(administrator.Id), cancellation: cancellationToken);
     }
 }

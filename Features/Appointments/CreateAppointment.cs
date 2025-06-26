@@ -14,14 +14,12 @@ public record CreateAppointmentRequest(
     Guid Status,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
-    List<Guid> Clients
+    List<Guid> Clients,
+    List<Guid> Coaches
 );
 
 public record CreateAppointmentResponse(
-    Guid Id,
-    DateTimeOffset StartTime,
-    DateTimeOffset EndTime,
-    List<AppointmentClientDto> Clients
+    Guid Id
 );
 
 public record AppointmentClientDto(
@@ -34,15 +32,13 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
-    private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
 
     public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
-        IClientService clientService, IEmailService emailService)
+        IEmailService emailService)
     {
         _context = context;
         _appointmentService = appointmentService;
-        _clientService = clientService;
         _emailService = emailService;
     }
 
@@ -60,6 +56,13 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count == 0)
+            ThrowError(ErrorMessages.NotFound);
+
+        var coaches = await _context.Coaches
+            .Where(x => request.Coaches.Contains(x.Id))
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        if (coaches.Count == 0)
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentType = await _context.AppointmentTypes
@@ -94,26 +97,12 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        var appointmentClients = clients
-            .Select(client => new ClientAppointment
-            {
-                ClientId = client.Id,
-                Client = client,
-                AppointmentId = appointment.Id,
-                Appointment = appointment
-            }).ToList();
+        await _appointmentService.UpdateClients(clients, appointment, cancellationToken);
 
-        await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
-
-        var clientsResponse = clients
-            .Select(client => new AppointmentClientDto(client.Id, client.FirstName, client.LastName))
-            .ToList();
-        
-        _emailService.SendAppointmentEmailToClients(clients, appointment);
+        await _appointmentService.UpdateCoaches(coaches, appointment, cancellationToken);
 
         await SendAsync(
-            new CreateAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime,
-                clientsResponse),
+            new CreateAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
     }
 }
@@ -126,5 +115,6 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
         RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

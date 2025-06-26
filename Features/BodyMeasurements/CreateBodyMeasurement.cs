@@ -20,16 +20,7 @@ public record CreateBodyMeasurementRequest(
 );
 
 public record CreateBodyMeasurementResponse(
-    Guid Id,
-    decimal Height,
-    decimal Weight,
-    decimal Shoulders,
-    decimal Chest,
-    decimal UpperArm,
-    decimal Waist,
-    decimal Thigh,
-    decimal Calves,
-    BodyMeasurementClientDto Client
+    Guid Id
 );
 
 public record BodyMeasurementClientDto(
@@ -85,17 +76,7 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
 
         await SendAsync(
             new CreateBodyMeasurementResponse(
-                bodyMeasurement.Id,
-                bodyMeasurement.Height,
-                bodyMeasurement.Weight,
-                bodyMeasurement.Shoulders,
-                bodyMeasurement.Chest,
-                bodyMeasurement.UpperArm,
-                bodyMeasurement.Waist,
-                bodyMeasurement.Thigh,
-                bodyMeasurement.Calves,
-                new BodyMeasurementClientDto(client.Id, client.FirstName, client.LastName)
-            ),
+                bodyMeasurement.Id),
             cancellation: cancellationToken);
     }
 }

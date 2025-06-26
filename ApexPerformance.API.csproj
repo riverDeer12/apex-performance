@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Templates\NewClientAppointmentEmail.html" />
+    <None Include="Templates\ClientAppointmentStatusEmail.html" />
   </ItemGroup>
 
 </Project>

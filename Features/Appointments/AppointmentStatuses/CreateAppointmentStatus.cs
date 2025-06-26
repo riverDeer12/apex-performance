@@ -13,9 +13,7 @@ public record CreateAppointmentStatusRequest(
 );
 
 public record CreateAppointmentStatusResponse(
-    Guid Id,
-    string Name,
-    string Description
+    Guid Id
 );
 
 public class CreateAppointmentStatusEndpoint : Endpoint<CreateAppointmentStatusRequest, CreateAppointmentStatusResponse>
@@ -50,8 +48,7 @@ public class CreateAppointmentStatusEndpoint : Endpoint<CreateAppointmentStatusR
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new CreateAppointmentStatusResponse(appointmentStatus.Id, appointmentStatus.Name,
-                appointmentStatus.Description),
+            new CreateAppointmentStatusResponse(appointmentStatus.Id),
             cancellation: cancellationToken);
     }
 }

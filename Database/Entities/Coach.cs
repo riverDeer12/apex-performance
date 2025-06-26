@@ -10,5 +10,6 @@ public class Coach : UserType
     public required string Email { get; set; }
     public required string Phone { get; set; }
     public ICollection<CoachClient> Clients { get; set; } = null!;
+    public ICollection<CoachAppointment> Appointments { get; set; } = null!;
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 }

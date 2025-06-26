@@ -6,9 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
 
 public record DeleteAppointmentTypeResponse(
-    Guid Id,
-    string Name,
-    string Description
+    Guid Id
 );
 
 public class DeleteAppointmentTypeEndpoint : EndpointWithoutRequest<DeleteAppointmentTypeResponse>
@@ -48,7 +46,7 @@ public class DeleteAppointmentTypeEndpoint : EndpointWithoutRequest<DeleteAppoin
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new DeleteAppointmentTypeResponse(appointmentType.Id, appointmentType.Name, appointmentType.Description),
+            new DeleteAppointmentTypeResponse(appointmentType.Id),
             cancellation: cancellationToken);
     }
 }

@@ -13,28 +13,26 @@ public record UpdateAppointmentRequest(
     Guid Type,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
-    List<Guid> Clients
+    List<Guid> Clients,
+    List<Guid> Coaches
 );
 
 public record UpdateAppointmentResponse(
-    Guid Id,
-    DateTimeOffset StartTime,
-    DateTimeOffset EndTime,
-    List<AppointmentClientDto> Clients
+    Guid Id
 );
 
 public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, UpdateAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
-    private readonly IClientService _clientService;
+    private readonly IEmailService _emailService;
 
     public UpdateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
-        IClientService clientService)
+        IEmailService emailService)
     {
         _context = context;
         _appointmentService = appointmentService;
-        _clientService = clientService;
+        _emailService = emailService;
     }
 
     public override void Configure()
@@ -65,9 +63,16 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
 
+        var inProgressStatus = _context.AppointmentStatuses
+            .FirstOrDefault(x => x.Name == nameof(BusinessStatuses.InProgress));
+
+        if (inProgressStatus == null)
+            ThrowError(ErrorMessages.NotFound);
+
         appointment.StartTime = request.StartTime;
         appointment.EndTime = request.EndTime;
         appointment.AppointmentType = appointmentType;
+        appointment.AppointmentStatus = inProgressStatus;
 
         _context.Appointments.Update(appointment);
 
@@ -76,32 +81,30 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        var appointmentClients = new List<ClientAppointment>(
-            request.Clients.Select(clientId => new ClientAppointment
-            {
-                ClientId = clientId,
-                AppointmentId = appointment.Id
-            }));
-
         await _context.ClientAppointments
             .Where(clientAppointment => clientAppointment.AppointmentId == appointment.Id)
             .ExecuteDeleteAsync(cancellationToken);
 
-        await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
+        await _context.CoachAppointments
+            .Where(coachAppointment => coachAppointment.AppointmentId == appointment.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
         var clients = await _context.Clients
             .Where(x => request.Clients.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
-        var clientsResponse = clients
-            .Select(client => new AppointmentClientDto(client.Id, client.FirstName, client.LastName))
-            .ToList();
+        var coaches = await _context.Coaches
+            .Where(x => request.Coaches.Contains(x.Id))
+            .ToListAsync(cancellationToken: cancellationToken);
 
-        await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+        await _appointmentService.UpdateClients(clients, appointment, cancellationToken);
+
+        await _appointmentService.UpdateCoaches(coaches, appointment, cancellationToken);
+
+        _emailService.SendAppointmentStatus(clients, appointment);
 
         await SendAsync(
-            new UpdateAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime, clientsResponse),
-            cancellation: cancellationToken);
+            new UpdateAppointmentResponse(appointment.Id), cancellation: cancellationToken);
     }
 }
 
@@ -113,5 +116,6 @@ public sealed class UpdateAppointmentValidator : Validator<UpdateAppointmentRequ
         RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

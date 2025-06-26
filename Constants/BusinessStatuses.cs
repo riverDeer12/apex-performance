@@ -21,6 +21,10 @@ public static class BusinessStatuses
     public static readonly AppointmentStatus Pending =
         AppointmentStatus.Init("27c2b8b8-d95d-4e35-8df6-90f8b31a22aa", nameof(Pending),
             "Pending status.");
+    
+    public static readonly AppointmentStatus Canceled =
+        AppointmentStatus.Init("e2031af4-e2d7-440d-a88b-b7e09fff9805", nameof(Canceled),
+            "Canceled status.");
 
     public static List<AppointmentStatus> GetBusinessStatuses()
     {

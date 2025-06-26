@@ -7,9 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Appointments;
 
 public record DeleteAppointmentResponse(
-    Guid Id,
-    DateTimeOffset StartTime,
-    DateTimeOffset EndTime
+    Guid Id
 );
 
 public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmentResponse>
@@ -54,11 +52,9 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
             ThrowError(ErrorMessages.SavingError);
 
         var clients = await _clientService.GetClientsByAppointmentId(appointmentId, cancellationToken);
-
-        await _clientService.AddClientsCredits(clients, 1, cancellationToken);
             
         await  SendAsync(
-            new DeleteAppointmentResponse(appointment.Id, appointment.StartTime, appointment.EndTime),
+            new DeleteAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
     }
 }

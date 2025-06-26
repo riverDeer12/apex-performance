@@ -38,7 +38,7 @@ public class ProgressAppointmentEndpoint : EndpointWithoutRequest<ProgressAppoin
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.InProgress.Name,
+            .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.InProgress),
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)

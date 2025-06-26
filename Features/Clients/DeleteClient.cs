@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public record DeleteClientResponse(Guid Id, string FirstName, string LastName);
+public record DeleteClientResponse(Guid Id);
 
 public class DeleteClientEndpoint : EndpointWithoutRequest<DeleteClientResponse>
 {
@@ -43,7 +43,7 @@ public class DeleteClientEndpoint : EndpointWithoutRequest<DeleteClientResponse>
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new DeleteClientResponse(client.Id, client.FirstName, client.LastName),
+        await SendAsync(new DeleteClientResponse(client.Id),
             cancellation: cancellationToken);
     }
 }

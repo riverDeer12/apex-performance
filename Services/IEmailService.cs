@@ -6,28 +6,28 @@ public interface IEmailService
 {
     /// <summary>
     /// Send email/emails to client email/emails
-    /// when new appointment is arranged.
+    /// when a new appointment is arranged.
     /// </summary>
     /// <param name="clients">Clients that need to get notification
-    /// about new appointment.</param>
+    /// about a new appointment.</param>
     /// <param name="appointment">Appointment that needs to be sent.</param>
     /// <returns></returns>
-    void SendAppointmentEmailToClients(List<Client> clients, Appointment appointment);
+    void SendAppointmentStatus(List<Client> clients, Appointment appointment);
 
     /// <summary>
     /// Send email to coach for new
     /// appointment request.
     /// </summary>
-    /// <param name="coach">Coach that needs to get email.</param>
+    /// <param name="coaches">Coaches that need to get email notification.</param>
     /// <param name="appointment">Appointment from request.</param>
     /// <returns></returns>
-    void SendAppointmentRequestEmail(Coach coach, Appointment appointment);
+    void SendAppointmentRequestEmail(List<Coach> coaches, Appointment appointment);
 
     /// <summary>
     /// Send email to user for resetting
-    /// the password. It contains link with
-    /// which user is redirected to page for
-    /// setting new password.
+    /// the password. It contains a link with
+    /// which the user is redirected to the page for setting a
+    ///  new password.
     /// </summary>
     /// <param name="user">User that needs to reset email.</param>
     /// <returns></returns>
@@ -35,10 +35,10 @@ public interface IEmailService
 
     /// <summary>
     /// Send email with notification
-    /// that new client is registered in the system.
+    /// when a new user is registered in the system.
     /// </summary>
-    /// <param name="client">Client that needs to get credentials.</param>
+    /// <param name="user">User account that needs to get credentials.</param>
     /// <param name="password">Password value.</param>
     /// <returns></returns>
-    void SendClientCredentialsEmail(Client client, string password);
+    void SendCredentialsEmail(User user, string password);
 }

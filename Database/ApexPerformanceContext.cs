@@ -26,6 +26,7 @@ public class ApexPerformanceContext : DbContext
     public DbSet<Client> Clients { get; set; }
     public DbSet<ClientAppointment> ClientAppointments { get; set; }
     public DbSet<Coach> Coaches { get; set; }
+    public DbSet<CoachAppointment> CoachAppointments { get; set; }
     public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -94,7 +95,7 @@ public class ApexPerformanceContext : DbContext
         });
 
         // Seed Permissions
-        var permissions = UserPermissions.GetUserPermissions()
+        /*var permissions = UserPermissions.GetUserPermissions()
             .Select(permission => new Permission
             {
                 Id = permission.Id,
@@ -104,7 +105,7 @@ public class ApexPerformanceContext : DbContext
             })
             .ToList();
 
-        modelBuilder.Entity<Permission>().HasData(permissions);
+        modelBuilder.Entity<Permission>().HasData(permissions);*/
         
         // Seed Statuses
         var appointmentStatuses = BusinessStatuses.GetBusinessStatuses()
