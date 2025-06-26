@@ -8,7 +8,7 @@ namespace ApexPerformance.API.Features.Administrators;
 
 public sealed record UpdateAdministratorRequest(string FirstName, string LastName);
 
-public sealed record UpdateAdministratorResponse(Guid Id, string FullName);
+public sealed record UpdateAdministratorResponse(Guid Id);
 
 public class UpdateAdministratorEndpoint : Endpoint<UpdateAdministratorRequest, UpdateAdministratorResponse>
 {
@@ -47,7 +47,7 @@ public class UpdateAdministratorEndpoint : Endpoint<UpdateAdministratorRequest, 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new(administrator.Id, administrator.FullName), cancellation: cancellationToken);
+        await SendAsync(new(administrator.Id), cancellation: cancellationToken);
     }
 }
 

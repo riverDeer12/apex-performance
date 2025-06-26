@@ -12,4 +12,5 @@ public class Appointment : BaseEntity
     public required AppointmentStatus AppointmentStatus { get; set; }
     public Guid AppointmentStatusId { get; set; }
     public ICollection<ClientAppointment> Clients { get; set; } = null!;
+    public ICollection<CoachAppointment> Coaches { get; set; } = null!;
 }

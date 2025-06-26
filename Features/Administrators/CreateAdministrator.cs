@@ -9,7 +9,7 @@ namespace ApexPerformance.API.Features.Administrators;
 
 public sealed record CreateAdministratorRequest(Guid User, string FirstName, string LastName);
 
-public sealed record CreateAdministratorResponse(Guid Id, string FullName);
+public sealed record CreateAdministratorResponse(Guid Id);
 
 public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRequest, CreateAdministratorResponse>
 {
@@ -54,7 +54,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        await SendAsync(new CreateAdministratorResponse(newAdministrator.Id, newAdministrator.FullName),
+        await SendAsync(new CreateAdministratorResponse(newAdministrator.Id),
             cancellation: cancellationToken);
     }
 }

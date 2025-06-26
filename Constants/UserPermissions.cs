@@ -64,6 +64,11 @@ public static class UserPermissions
     public static readonly Permission CanProgressAppointment =
         Permission.Init("b8f6cb70-ccf7-4a1c-8e6a-3f4a13c2735d", nameof(CanProgressAppointment),
             "Allows progressing appointment.",
+            "Appointments");    
+    
+    public static readonly Permission CanCancelAppointment =
+        Permission.Init("b8f6cb70-ccf7-4a1c-8e6a-3f4a13c2735d", nameof(CanCancelAppointment),
+            "Allows canceling appointment.",
             "Appointments");
 
     /**

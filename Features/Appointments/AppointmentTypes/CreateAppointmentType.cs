@@ -13,9 +13,7 @@ public record CreateAppointmentTypeRequest(
 );
 
 public record CreateAppointmentTypeResponse(
-    Guid Id,
-    string Name,
-    string Description
+    Guid Id
 );
 
 public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeRequest, CreateAppointmentTypeResponse>
@@ -50,7 +48,7 @@ public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeReque
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new CreateAppointmentTypeResponse(appointmentType.Id, appointmentType.Name, appointmentType.Description),
+            new CreateAppointmentTypeResponse(appointmentType.Id),
             cancellation: cancellationToken);
     }
 }

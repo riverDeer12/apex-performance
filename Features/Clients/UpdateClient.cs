@@ -1,7 +1,6 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities;
-using EFCore.BulkExtensions;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -18,20 +17,17 @@ public record UpdateClientRequest(
 );
 
 public record UpdateClientResponse(
-    Guid Id,
-    string FirstName,
-    string LastName,
-    string Email,
-    string Phone,
-    int Credits);
+    Guid Id);
 
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IClientService _clientService;
 
-    public UpdateClientEndpoint(ApexPerformanceContext context)
+    public UpdateClientEndpoint(ApexPerformanceContext context, IClientService clientService)
     {
         _context = context;
+        _clientService = clientService;
     }
 
     public override void Configure()
@@ -64,32 +60,14 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
+        
+        await _context.CoachClients
+            .Where(coachClient => coachClient.ClientId == client.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        await AddClientCoaches(client, request.Coaches, cancellationToken);
+        await _clientService.UpdateClientCoaches(client, request.Coaches, cancellationToken);
 
-        await SendAsync(new(client.Id, client.FirstName,
-                client.LastName, client.Email, client.Phone, client.Credits),
-            cancellation: cancellationToken);
-    }
-
-    private async Task AddClientCoaches(Client client, List<Guid> coachesIds, CancellationToken cancellationToken)
-    {
-        if (coachesIds.Count == 0) return;
-
-        var coaches = await _context.Coaches
-            .Where(x => coachesIds.Contains(x.Id))
-            .ToListAsync(cancellationToken);
-
-        var clientCoaches = coaches
-            .Select(coach => new CoachClient
-            {
-                Client = client,
-                ClientId = client.Id,
-                CoachId = coach.Id,
-                Coach = coach
-            }).ToList();
-
-        await _context.BulkInsertOrUpdateAsync(clientCoaches, cancellationToken: cancellationToken);
+        await SendAsync(new(client.Id), cancellation: cancellationToken);
     }
 }
 

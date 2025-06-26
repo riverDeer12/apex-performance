@@ -90,13 +90,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("a4a7de2e-c126-4a31-995b-c6b363775ad2"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2840), new TimeSpan(0, 2, 0, 0, 0)),
+                            Id = new Guid("d84ed40d-1c0d-4c5a-b590-132b8093ff95"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 729, DateTimeKind.Unspecified).AddTicks(179), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             FirstName = "Super",
                             IsDeleted = false,
                             LastName = "Admin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2840), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 729, DateTimeKind.Unspecified).AddTicks(186), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserId = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
@@ -166,45 +166,6 @@ namespace ApexPerformance.API.Database.Migrations
                                     .HasPeriodEnd("PeriodEnd")
                                     .HasColumnName("PeriodEnd");
                             }));
-                });
-
-            modelBuilder.Entity("ApexPerformance.API.Database.Entities.AppointmentType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AppointmentTypes", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.BodyMeasurement", b =>
@@ -368,7 +329,57 @@ namespace ApexPerformance.API.Database.Migrations
                             Name = "Pending",
                             UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("e2031af4-e2d7-440d-a88b-b7e09fff9805"),
+                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Canceled status.",
+                            IsDeleted = false,
+                            Name = "Canceled",
+                            UpdatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         });
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppointmentTypes", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Client", b =>
@@ -541,6 +552,21 @@ namespace ApexPerformance.API.Database.Migrations
                             }));
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachAppointment", b =>
+                {
+                    b.Property<Guid>("CoachId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CoachId", "AppointmentId");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.ToTable("CoachAppointments");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachClient", b =>
                 {
                     b.Property<Guid>("ClientId")
@@ -579,190 +605,6 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Permissions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("3808be7c-782b-4fcf-8d2b-b9cd3a2bb8ee"),
-                            Category = "Administrators",
-                            Description = "Allows viewing administrators.",
-                            Name = "CanGetAdministrators"
-                        },
-                        new
-                        {
-                            Id = new Guid("d7775310-c4ff-4fd4-bf3b-719d85b60b4c"),
-                            Category = "Administrators",
-                            Description = "Allows creating administrator.",
-                            Name = "CanCreateAdministrator"
-                        },
-                        new
-                        {
-                            Id = new Guid("5bdaa142-aae1-4225-8e8e-2539e74bd616"),
-                            Category = "Administrators",
-                            Description = "Allows updating administrator.",
-                            Name = "CanUpdateAdministrator"
-                        },
-                        new
-                        {
-                            Id = new Guid("2070c041-997a-43d6-8a01-ba04c8f1b1ed"),
-                            Category = "Administrators",
-                            Description = "Allows deleting administrator.",
-                            Name = "CanDeleteAdministrator"
-                        },
-                        new
-                        {
-                            Id = new Guid("c1a4f730-9c92-47c0-97b0-9ce7e94fc20a"),
-                            Category = "Appointments",
-                            Description = "Allows viewing appointments.",
-                            Name = "CanGetAppointments"
-                        },
-                        new
-                        {
-                            Id = new Guid("11c09349-6f32-4a43-a4b2-dbd58c244b1a"),
-                            Category = "Appointments",
-                            Description = "Allows creating appointment.",
-                            Name = "CanCreateAppointment"
-                        },
-                        new
-                        {
-                            Id = new Guid("f9fa3e15-8819-48f0-8751-02cf42e22a1d"),
-                            Category = "Appointments",
-                            Description = "Allows updating appointment.",
-                            Name = "CanUpdateAppointment"
-                        },
-                        new
-                        {
-                            Id = new Guid("6a6c1fd6-8c28-49cf-8a71-91bead303a6f"),
-                            Category = "Appointments",
-                            Description = "Allows deleting appointment.",
-                            Name = "CanDeleteAppointment"
-                        },
-                        new
-                        {
-                            Id = new Guid("5a0c2c49-6e9a-4c45-a6db-d50f802816ef"),
-                            Category = "Appointments",
-                            Description = "Allows approving appointment.",
-                            Name = "CanApproveAppointment"
-                        },
-                        new
-                        {
-                            Id = new Guid("3a3f30a7-c0fc-43e7-aac0-861a53836479"),
-                            Category = "Appointments",
-                            Description = "Allows declining appointment.",
-                            Name = "CanDeclineAppointment"
-                        },
-                        new
-                        {
-                            Id = new Guid("3f8c91de-49e7-4af7-b3f4-8d5c7ff1a9ae"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows viewing body measurements.",
-                            Name = "CanGetBodyMeasurements"
-                        },
-                        new
-                        {
-                            Id = new Guid("c7a1738d-e20f-4931-a2f1-d3c0dcf64c5f"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows creating body measurements.",
-                            Name = "CanCreateBodyMeasurement"
-                        },
-                        new
-                        {
-                            Id = new Guid("a412e56f-5d9c-4e1d-97e4-1c31f7aa2e59"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows updating body measurements.",
-                            Name = "CanUpdateBodyMeasurement"
-                        },
-                        new
-                        {
-                            Id = new Guid("8b13e0cb-4c27-497f-bf13-b2101d8f0efb"),
-                            Category = "BodyMeasurements",
-                            Description = "Allows deleting body measurements.",
-                            Name = "CanDeleteBodyMeasurement"
-                        },
-                        new
-                        {
-                            Id = new Guid("17ef9141-208a-491a-9cb7-84d4f8375fb9"),
-                            Category = "Clients",
-                            Description = "Allows viewing clients.",
-                            Name = "CanGetClients"
-                        },
-                        new
-                        {
-                            Id = new Guid("28ab969b-c866-470f-b3b4-7c1f1b066a48"),
-                            Category = "Clients",
-                            Description = "Allows creating client.",
-                            Name = "CanCreateClient"
-                        },
-                        new
-                        {
-                            Id = new Guid("718efa10-761a-4e44-8eda-eae6db4cb0a3"),
-                            Category = "Clients",
-                            Description = "Allows updating client.",
-                            Name = "CanUpdateClient"
-                        },
-                        new
-                        {
-                            Id = new Guid("b22c672f-6d69-4674-b9cd-5fbb8d497e7a"),
-                            Category = "Clients",
-                            Description = "Allows deleting client.",
-                            Name = "CanDeleteClient"
-                        },
-                        new
-                        {
-                            Id = new Guid("3c9e9e34-7a7f-4e49-8f3d-2c7a1f3c6b22"),
-                            Category = "Coaches",
-                            Description = "Allows viewing coaches.",
-                            Name = "CanGetCoaches"
-                        },
-                        new
-                        {
-                            Id = new Guid("d8e0e377-5f70-4f5b-a9bc-68a7b91c5a8d"),
-                            Category = "Coaches",
-                            Description = "Allows creating coach.",
-                            Name = "CanCreateCoach"
-                        },
-                        new
-                        {
-                            Id = new Guid("7aeb7c60-844b-4a38-b1ae-55829b8e5f3a"),
-                            Category = "Coaches",
-                            Description = "Allows updating coach.",
-                            Name = "CanUpdateCoach"
-                        },
-                        new
-                        {
-                            Id = new Guid("e3b4a1d2-f0fa-4d56-b349-8bb7b78f99ff"),
-                            Category = "Coaches",
-                            Description = "Allows deleting coach.",
-                            Name = "CanDeleteCoach"
-                        },
-                        new
-                        {
-                            Id = new Guid("fa6a2e89-cf1e-4e4c-bd3a-c95365c52f81"),
-                            Category = "Users",
-                            Description = "Allows viewing users.",
-                            Name = "CanGetUsers"
-                        },
-                        new
-                        {
-                            Id = new Guid("a4e62d67-676d-4f53-9ace-b4c600ea9718"),
-                            Category = "Users",
-                            Description = "Allows creating user.",
-                            Name = "CanCreateUser"
-                        },
-                        new
-                        {
-                            Id = new Guid("2fe1ad9e-4229-411f-8095-e8f289777455"),
-                            Category = "Users",
-                            Description = "Allows updating user.",
-                            Name = "CanUpdateUser"
-                        },
-                        new
-                        {
-                            Id = new Guid("f250b493-7826-4a43-968f-d1392d925b96"),
-                            Category = "Users",
-                            Description = "Allows deleting user.",
-                            Name = "CanDeleteUser"
-                        });
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Role", b =>
@@ -807,12 +649,12 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2770), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 729, DateTimeKind.Unspecified).AddTicks(28), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Description = "Role with all access.",
                             IsDeleted = false,
                             Name = "SuperAdmin",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2770), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 729, DateTimeKind.Unspecified).AddTicks(43), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb")
                         });
                 });
@@ -903,13 +745,13 @@ namespace ApexPerformance.API.Database.Migrations
                         new
                         {
                             Id = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2220), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 728, DateTimeKind.Unspecified).AddTicks(8924), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             Email = "superadmin@mail.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             Password = "685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3",
-                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 23, 14, 14, 55, 912, DateTimeKind.Unspecified).AddTicks(2270), new TimeSpan(0, 2, 0, 0, 0)),
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 6, 26, 12, 58, 57, 728, DateTimeKind.Unspecified).AddTicks(9008), new TimeSpan(0, 2, 0, 0, 0)),
                             UpdatedBy = new Guid("5604e898-cd94-476b-8b86-9aa3a87cc9bb"),
                             UserName = "superadmin"
                         });
@@ -956,7 +798,7 @@ namespace ApexPerformance.API.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ApexPerformance.API.Database.Entities.AppointmentType", "AppointmentType")
+                    b.HasOne("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", "AppointmentType")
                         .WithMany("Appointments")
                         .HasForeignKey("AppointmentTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1019,6 +861,25 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachAppointment", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.Appointment", "Appointment")
+                        .WithMany("Coaches")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.Coach", "Coach")
+                        .WithMany("Appointments")
+                        .HasForeignKey("CoachId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Coach");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachClient", b =>
                 {
                     b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
@@ -1079,14 +940,16 @@ namespace ApexPerformance.API.Database.Migrations
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Appointment", b =>
                 {
                     b.Navigation("Clients");
+
+                    b.Navigation("Coaches");
                 });
 
-            modelBuilder.Entity("ApexPerformance.API.Database.Entities.AppointmentType", b =>
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentStatus", b =>
                 {
                     b.Navigation("Appointments");
                 });
 
-            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentStatus", b =>
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", b =>
                 {
                     b.Navigation("Appointments");
                 });
@@ -1102,6 +965,8 @@ namespace ApexPerformance.API.Database.Migrations
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("Clients");
                 });
 

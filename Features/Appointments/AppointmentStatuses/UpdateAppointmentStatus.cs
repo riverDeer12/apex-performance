@@ -12,9 +12,7 @@ public record UpdateAppointmentStatusRequest(
 );
 
 public record UpdateAppointmentStatusResponse(
-    Guid Id,
-    string Name,
-    string Description
+    Guid Id
 );
 
 public class UpdateAppointmentStatusEndpoint : Endpoint<UpdateAppointmentStatusRequest, UpdateAppointmentStatusResponse>
@@ -55,8 +53,7 @@ public class UpdateAppointmentStatusEndpoint : Endpoint<UpdateAppointmentStatusR
             ThrowError(ErrorMessages.SavingError);
 
         await SendAsync(
-            new UpdateAppointmentStatusResponse(appointmentStatus.Id, appointmentStatus.Name,
-                appointmentStatus.Description),
+            new UpdateAppointmentStatusResponse(appointmentStatus.Id),
             cancellation: cancellationToken);
     }
 }

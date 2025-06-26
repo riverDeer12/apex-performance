@@ -1,31 +1,32 @@
-using ApexPerformance.API.Constants;
+﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public record DeclineAppointmentResponse(
-    Guid Id,
-    bool IsDeclined
-);
+public record CancelAppointmentResponse(Guid Id, bool IsCanceled);
 
-public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointmentResponse>
+public class CancelAppointmentEndpoint: EndpointWithoutRequest<CancelAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
 
-    public DeclineAppointmentEndpoint(ApexPerformanceContext context, IEmailService emailService)
+    public CancelAppointmentEndpoint(ApexPerformanceContext context, IClientService clientService, 
+        IEmailService emailService)
     {
         _context = context;
+        _clientService = clientService;
         _emailService = emailService;
     }
 
     public override void Configure()
     {
-        Get("api/appointments/decline/{id}");
-        Permissions(nameof(UserPermissions.CanDeclineAppointment));
+        Get("api/appointments/cancel/{id}");
+        Permissions(nameof(UserPermissions.CanCancelAppointment));
         Options(x => x.WithTags("Appointments"));
     }
 
@@ -41,9 +42,9 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
 
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
-
+        
         var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Declined),
+            .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Canceled),
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)
@@ -58,12 +59,14 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        var clients = appointment.Clients.Select(x => x.Client).ToList();
+        var appointmentClients = appointment.Clients.Select(x => x.Client).ToList();
 
-        _emailService.SendAppointmentStatus(clients, appointment);
+        _emailService.SendAppointmentStatus(appointmentClients, appointment);
+        
+        await _clientService.AddClientsCredits(appointmentClients, 1, cancellationToken);
 
         await SendAsync(
-            new DeclineAppointmentResponse(appointment.Id, true),
+            new CancelAppointmentResponse(appointment.Id, true),
             cancellation: cancellationToken);
     }
 }

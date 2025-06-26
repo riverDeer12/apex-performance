@@ -19,16 +19,7 @@ public record UpdateBodyMeasurementRequest(
 );
 
 public record UpdateBodyMeasurementResponse(
-    Guid Id,
-    decimal Height,
-    decimal Weight,
-    decimal Shoulders,
-    decimal Chest,
-    decimal UpperArm,
-    decimal Waist,
-    decimal Thigh,
-    decimal Calves,
-    BodyMeasurementClientDto Client
+    Guid Id
 );
 
 public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementRequest, UpdateBodyMeasurementResponse>
@@ -83,16 +74,7 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
 
         await SendAsync(
             new UpdateBodyMeasurementResponse(
-                bodyMeasurement.Id,
-                bodyMeasurement.Height,
-                bodyMeasurement.Weight,
-                bodyMeasurement.Shoulders,
-                bodyMeasurement.Chest,
-                bodyMeasurement.UpperArm,
-                bodyMeasurement.Waist,
-                bodyMeasurement.Thigh,
-                bodyMeasurement.Calves,
-                new BodyMeasurementClientDto(client.Id, client.FirstName, client.LastName)
+                bodyMeasurement.Id
             ),
             cancellation: cancellationToken);
     }
