@@ -2,7 +2,7 @@ use ApexPerformance
 
 go
 
--- CREATING SUPERADMIN
+-- CREATING SUPER ADMIN
 INSERT INTO Users (
     Id,
     CreatedAt,
@@ -29,7 +29,7 @@ INSERT INTO Users (
     1
 );
 
--- CREATING SUPERADMIN ROLE
+-- CREATING SUPER ADMIN ROLE
 INSERT INTO Roles (
     Id,
     CreatedAt,
