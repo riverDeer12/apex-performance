@@ -44,7 +44,7 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
         var roles = user.Roles.Select(r => r.Role.Name).ToList();
 
-        var isSuperAdmin = roles.Contains(SeedData.SuperAdminRoleName);
+        var isSuperAdmin = roles.Contains(nameof(UserRoles.SuperAdmin));
 
         var permissions = await GetUserPermissions(isSuperAdmin, user.Roles, cancellationToken);
 

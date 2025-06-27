@@ -28,11 +28,12 @@ builder.Services.AddDbContext<ApexPerformanceContext>(options =>
 
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<ICoachService, CoachService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Host.UseSerilog((context, config) 
+builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
