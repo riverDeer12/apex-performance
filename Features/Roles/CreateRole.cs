@@ -29,7 +29,7 @@ public sealed class CreateRoleEndpoint : Endpoint<CreateRoleRequest, CreateRoleR
     public override void Configure()
     {
         Post("api/roles");
-        Roles(SeedData.SuperAdminRoleName);
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Roles"));
     }
 

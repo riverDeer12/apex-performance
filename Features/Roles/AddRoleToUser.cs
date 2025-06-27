@@ -22,7 +22,7 @@ public sealed class AddRoleToUserEndpoint : Endpoint<AddRoleToUserRequest, AddRo
     public override void Configure()
     {
         Post("api/roles/add-user");
-        Roles(SeedData.SuperAdminRoleName);
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Roles"));
     }
 

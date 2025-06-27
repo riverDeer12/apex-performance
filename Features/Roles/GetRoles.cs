@@ -32,7 +32,7 @@ public sealed class GetRolesEndpoint : EndpointWithoutRequest<List<GetRoleRespon
     public override void Configure()
     {
         Get("api/roles");
-        Roles(SeedData.SuperAdminRoleName);
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Roles"));
     }
 

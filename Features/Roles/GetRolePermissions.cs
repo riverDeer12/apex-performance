@@ -19,7 +19,7 @@ public sealed class GetRolePermissionsEndpoint : EndpointWithoutRequest<List<Get
     public override void Configure()
     {
         Get("api/roles/{id}/permissions");
-        Roles(SeedData.SuperAdminRoleName);
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Roles"));
     }
 

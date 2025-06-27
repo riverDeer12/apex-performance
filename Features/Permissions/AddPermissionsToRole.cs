@@ -24,7 +24,7 @@ public sealed class AddPermissionsToRoleEndpoint : Endpoint<AddPermissionsToRole
     public override void Configure()
     {
         Post("api/permissions/{roleId}");
-        Roles(SeedData.SuperAdminRoleName);
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Permissions"));
     }
 

@@ -76,7 +76,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             ThrowError(ValidationMessages.NotValid);
 
         var pendingStatus =
-            await _context.AppointmentStatuses.FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Pending.Name,
+            await _context.AppointmentStatuses
+                .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Pending),
                 cancellationToken: cancellationToken);
 
         if (pendingStatus is null)

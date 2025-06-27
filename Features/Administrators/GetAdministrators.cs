@@ -28,7 +28,7 @@ public sealed class GetAdministratorsEndpoint : EndpointWithoutRequest<List<GetA
     public override void Configure()
     {
         Get("api/administrators");
-        Permissions(nameof(UserPermissions.CanGetAdministrators));
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Administrators"));
     }
 

@@ -1,7 +1,7 @@
 namespace ApexPerformance.API.Constants;
 
-public class UserRoles
+public static class UserRoles
 {
-    public static readonly string SuperAdmin = "SuperAdmin";
-    public static readonly string Administrator = "Administrator";
+    public const string SuperAdmin = "SuperAdmin";
+    public const string Administrator = "Administrator";
 }

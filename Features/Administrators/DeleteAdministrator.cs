@@ -19,7 +19,7 @@ public sealed class DeleteAdministratorEndpoint : EndpointWithoutRequest<DeleteA
     public override void Configure()
     {
         Delete("api/administrators/{id}");
-        Permissions(nameof(UserPermissions.CanDeleteAdministrator));
+        Roles(nameof(UserRoles.SuperAdmin));
         Options(x => x.WithTags("Administrators"));
     }
 
