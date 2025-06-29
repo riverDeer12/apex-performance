@@ -8,8 +8,7 @@ using FluentValidation;
 namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
 
 public record CreateAppointmentTypeRequest(
-    string Name,
-    string Description
+    string Name
 );
 
 public record CreateAppointmentTypeResponse(
@@ -37,7 +36,7 @@ public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeReque
         var appointmentType = new AppointmentType
         {
             Name = request.Name,
-            Description = request.Description,
+            Description = request.Name.ToLower(),
         };
 
         _context.AppointmentTypes.Add(appointmentType);
@@ -58,6 +57,5 @@ public sealed class CreateAppointmentTypeValidator : Validator<CreateAppointment
     public CreateAppointmentTypeValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

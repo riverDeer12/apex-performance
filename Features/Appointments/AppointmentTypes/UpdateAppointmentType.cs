@@ -7,8 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
 
 public record UpdateAppointmentTypeRequest(
-    string Name,
-    string Description
+    string Name
 );
 
 public record UpdateAppointmentTypeResponse(
@@ -43,7 +42,7 @@ public class UpdateAppointmentTypeEndpoint : Endpoint<UpdateAppointmentTypeReque
             ThrowError(ErrorMessages.NotFound);
 
         appointmentType.Name = request.Name;
-        appointmentType.Description = request.Description;
+        appointmentType.Description = request.Name.ToLower();
 
         _context.AppointmentTypes.Update(appointmentType);
 
@@ -63,6 +62,5 @@ public sealed class UpdateAppointmentTypeValidator : Validator<UpdateAppointment
     public UpdateAppointmentTypeValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

@@ -6,6 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
+public record AppointmentCoachDto(
+    Guid Id,
+    string Fullname
+);
+
 public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppointmentResponse>>
 {
     private readonly ApexPerformanceContext _context;
@@ -29,6 +34,8 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
+            .Include(appointment => appointment.Coaches)
+            .ThenInclude(coachAppointment => coachAppointment.Coach)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)
@@ -41,11 +48,13 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
 
         foreach (var appointment in appointments)
         {
-            var appointmentClientsResponse = appointment
-                .Clients
+            var appointmentClientsResponse = appointment.Clients
                 .Select(client =>
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
+            
+            var appointmentCoachesResponse = appointment.Coaches
+                .Select(coach => new AppointmentCoachDto(coach.CoachId, coach.Coach.FullName)).ToList();
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
@@ -55,7 +64,7 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
 
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
                 appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusDto,
-                appointmentClientsResponse);
+                appointmentClientsResponse, appointmentCoachesResponse);
 
             appointmentResponseList.Add(appointmentResponse);
         }
