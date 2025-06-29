@@ -1,11 +1,12 @@
-﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
-public record GetBodyMeasurementsByClientResponse(
+public record GetClientBodyMeasurementsResponse(
     Guid Id,
     decimal Height,
     decimal Weight,
@@ -19,33 +20,33 @@ public record GetBodyMeasurementsByClientResponse(
     DateTimeOffset UpdatedAt
 );
 
-public class GetBodyMeasurementsByClientEndpoint : EndpointWithoutRequest<List<GetBodyMeasurementsByClientResponse>>
+public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetClientBodyMeasurementsResponse>>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetBodyMeasurementsByClientEndpoint(ApexPerformanceContext context)
+    public GetClientBodyMeasurementsEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext context)
     {
+        _currentUserService = currentUserService;
         _context = context;
     }
 
     public override void Configure()
     {
-        Get("api/body-measurements/client/{id}");
+        Get("api/body-measurements/client");
         Options(x => x.WithTags("BodyMeasurements"));
     }
-
+    
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var clientId = Route<Guid>("id", isRequired: true);
-
-        var client = await _context.Clients.FirstOrDefaultAsync(x => x.Id == clientId,
+        var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
             cancellationToken: cancellationToken);
 
         if (client is null)
             ThrowError(ErrorMessages.NotFound);
 
         var bodyMeasurements = await _context.BodyMeasurements
-            .Where(x => x.ClientId == clientId && !x.IsDeleted)
+            .Where(x => x.ClientId == client.Id && !x.IsDeleted)
             .Include(bodyMeasurement => bodyMeasurement.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -57,7 +58,7 @@ public class GetBodyMeasurementsByClientEndpoint : EndpointWithoutRequest<List<G
 
         await SendAsync(bodyMeasurements
             .Select(x =>
-                new GetBodyMeasurementsByClientResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm,
+                new GetClientBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm,
                     x.Waist,
                     x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt))
             .ToList(), cancellation: cancellationToken);

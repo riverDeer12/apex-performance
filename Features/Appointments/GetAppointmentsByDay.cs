@@ -12,7 +12,8 @@ public record GetAppointmentResponse(
     DateTimeOffset EndTime,
     CatalogDataDto Type,
     CatalogDataDto Status,
-    List<AppointmentClientDto> Clients
+    List<AppointmentClientDto> Clients,
+    List<AppointmentCoachDto> Coaches
 );
 
 public record AppointmentsByDayDto(
@@ -41,7 +42,10 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
         var appointments = await _context.Appointments
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
-            .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.AppointmentStatus)
+            .Include(appointment => appointment.AppointmentType)
+            .Include(appointment => appointment.AppointmentStatus)
+            .Include(appointment => appointment.Coaches)
+            .ThenInclude(coachAppointment => coachAppointment.Coach)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)
@@ -54,21 +58,24 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
 
         foreach (var appointment in appointments)
         {
-            var appointmentClientsResponse = appointment
+            var clientsResponse = appointment
                 .Clients
                 .Select(client =>
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
+            
+            var coachesResponse = appointment.Coaches
+                .Select(coach => new AppointmentCoachDto(coach.CoachId, coach.Coach.FullName)).ToList();
 
-            var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
+            var typeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
 
-            var appointmentStatusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
+            var statusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusResponse,
-                appointmentClientsResponse);
+                appointment.StartTime, appointment.EndTime, typeResponse, statusResponse,
+                clientsResponse, coachesResponse);
 
             appointmentResponseList.Add(appointmentResponse);
         }

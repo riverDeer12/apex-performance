@@ -7,8 +7,7 @@ namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
 
 public record GetAppointmentTypeResponse(
     Guid Id,
-    string Name,
-    string Description
+    string Name
 );
 
 public class GetAppointmentTypesEndpoint : EndpointWithoutRequest<List<GetAppointmentTypeResponse>>
@@ -39,7 +38,7 @@ public class GetAppointmentTypesEndpoint : EndpointWithoutRequest<List<GetAppoin
         }
 
         await SendAsync(appointmentTypes
-            .Select(x => new GetAppointmentTypeResponse(x.Id, x.Name, x.Description))
+            .Select(x => new GetAppointmentTypeResponse(x.Id, x.Name))
             .ToList(), cancellation: cancellationToken);
     }
 }
