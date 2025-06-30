@@ -8,16 +8,21 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Appointments;
 
 public record GetClientAppointmentsResponse(
+    List<AppointmentDto> ApprovedAppointments,
+    List<AppointmentDto> PendingAppointments,
+    List<AppointmentDto> InProgressAppointments
+);
+
+public record AppointmentDto(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     CatalogDataDto Type,
-    CatalogDataDto Status,
     List<PersonDataDto> Clients,
     List<PersonDataDto> Coaches
 );
 
-public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<List<GetClientAppointmentsResponse>>
+public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<GetClientAppointmentsResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -49,7 +54,11 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<List<GetClie
 
         if (appointmentRelations.Count is 0)
         {
-            await SendAsync([], cancellation: cancellationToken);
+            await SendAsync(new GetClientAppointmentsResponse(
+                Array.Empty<AppointmentDto>().ToList(),
+                Array.Empty<AppointmentDto>().ToList(),
+                Array.Empty<AppointmentDto>().ToList()
+            ), cancellation: cancellationToken);
             return;
         }
 
@@ -66,11 +75,18 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<List<GetClie
 
         if (clientAppointments.Count is 0)
         {
-            await SendAsync([], cancellation: cancellationToken);
+            await SendAsync(new GetClientAppointmentsResponse(
+                Array.Empty<AppointmentDto>().ToList(),
+                Array.Empty<AppointmentDto>().ToList(),
+                Array.Empty<AppointmentDto>().ToList()), cancellation: cancellationToken);
             return;
         }
 
-        var appointmentResponseList = new List<GetClientAppointmentsResponse>();
+        var approvedAppointments = new List<AppointmentDto>();
+
+        var pendingAppointments = new List<AppointmentDto>();
+
+        var inProgressAppointments = new List<AppointmentDto>();
 
         foreach (var appointment in clientAppointments)
         {
@@ -87,16 +103,26 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<List<GetClie
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
 
-            var appointmentStatusDto = new CatalogDataDto(appointment.AppointmentStatus.Id,
-                appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
-
-            var appointmentResponse = new GetClientAppointmentsResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusDto,
+            var appointmentResponse = new AppointmentDto(appointment.Id,
+                appointment.StartTime, appointment.EndTime, appointmentTypeResponse,
                 appointmentClientsResponse, appointmentCoachesResponse);
 
-            appointmentResponseList.Add(appointmentResponse);
+            switch (appointment.AppointmentStatus.Name)
+            {
+                case BusinessStatuses.Approved:
+                    approvedAppointments.Add(appointmentResponse);
+                    continue;
+                case BusinessStatuses.Pending:
+                    pendingAppointments.Add(appointmentResponse);
+                    continue;
+                case BusinessStatuses.InProgress:
+                    inProgressAppointments.Add(appointmentResponse);
+                    continue;
+            }
         }
 
-        await SendAsync(appointmentResponseList, cancellation: cancellationToken);
+        await SendAsync(
+            new GetClientAppointmentsResponse(approvedAppointments, pendingAppointments, inProgressAppointments),
+            cancellation: cancellationToken);
     }
 }

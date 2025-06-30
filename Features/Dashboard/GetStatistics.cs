@@ -10,9 +10,9 @@ public record GetStatisticsResponse(
     List<StatisticsItem> ActiveClients,
     List<StatisticsItem> ActiveCoaches,
     List<StatisticsItem> LowCreditsClients,
-    List<AppointmentDto> TodayAppointments,
-    List<AppointmentDto> PendingAppointments,
-    List<AppointmentDto> InProgressAppointments
+    List<StatisticsAppointmentDto> TodayAppointments,
+    List<StatisticsAppointmentDto> PendingAppointments,
+    List<StatisticsAppointmentDto> InProgressAppointments
 );
 
 public record StatisticsItem(
@@ -20,7 +20,7 @@ public record StatisticsItem(
     string FullName
 );
 
-public record AppointmentDto(
+public record StatisticsAppointmentDto(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
@@ -112,10 +112,10 @@ public class GetStatisticsEndpoint : EndpointWithoutRequest<GetStatisticsRespons
         )).ToList();
     }
 
-    private static List<AppointmentDto> MapToAppointmentStatisticsItem(
+    private static List<StatisticsAppointmentDto> MapToAppointmentStatisticsItem(
         List<Appointment> appointments)
     {
-        return appointments.Select(item => new AppointmentDto(
+        return appointments.Select(item => new StatisticsAppointmentDto(
             item.Id,
             item.StartTime,
             item.EndTime,
