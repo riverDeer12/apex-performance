@@ -137,7 +137,7 @@ public class EmailService : IEmailService
 
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
-        message.Subject = "Password Changed Successfully";
+        message.Subject = "Password Changed Successfully!";
 
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ResetUserPasswordEmail.html");
 

@@ -1,8 +1,10 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.X509.SigI;
 
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
@@ -17,7 +19,8 @@ public record GetClientBodyMeasurementsResponse(
     decimal Thigh,
     decimal Calves,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt
+    DateTimeOffset UpdatedAt,
+    PersonDataDto Client
 );
 
 public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetClientBodyMeasurementsResponse>>
@@ -36,7 +39,7 @@ public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<Get
         Get("api/body-measurements/client");
         Options(x => x.WithTags("BodyMeasurements"));
     }
-    
+
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
@@ -60,7 +63,8 @@ public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<Get
             .Select(x =>
                 new GetClientBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm,
                     x.Waist,
-                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt))
+                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt,
+                    new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
             .ToList(), cancellation: cancellationToken);
     }
 }

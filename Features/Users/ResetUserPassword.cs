@@ -23,13 +23,15 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
     private readonly ICurrentUserService _currentUserService;
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
     public ResetUserPasswordEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext context,
-        IConfiguration configuration)
+        IConfiguration configuration, IEmailService emailService)
     {
         _currentUserService = currentUserService;
         _context = context;
         _configuration = configuration;
+        _emailService = emailService;
     }
 
     public override void Configure()
@@ -55,14 +57,9 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        SendResetPasswordEmail(user);
+        _emailService.SendResetPasswordEmail(user);
 
         await SendAsync(new(user.Id), cancellation: cancellationToken);
-    }
-
-    private void SendResetPasswordEmail(User user)
-    {
-        
     }
 }
 
