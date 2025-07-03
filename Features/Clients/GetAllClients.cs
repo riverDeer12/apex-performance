@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public record GetClientResponse(
+public record GetAllClientResponse(
     Guid Id,
     string FirstName,
     string LastName,
@@ -25,7 +25,7 @@ public record ClientCoachDto(
     string LastName
 );
 
-public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientResponse>>
+public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetAllClientResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -36,7 +36,7 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
 
     public override void Configure()
     {
-        Get("api/clients");
+        Get("api/clients/all");
         Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Clients"));
     }
@@ -55,7 +55,7 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
             return;
         }
 
-        var response = new List<GetClientResponse>();
+        var response = new List<GetAllClientResponse>();
 
         foreach (var client in clients)
         {
@@ -74,7 +74,7 @@ public class GetAllClientsEndpoint : EndpointWithoutRequest<List<GetClientRespon
 
             var clientUserResponse = new ClientUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
 
-            var roleResponse = new GetClientResponse(client.Id,
+            var roleResponse = new GetAllClientResponse(client.Id,
                 client.FirstName, client.LastName, client.Email,
                 client.Phone,
                 client.Credits,

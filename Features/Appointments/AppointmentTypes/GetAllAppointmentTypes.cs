@@ -1,23 +1,28 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.AppointmentTypes;
 
-public class GetAppointmentTypesEndpoint : EndpointWithoutRequest<List<CatalogDataDto>>
+public record GetAllAppointmentTypeResponse(
+    Guid Id,
+    string Name
+);
+
+public class GetAllAppointmentTypesEndpoint : EndpointWithoutRequest<List<GetAllAppointmentTypeResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
-    public GetAppointmentTypesEndpoint(ApexPerformanceContext context)
+    public GetAllAppointmentTypesEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
 
     public override void Configure()
     {
-        Get("api/appointment-types");
+        Get("api/appointment-types/all");
+        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("AppointmentTypes"));
     }
 
@@ -33,7 +38,7 @@ public class GetAppointmentTypesEndpoint : EndpointWithoutRequest<List<CatalogDa
         }
 
         await SendAsync(appointmentTypes
-            .Select(x => new CatalogDataDto(x.Id, x.Name, x.Description))
+            .Select(x => new GetAllAppointmentTypeResponse(x.Id, x.Name))
             .ToList(), cancellation: cancellationToken);
     }
 }
