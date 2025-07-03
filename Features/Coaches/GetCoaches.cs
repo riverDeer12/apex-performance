@@ -33,7 +33,7 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
 
     public override void Configure()
     {
-        Get("api/coaches");
+        Get("api/coaches/all");
         Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Coaches"));
     }
