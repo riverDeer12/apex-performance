@@ -36,6 +36,7 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .OrderByDescending(x => x.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)

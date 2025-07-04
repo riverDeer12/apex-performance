@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
@@ -17,20 +18,18 @@ public record UpdateCoachRequest(
 );
 
 public record UpdateCoachResponse(
-    Guid Id,
-    string FirstName,
-    string LastName,
-    string Email,
-    string Phone
+    Guid Id
 );
 
 public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICoachService _coachService;
 
-    public UpdateCoachEndpoint(ApexPerformanceContext context)
+    public UpdateCoachEndpoint(ApexPerformanceContext context, ICoachService coachService)
     {
         _context = context;
+        _coachService = coachService;
     }
 
     public override void Configure()
@@ -69,27 +68,15 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
 
         if (clients.Count == 0)
             ThrowError(ErrorMessages.NotFound);
-
-        await AddCoachClients(request.Clients, coach, cancellationToken);
-
-        await SendAsync(new(coach.Id, coach.FirstName,
-                coach.LastName, coach.Email, coach.Phone),
-            cancellation: cancellationToken);
-    }
-
-    private async Task AddCoachClients(List<Guid> clientsIds, Coach coach, CancellationToken cancellationToken)
-    {
-        if(clientsIds.Count == 0) return;
         
-        var coachClients = clientsIds
-            .Select(clientId => new CoachClient
-            {
-                ClientId = clientId,
-                CoachId = coach.Id,
-                Coach = coach
-            }).ToList();
+        await _context.CoachClients
+            .Where(coachClient => coachClient.CoachId == coach.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        await _context.BulkInsertOrUpdateAsync(coachClients, cancellationToken: cancellationToken);
+        await _coachService.UpdateCoachClients(clients, coach, cancellationToken);
+
+        await SendAsync(new(coach.Id),
+            cancellation: cancellationToken);
     }
 }
 

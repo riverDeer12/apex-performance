@@ -24,7 +24,7 @@ public class EmailService : IEmailService
 
             message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
-            message.Subject = nameof(appointment.AppointmentStatus.Name) + " Appointment";
+            message.Subject = appointment.AppointmentStatus.Name + " Appointment";
 
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates",
                 "ClientAppointmentStatusEmail.html");
@@ -34,7 +34,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{ClientFullName}}", client.FullName);
 
             html = html.Replace("{{Description}}",
-                "Your Appointment has been " + nameof(appointment.AppointmentStatus.Name) + ".");
+                "Your Appointment has been " + appointment.AppointmentStatus.Name + ".");
 
             html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
 
@@ -98,9 +98,9 @@ public class EmailService : IEmailService
 
             html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
 
-            var approveLink = "";
+            var approveLink = _configuration["WebAppUrl"] + "/new-appointment-request/approve";
 
-            var declineLink = "";
+            var declineLink = _configuration["WebAppUrl"] + "/new-appointment-request/decline";
 
             html = html.Replace("{{ApproveLink}}", approveLink);
 
@@ -203,6 +203,71 @@ public class EmailService : IEmailService
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to send email: {ex.Message}");
+        }
+    }
+
+    public void SendCancelationRequest(Client client, Appointment appointment)
+    {
+        var coaches = appointment.Coaches.Select(x => x.Coach).ToList();
+        
+        foreach (var coach in coaches)
+        {
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+                _configuration["MailConfiguration::FromAddress"]));
+
+            message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
+
+            message.Subject = "You Have New Cancelation Request from: " + client.FullName;
+
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CancelationRequestEmail.html");
+            
+            var clientsNames = string.Join(",", appointment.Clients.Select(x => x.Client.FullName));
+
+            var html = File.ReadAllText(templatePath);
+
+            html = html.Replace("{{ClientFullName}}", client.FullName);
+            
+            html = html.Replace("{{CoachFullName}}", coach.FullName);
+            
+            html = html.Replace("{{Clients}}", clientsNames);
+
+            html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
+
+            html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
+
+            html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
+
+            html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
+            
+            var approveLink = _configuration["WebAppUrl"] + "/cancelation-request/approve";
+
+            var declineLink = _configuration["WebAppUrl"] + "/cancelation-request/decline";
+
+            html = html.Replace("{{ApproveLink}}", approveLink);
+
+            html = html.Replace("{{DeclineLink}}", declineLink);
+            
+            message.Body = new TextPart("html") { Text = html };
+
+            using var smtpClient = new SmtpClient();
+
+            try
+            {
+                smtpClient.Connect(_configuration["MailConfiguration::Host"],
+                    int.Parse(_configuration["MailConfiguration::Port"]!),
+                    MailKit.Security.SecureSocketOptions.StartTls);
+                smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
+                    _configuration["MailConfiguration::Password"]);
+                smtpClient.Send(message);
+                smtpClient.Disconnect(true);
+                Console.WriteLine("Email sent successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send email: {ex.Message}");
+            }
         }
     }
 }

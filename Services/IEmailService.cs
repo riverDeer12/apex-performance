@@ -41,4 +41,12 @@ public interface IEmailService
     /// <param name="password">Password value.</param>
     /// <returns></returns>
     void SendCredentialsEmail(User user, string password);
+
+    /// <summary>
+    /// Send email to coaches which are connected to this
+    /// appointment about client's request for cancellation.
+    /// </summary>
+    /// <param name="client">Client that sends cancellation request.</param>
+    /// <param name="appointment">Appointment that client wants to cancel.</param>
+    void SendCancelationRequest(Client client, Appointment appointment);
 }
