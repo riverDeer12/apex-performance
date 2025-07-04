@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ApexPerformance.API.Database.Configurations;
 
-public class AppointmentTypeConfiguration : IEntityTypeConfiguration<AppointmentType>
+public class AppointmentRequestTypeConfiguration : IEntityTypeConfiguration<AppointmentRequestType>
 {
-    public void Configure(EntityTypeBuilder<AppointmentType> builder)
+    public void Configure(EntityTypeBuilder<AppointmentRequestType> builder)
     {
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(200);
-        builder.ToTable("AppointmentTypes");
+        builder.ToTable("AppointmentRequestTypes");
 
     }
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Your Account Details</title>
+    <title>Cancelation Request from {{ClientFullName}}</title>
     <style>
         body {
             background-color: #11111142;
@@ -111,7 +111,7 @@
     </div>
     <div class="content">
         <h2>Hello, {{CoachFullName}}</h2>
-        <p>You have new appointment request. Please find appointment details below:</p>
+        <p>You have appointment cancelation request from {{ClientFullName}}. Please find appointment details below:</p>
 
         <div class="credentials">
             <p><span>Clients:</span> {{Clients}}</p>
@@ -119,13 +119,9 @@
             <p><span>Day:</span> {{Day}}</p>
             <p><span>Time:</span> {{StartTime}} - {{EndTime}}</p>
             <p style="margin-top: 2rem">
-                <a href="{{ApproveLink}}">
-                    <button type="button">Approve<span class="icon">&check;</span></button>
-                </a><
-                <a href="{{DeclineLink}}">
-                    <button type="button" style="background-color: rgba(214, 32, 32, 1);">Decline<span
-                            class="icon">&times;</span></button>
-                </a><
+                <button type="button">Approve<span class="icon">&check;</span></button>
+                <button type="button" style="background-color: rgba(214, 32, 32, 1);">Decline<span
+                        class="icon">&times;</span></button>
             </p>
         </div>
     </div>

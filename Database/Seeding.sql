@@ -218,6 +218,18 @@ INSERT INTO AppointmentStatuses (id, name, description) VALUES
 ('27c2b8b8-d95d-4e35-8df6-90f8b31a22aa', 'Pending', 'Pending status.'),
 ('e2031af4-e2d7-440d-a88b-b7e09fff9805', 'Canceled', 'Canceled status.');
 
+-- CREATE APPOINTMENT REQUEST TYPES
+INSERT INTO AppointmentRequestTypes (id, name, description) VALUES
+('15357c44-7a67-4bfa-bcf7-bbfb50d90a1b', 'CancelationRequest', 'Client wants to cancel approved appointment.');
+
+-- CREATE APPOINTMENT REQUEST STATUSES
+INSERT INTO AppointmentRequestStatuses (id, name, description) VALUES
+('b9ffb94b-b575-4f04-bac6-8d800aa84357', 'Approved', 'Approved request.'),
+('8168dc3b-e88d-458c-b837-f6f36bd450e8', 'Declined', 'Declined request.'),
+('56651beb-85fe-496a-9dc8-35860bd74be0', 'InProgress', 'Request is in progress.'),
+('fb6de924-ba35-4972-8800-167e1f6a994d', 'Pending', 'Pending request.'),
+('61ae9165-879e-45d6-b94a-19769a1adcc2', 'Canceled', 'Canceled request.');
+
 -- CREATE APPOINTMENT TYPES
 INSERT INTO AppointmentTypes (id, name, description) VALUES
  ('7b8f6c62-8a91-4c7e-bb65-fb9ad7d0b55a', 'Legs', 'legs'),
