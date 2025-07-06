@@ -2,14 +2,13 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public record CancelAppointmentResponse(Guid Id, bool IsCanceled);
-
-public class CancelAppointmentEndpoint: EndpointWithoutRequest<CancelAppointmentResponse>
+public class CancelAppointmentEndpoint: EndpointWithoutRequest<StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IClientService _clientService;
@@ -66,7 +65,7 @@ public class CancelAppointmentEndpoint: EndpointWithoutRequest<CancelAppointment
         await _clientService.AddClientsCredits(appointmentClients, 1, cancellationToken);
 
         await SendAsync(
-            new CancelAppointmentResponse(appointment.Id, true),
+            new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
     }
 }

@@ -65,15 +65,14 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             if (relatedAppointment is null)
                 ThrowError(ErrorMessages.NotFound);
 
-            var appointmentRequestType = new CatalogDataDto(appointmentRequest.AppointmentRequestType.Id,
+            var requestType = new CatalogDataDto(appointmentRequest.AppointmentRequestType.Id,
                 appointmentRequest.AppointmentRequestType.Name,
                 appointmentRequest.AppointmentRequestType.Description);
 
-            var appointmentRequestStatus = new CatalogDataDto(appointmentRequest.AppointmentRequestStatus.Id,
+            var requestStatus = new CatalogDataDto(appointmentRequest.AppointmentRequestStatus.Id,
                 appointmentRequest.AppointmentRequestStatus.Name,
                 appointmentRequest.AppointmentRequestStatus.Description);
-
-
+            
             var appointmentType = new CatalogDataDto(relatedAppointment.AppointmentType.Id,
                 relatedAppointment.AppointmentType.Name,
                 relatedAppointment.AppointmentType.Description);
@@ -91,7 +90,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 clients, coaches);
 
             appointmentRequestsResponse.Add(new GetAppointmentRequestsResponse(appointmentRequest.Id,
-                appointmentRequest.Comment, appointmentRequestType, appointmentRequestStatus, appointmentResponse));
+                appointmentRequest.Comment, requestType, requestStatus, appointmentResponse));
         }
 
         await SendAsync(appointmentRequestsResponse, cancellation: cancellationToken);
