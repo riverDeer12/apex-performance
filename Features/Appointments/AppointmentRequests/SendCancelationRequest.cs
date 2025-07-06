@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,9 +10,7 @@ namespace ApexPerformance.API.Features.Appointments.AppointmentRequests;
 
 public record SendCancelationRequest(string Comment);
 
-public record SendCancelationRequestResponse(Guid Id, bool IsSend);
-
-public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, SendCancelationRequestResponse>
+public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -27,7 +26,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
 
     public override void Configure()
     {
-        Get("api/appointment-requests/cancelation/{id}");
+        Post("api/appointment-requests/cancelation/{id}");
         Options(x => x.WithTags("AppointmentRequests"));
     }
 
@@ -85,7 +84,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
 
         _emailService.SendCancelationRequest(client, appointment);
 
-        await SendAsync(new SendCancelationRequestResponse(appointmentRequest.Id, true),
+        await SendAsync(new StatusResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
     }
 }
