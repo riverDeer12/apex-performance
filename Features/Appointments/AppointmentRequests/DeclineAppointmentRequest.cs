@@ -10,14 +10,12 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IAppointmentService _appointmentService;
 
     public DeclineAppointmentRequestEndpoint(ApexPerformanceContext context,
-        ICurrentUserService currentUserService, IAppointmentService appointmentService)
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
-        _appointmentService = appointmentService;
     }
 
     public override void Configure()
