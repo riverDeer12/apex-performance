@@ -1,4 +1,6 @@
-﻿using ApexPerformance.API.Database.Entities;
+﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 
 namespace ApexPerformance.API.Services;
 
@@ -34,4 +36,15 @@ public interface IAppointmentService
     /// <param name="cancellationToken">Value of a cancellation token.</param>
     /// <returns></returns>
     Task UpdateCoaches(List<Coach> coaches, Appointment appointment, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Change appointment status
+    /// after approved appointment request.
+    /// </summary>
+    /// <param name="appointment">Appointment that needs to be updated.</param>
+    /// <param name="requestStatus">Status from Appointment request.</param>
+    /// <param name="businessAction">Triggered business action.</param>
+    /// <param name="cancellationToken"></param>
+    void ChangeAppointmentStatus(Appointment appointment, AppointmentRequestStatus requestStatus,
+        string businessAction, CancellationToken cancellationToken);
 }

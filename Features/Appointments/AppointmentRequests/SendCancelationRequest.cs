@@ -40,9 +40,13 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
 
         var appointmentId = Route<Guid>("id", isRequired: true);
 
-        var appointment = await _context.Appointments.Include(appointment => appointment.Coaches)
+        var appointment = await _context.Appointments
+            .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
-            .Include(appointment => appointment.AppointmentStatus).FirstOrDefaultAsync(x => x.Id == appointmentId,
+            .Include(appointment => appointment.AppointmentStatus)
+            .Include(appointment => appointment.Clients)
+            .Include(appointment => appointment.AppointmentType)
+            .FirstOrDefaultAsync(x => x.Id == appointmentId,
                 cancellationToken: cancellationToken);
 
         if (appointment is null)
