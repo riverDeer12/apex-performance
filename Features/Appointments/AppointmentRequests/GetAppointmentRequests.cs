@@ -60,7 +60,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
         foreach (var appointmentRequest in appointmentRequests)
         {
-            var relatedAppointment = appointments.FirstOrDefault(x => x.Id == appointmentRequest.Id);
+            var relatedAppointment = appointments.FirstOrDefault(x => x.Id == appointmentRequest.Appointment.Id);
 
             if (relatedAppointment is null)
                 ThrowError(ErrorMessages.NotFound);
