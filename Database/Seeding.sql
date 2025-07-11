@@ -237,6 +237,7 @@ INSERT INTO AppointmentTypes (id, name, description) VALUES
  ('f3e37c12-d674-4f0d-9790-18c03c33f4a2', 'Arms', 'arms'),
  ('d6a52901-d88e-4de3-a65c-47f1cd6231d6', 'Cardio', 'cardio'),
  ('2fd98f7f-0bc1-4127-9ac5-538d89649c9e', 'Chest', 'chest');
+ ('f2a3c1e0-47f1-4c8f-b9c6-8d3788c3e9df', 'Strength and Conditioning', 'strength-and-conditioning');
 
 
 
