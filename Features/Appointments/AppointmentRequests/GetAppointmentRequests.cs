@@ -11,7 +11,9 @@ public record GetAppointmentRequestsResponse(
     string Comment,
     CatalogDataDto Type,
     CatalogDataDto Status,
-    AppointmentDataDto Appointment
+    AppointmentDataDto Appointment,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt
 );
 
 public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetAppointmentRequestsResponse>>
@@ -60,7 +62,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
         foreach (var appointmentRequest in appointmentRequests)
         {
-            var relatedAppointment = appointments.FirstOrDefault(x => x.Id == appointmentRequest.Appointment.Id);
+            var relatedAppointment = appointments.FirstOrDefault(x => x.Id == appointmentRequest.AppointmentId);
 
             if (relatedAppointment is null)
                 ThrowError(ErrorMessages.NotFound);
@@ -72,7 +74,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             var requestStatus = new CatalogDataDto(appointmentRequest.AppointmentRequestStatus.Id,
                 appointmentRequest.AppointmentRequestStatus.Name,
                 appointmentRequest.AppointmentRequestStatus.Description);
-            
+
             var appointmentType = new CatalogDataDto(relatedAppointment.AppointmentType.Id,
                 relatedAppointment.AppointmentType.Name,
                 relatedAppointment.AppointmentType.Description);
@@ -90,7 +92,8 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 clients, coaches);
 
             appointmentRequestsResponse.Add(new GetAppointmentRequestsResponse(appointmentRequest.Id,
-                appointmentRequest.Comment, requestType, requestStatus, appointmentResponse));
+                appointmentRequest.Comment, requestType, requestStatus, appointmentResponse,
+                appointmentRequest.CreatedAt, appointmentRequest.UpdatedAt));
         }
 
         await SendAsync(appointmentRequestsResponse, cancellation: cancellationToken);
