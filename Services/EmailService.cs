@@ -46,23 +46,7 @@ public class EmailService : IEmailService
 
             message.Body = new TextPart("html") { Text = html };
 
-            using var smtpClient = new SmtpClient();
-
-            try
-            {
-                smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                    int.Parse(_configuration["MailConfiguration::Port"]!),
-                    MailKit.Security.SecureSocketOptions.StartTls);
-                smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                    _configuration["MailConfiguration::Password"]);
-                smtpClient.Send(message);
-                smtpClient.Disconnect(true);
-                Console.WriteLine("Email sent successfully!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-            }
+            ConnectToMailServer(message);
         }
     }
 
@@ -108,23 +92,7 @@ public class EmailService : IEmailService
 
             message.Body = new TextPart("html") { Text = html };
 
-            using var smtpClient = new SmtpClient();
-
-            try
-            {
-                smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                    int.Parse(_configuration["MailConfiguration::Port"]!),
-                    MailKit.Security.SecureSocketOptions.StartTls);
-                smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                    _configuration["MailConfiguration::Password"]);
-                smtpClient.Send(message);
-                smtpClient.Disconnect(true);
-                Console.WriteLine("Email sent successfully!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-            }
+            ConnectToMailServer(message);
         }
     }
 
@@ -147,23 +115,7 @@ public class EmailService : IEmailService
 
         message.Body = new TextPart("html") { Text = html };
 
-        using var smtpClient = new SmtpClient();
-
-        try
-        {
-            smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                int.Parse(_configuration["MailConfiguration::Port"]!),
-                MailKit.Security.SecureSocketOptions.StartTls);
-            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                _configuration["MailConfiguration::Password"]);
-            smtpClient.Send(message);
-            smtpClient.Disconnect(true);
-            Console.WriteLine("Email sent successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to send email: {ex.Message}");
-        }
+        ConnectToMailServer(message);
     }
 
     public void SendCredentialsEmail(User user, string password)
@@ -251,23 +203,28 @@ public class EmailService : IEmailService
             
             message.Body = new TextPart("html") { Text = html };
 
-            using var smtpClient = new SmtpClient();
-
-            try
-            {
-                smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                    int.Parse(_configuration["MailConfiguration::Port"]!),
-                    MailKit.Security.SecureSocketOptions.StartTls);
-                smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                    _configuration["MailConfiguration::Password"]);
-                smtpClient.Send(message);
-                smtpClient.Disconnect(true);
-                Console.WriteLine("Email sent successfully!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-            }
+            ConnectToMailServer(message);
+        }
+    }
+    
+    private void ConnectToMailServer(MimeMessage message)
+    {
+        using var smtpClient = new SmtpClient();
+        
+        try
+        {
+            smtpClient.Connect(_configuration["MailConfiguration::Host"],
+                int.Parse(_configuration["MailConfiguration::Port"]!),
+                MailKit.Security.SecureSocketOptions.StartTls);
+            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
+                _configuration["MailConfiguration::Password"]);
+            smtpClient.Send(message);
+            smtpClient.Disconnect(true);
+            Console.WriteLine("Email sent successfully!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send email: {ex.Message}");
         }
     }
 }

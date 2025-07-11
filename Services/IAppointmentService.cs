@@ -42,9 +42,8 @@ public interface IAppointmentService
     /// after approved appointment request.
     /// </summary>
     /// <param name="appointment">Appointment that needs to be updated.</param>
-    /// <param name="requestStatus">Status from Appointment request.</param>
     /// <param name="businessAction">Triggered business action.</param>
     /// <param name="cancellationToken"></param>
-    void ChangeAppointmentStatus(Appointment appointment, AppointmentRequestStatus requestStatus,
+    void ChangeAppointmentStatus(Appointment appointment,
         string businessAction, CancellationToken cancellationToken);
 }
