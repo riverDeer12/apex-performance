@@ -93,9 +93,12 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<GetClientApp
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
+            
+            var appointmentStatusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
+                appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
             var appointmentResponse = new AppointmentDataDto(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentTypeResponse,
+                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusResponse,
                 appointmentClientsResponse, appointmentCoachesResponse);
 
             switch (appointment.AppointmentStatus.Name)

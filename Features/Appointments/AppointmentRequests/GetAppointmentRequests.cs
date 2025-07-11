@@ -79,6 +79,10 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 relatedAppointment.AppointmentType.Name,
                 relatedAppointment.AppointmentType.Description);
 
+            var appointmentStatus = new CatalogDataDto(relatedAppointment.AppointmentStatus.Id,
+                relatedAppointment.AppointmentStatus.Name,
+                relatedAppointment.AppointmentStatus.Description);
+
             var clients = relatedAppointment.Clients
                 .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName))
                 .ToList();
@@ -89,6 +93,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
             var appointmentResponse = new AppointmentDataDto(
                 relatedAppointment.Id, relatedAppointment.StartTime, relatedAppointment.EndTime, appointmentType,
+                appointmentStatus,
                 clients, coaches);
 
             appointmentRequestsResponse.Add(new GetAppointmentRequestsResponse(appointmentRequest.Id,

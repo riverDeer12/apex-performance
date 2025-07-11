@@ -10,6 +10,7 @@ public record GetAppointmentResponse(
     Guid Id,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
+    DateTimeOffset UpdatedAt,
     CatalogDataDto Type,
     CatalogDataDto Status,
     List<AppointmentClientDto> Clients,
@@ -63,7 +64,7 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
                 .Select(client =>
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
-            
+
             var coachesResponse = appointment.Coaches
                 .Select(coach => new AppointmentCoachDto(coach.CoachId, coach.Coach.FullName)).ToList();
 
@@ -74,7 +75,7 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, typeResponse, statusResponse,
+                appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, typeResponse, statusResponse,
                 clientsResponse, coachesResponse);
 
             appointmentResponseList.Add(appointmentResponse);

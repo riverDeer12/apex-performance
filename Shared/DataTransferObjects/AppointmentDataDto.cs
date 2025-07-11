@@ -5,6 +5,7 @@ public record AppointmentDataDto(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     CatalogDataDto Type,
+    CatalogDataDto Status,
     List<PersonDataDto> Clients,
     List<PersonDataDto> Coaches
 );
