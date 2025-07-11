@@ -9,31 +9,23 @@ namespace ApexPerformance.API.Features.Appointments.AppointmentRequests;
 public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IAppointmentService _appointmentService;
 
-    public ApproveAppointmentRequestEndpoint(ApexPerformanceContext context,
-        ICurrentUserService currentUserService, IAppointmentService appointmentService)
+    public ApproveAppointmentRequestEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
     {
         _context = context;
-        _currentUserService = currentUserService;
         _appointmentService = appointmentService;
     }
 
     public override void Configure()
     {
         Get("api/appointment-requests/approve/{id}");
+        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("AppointmentRequests"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
-            cancellationToken: cancellationToken);
-
-        if (client is null)
-            ThrowError(ErrorMessages.NotFound);
-
         var appointmentRequestId = Route<Guid>("id", isRequired: true);
 
         var appointmentRequest = await _context.AppointmentRequests
@@ -42,7 +34,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
                 cancellationToken: cancellationToken);
 
         if (appointmentRequest is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(nameof(appointmentRequest) + ErrorMessages.NotFound);
 
         var requestStatus = appointmentRequest.AppointmentRequestStatus;
 
@@ -52,6 +44,9 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
 
         if (approvedStatus is null)
             ThrowError(ErrorMessages.NotFound);
+
+        if (requestStatus.Name == approvedStatus.Name)
+            ThrowError(ErrorMessages.AlreadyChanged);
 
         appointmentRequest.AppointmentRequestStatus = approvedStatus;
 
@@ -71,5 +66,8 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
 
         _appointmentService.ChangeAppointmentStatus(appointment, requestStatus,
             BusinessStatuses.Canceled, cancellationToken);
+
+        await SendAsync(new ApproveAppointmentResponse(appointmentRequest.Id, true), 
+            cancellation: cancellationToken);
     }
 }
