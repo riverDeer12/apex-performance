@@ -53,7 +53,7 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
                 .Select(client =>
                     new AppointmentClientDto(client.Client.Id, client.Client.FirstName, client.Client.LastName))
                 .ToList();
-            
+
             var appointmentCoachesResponse = appointment.Coaches
                 .Select(coach => new AppointmentCoachDto(coach.CoachId, coach.Coach.FullName)).ToList();
 
@@ -64,7 +64,8 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusDto,
+                appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, appointmentTypeResponse,
+                appointmentStatusDto,
                 appointmentClientsResponse, appointmentCoachesResponse);
 
             appointmentResponseList.Add(appointmentResponse);
