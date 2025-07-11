@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -64,10 +65,24 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         if (appointment is null)
             ThrowError(ErrorMessages.SavingError);
 
-        _appointmentService.ChangeAppointmentStatus(appointment, requestStatus,
-            BusinessStatuses.Canceled, cancellationToken);
+        await ChangeAppointmentStatus(appointment, cancellationToken);
 
-        await SendAsync(new ApproveAppointmentResponse(appointmentRequest.Id, true), 
+        await SendAsync(new ApproveAppointmentResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
+    }
+
+    private async Task ChangeAppointmentStatus(Appointment appointment, CancellationToken cancellationToken)
+    {
+        var updatedStatus = await _context.AppointmentStatuses.SingleAsync(
+            x => x.Name == BusinessStatuses.Canceled, cancellationToken: cancellationToken);
+            
+        appointment.AppointmentStatus = updatedStatus;
+            
+        _context.Appointments.Update(appointment);
+        
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorMessages.SavingError);
     }
 }

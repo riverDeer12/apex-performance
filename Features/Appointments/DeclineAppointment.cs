@@ -37,6 +37,7 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
             await _context.Appointments
                 .Include(appointment => appointment.Clients)
                 .ThenInclude(clientAppointment => clientAppointment.Client)
+                .Include(appointment => appointment.AppointmentType)
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)

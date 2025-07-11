@@ -45,6 +45,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Clients)
+            .ThenInclude(appointmentClient => appointmentClient.Client)
             .Include(appointment => appointment.AppointmentType)
             .FirstOrDefaultAsync(x => x.Id == appointmentId,
                 cancellationToken: cancellationToken);

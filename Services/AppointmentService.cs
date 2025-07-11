@@ -40,18 +40,16 @@ public class AppointmentService : IAppointmentService
         await _context.BulkInsertOrUpdateAsync(appointmentCoaches, cancellationToken: cancellationToken);
     }
 
-    public async void ChangeAppointmentStatus(Appointment appointment, AppointmentRequestStatus requestStatus,
+    public async void ChangeAppointmentStatus(Appointment appointment,
         string businessAction, CancellationToken cancellationToken)
     {
-        var updatedStatus = businessAction switch
-        {
-            BusinessActions.CancelationRequest => await _context.AppointmentStatuses.FirstOrDefaultAsync(
-                x => x.Name == nameof(BusinessStatuses.Canceled), cancellationToken: cancellationToken),
-            _ => throw new ArgumentOutOfRangeException(nameof(businessAction), businessAction, null)
-        };
+        if (businessAction != BusinessActions.CancelationRequest) return;
         
-        appointment.AppointmentStatus = updatedStatus!;
-
+        var updatedStatus = await _context.AppointmentStatuses.SingleAsync(
+            x => x.Name == BusinessStatuses.Canceled, cancellationToken: cancellationToken);
+            
+        appointment.AppointmentStatus = updatedStatus;
+            
         _context.Appointments.Update(appointment);
         
         var result = await _context.SaveChangesAsync(cancellationToken);
