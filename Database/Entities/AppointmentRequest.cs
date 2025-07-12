@@ -21,5 +21,5 @@ public class AppointmentRequest : BaseEntity
     
     public Guid AppointmentRequestStatusId { get; set; }
     
-    public string Comment { get; set; }
+    public required string Comment { get; set; }
 }
