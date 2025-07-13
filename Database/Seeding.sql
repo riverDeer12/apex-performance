@@ -220,7 +220,8 @@ INSERT INTO AppointmentStatuses (id, name, description) VALUES
 
 -- CREATE APPOINTMENT REQUEST TYPES
 INSERT INTO AppointmentRequestTypes (id, name, description) VALUES
-('15357c44-7a67-4bfa-bcf7-bbfb50d90a1b', 'CancelationRequest', 'Client wants to cancel approved appointment.');
+('15357c44-7a67-4bfa-bcf7-bbfb50d90a1b', 'CancelationRequest', 'cancelation-request');
+('fe475b5b-1757-437a-9ade-3cab41aee797', 'JoinAppointmentRequest', 'join-appointment-request');
 
 -- CREATE APPOINTMENT REQUEST STATUSES
 INSERT INTO AppointmentRequestStatuses (id, name, description) VALUES
