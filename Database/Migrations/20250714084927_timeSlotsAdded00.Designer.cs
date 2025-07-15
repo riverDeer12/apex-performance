@@ -4,6 +4,7 @@ using ApexPerformance.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApexPerformance.API.Database.Migrations
 {
     [DbContext(typeof(ApexPerformanceContext))]
-    partial class ApexPerformanceContextModelSnapshot : ModelSnapshot
+    [Migration("20250714084927_timeSlotsAdded00")]
+    partial class timeSlotsAdded00
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -371,47 +374,6 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("AppointmentTypes", (string)null);
                 });
 
-            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.TimeSlot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Day")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("PeriodEnd")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("PeriodEnd");
-
-                    b.Property<DateTime>("PeriodStart")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("PeriodStart");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TimeSlots", (string)null);
-
-                    b.ToTable(tb => tb.IsTemporal(ttb =>
-                            {
-                                ttb.UseHistoryTable("TimeSlotsHistory");
-                                ttb
-                                    .HasPeriodStart("PeriodStart")
-                                    .HasColumnName("PeriodStart");
-                                ttb
-                                    .HasPeriodEnd("PeriodEnd")
-                                    .HasColumnName("PeriodEnd");
-                            }));
-                });
-
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Client", b =>
                 {
                     b.Property<Guid>("Id")
@@ -706,6 +668,65 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.TimeSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodEnd");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("PeriodStart");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TimeSlots", (string)null);
+
+                    b.ToTable(tb => tb.IsTemporal(ttb =>
+                            {
+                                ttb.UseHistoryTable("TimeSlotsHistory");
+                                ttb
+                                    .HasPeriodStart("PeriodStart")
+                                    .HasColumnName("PeriodStart");
+                                ttb
+                                    .HasPeriodEnd("PeriodEnd")
+                                    .HasColumnName("PeriodEnd");
+                            }));
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -952,7 +973,7 @@ namespace ApexPerformance.API.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ApexPerformance.API.Database.Entities.Catalog.TimeSlot", "TimeSlot")
+                    b.HasOne("ApexPerformance.API.Database.Entities.TimeSlot", "TimeSlot")
                         .WithMany("Coaches")
                         .HasForeignKey("TimeSlotId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1028,11 +1049,6 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Appointments");
                 });
 
-            modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.TimeSlot", b =>
-                {
-                    b.Navigation("Coaches");
-                });
-
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Client", b =>
                 {
                     b.Navigation("Appointments");
@@ -1061,6 +1077,11 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Permissions");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.TimeSlot", b =>
+                {
+                    b.Navigation("Coaches");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.User", b =>
