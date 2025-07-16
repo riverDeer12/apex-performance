@@ -3,7 +3,7 @@ using ApexPerformance.API.Database;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Features.Coaches.TimeSlots;
+namespace ApexPerformance.API.Features.TimeSlots;
 
 public record GetTimeSlotResponse(Guid Id, DayOfWeek Day, TimeOnly StartTime, TimeOnly EndTime);
 
@@ -18,8 +18,9 @@ public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotRe
 
     public override void Configure()
     {
-        Get("api/coaches/time-slots/all");
+        Get("api/time-slots");
         Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Options(x => x.WithTags("TimeSlots"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
@@ -33,6 +34,7 @@ public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotRe
         }
 
         await SendAsync(timeSlots.Select(x
-            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime)).ToList(), cancellation: cancellationToken);
+            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime))
+            .ToList(), cancellation: cancellationToken);
     }
 }
