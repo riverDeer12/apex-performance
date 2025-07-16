@@ -1,25 +1,23 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Features.Coaches.TimeSlots;
+namespace ApexPerformance.API.Features.TimeSlots;
 
 public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotResponse>>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly ICurrentUserService _currentUserService;
 
-    public GetCoachTimeSlotsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public GetCoachTimeSlotsEndpoint(ApexPerformanceContext context)
     {
         _context = context;
-        _currentUserService = currentUserService;
     }
 
     public override void Configure()
     {
-        Get("api/coaches/time-slots/{id}");
+        Get("api/time-slots/coach/{id}");
+        Options(x => x.WithTags("TimeSlots"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
@@ -46,6 +44,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlot
         var coachTimeSlots = _context.TimeSlots.Where(x => timeSlots.Contains(x.Id)).ToList();
 
         await SendAsync(coachTimeSlots.Select(x
-            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime)).ToList(), cancellation: cancellationToken);
+            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime))
+            .ToList(), cancellation: cancellationToken);
     }
 }
