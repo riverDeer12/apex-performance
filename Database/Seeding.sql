@@ -28,8 +28,35 @@ INSERT INTO Users (
     '685D8127992F8280BB94EC3CF3F2B4DA35904A8AE09AC07AF245D1888A620FAF97DE8084F4141D5F2107BEB09FC7F57073EAE8746A000A0DFFD507C79ED055A3',
     1
 );
+    
+-- CREATING APEX ADMIN
+INSERT INTO Users (
+    Id,
+    CreatedAt,
+    CreatedBy,
+    UpdatedAt,
+    UpdatedBy,
+    IsDeleted,
+    DeletedAt,
+    UserName,
+    Email,
+    Password,
+    EmailConfirmed
+) VALUES (
+             'd9f1c2a4-5b3e-4ea3-91e1-b3a194b4e6af',
+             CURRENT_TIMESTAMP,
+             '5604e898-cd94-476b-8b86-9aa3a87cc9bb',
+             CURRENT_TIMESTAMP,
+             '5604e898-cd94-476b-8b86-9aa3a87cc9bb',
+             0,
+             NULL,
+             'apex',
+             'apex@apex-performance.fit',
+             'AAE7DA59D5D8DAE54605DC0E9D6F42AD188B99B0E872351DBBCF6DA12A09148A683DDB52043EABFDAA2AE08904FAD2B7E4B2E6F93C8E9E37B509A7769438A9E3',
+             1
+         );
 
--- CREATING ROLES FOR SUPER ADMIN, COACH, CLIENT)
+-- CREATING ROLES FOR SUPER ADMIN, ADMIN, COACH, CLIENT)
 INSERT INTO Roles (
     Id,
     CreatedAt,
@@ -50,6 +77,28 @@ INSERT INTO Roles (
              NULL,
              'SuperAdmin',
              'Role with all access.'
+         );
+
+INSERT INTO Roles (
+    Id,
+    CreatedAt,
+    CreatedBy,
+    UpdatedAt,
+    UpdatedBy,
+    IsDeleted,
+    DeletedAt,
+    Name,
+    Description
+) VALUES (
+             '63526fbb-b013-4a26-8c17-b164cc7903fa',
+             CURRENT_TIMESTAMP,
+             '5604e898-cd94-476b-8b86-9aa3a87cc9bb',
+             CURRENT_TIMESTAMP,
+             '5604e898-cd94-476b-8b86-9aa3a87cc9bb',
+             0,
+             NULL,
+             'Administrator',
+             'Highest role for Apex Performance app.'
          );
 
 INSERT INTO Roles (
@@ -103,6 +152,15 @@ INSERT INTO UserRoles (
 ) VALUES (
              '5604e898-cd94-476b-8b86-9aa3a87cc9bb',
              '69a4116d-b1bd-4f0b-b6a7-a13bb5eb639f'
+         );
+
+-- CREATING ROLE RELATIONSHIP FOR ADMIN
+INSERT INTO UserRoles (
+    UserId,
+    RoleId
+) VALUES (
+             'd9f1c2a4-5b3e-4ea3-91e1-b3a194b4e6af',
+             '63526fbb-b013-4a26-8c17-b164cc7903fa'
          );
 
 -- CREATING ADMINISTRATOR ACCOUNT FOR SUPER ADMIN
@@ -239,7 +297,6 @@ INSERT INTO AppointmentTypes (id, name, description) VALUES
                                                          ('d6a52901-d88e-4de3-a65c-47f1cd6231d6', 'Cardio', 'cardio'),
                                                          ('2fd98f7f-0bc1-4127-9ac5-538d89649c9e', 'Chest', 'chest'),
                                                          ('f2a3c1e0-47f1-4c8f-b9c6-8d3788c3e9df', 'Strength and Conditioning', 'strength-and-conditioning');
-
 
 -- CREATE TIME SLOTS
 INSERT INTO TimeSlots (Id, Day, StartTime, EndTime) VALUES

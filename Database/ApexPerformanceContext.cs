@@ -65,7 +65,7 @@ public class ApexPerformanceContext : DbContext
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entity.CreatedAt = DateTimeOffset.Now;
+                    entity.CreatedAt = DateTimeOffset.UtcNow;
                     entity.CreatedBy = _currentUserService.UserId;
                     break;
                 case EntityState.Detached:
@@ -77,7 +77,7 @@ public class ApexPerformanceContext : DbContext
                     throw new Exception(ErrorMessages.SavingError);
             }
 
-            entity.UpdatedAt = DateTimeOffset.Now;
+            entity.UpdatedAt = DateTimeOffset.UtcNow;
             entity.UpdatedBy = _currentUserService.UserId;
         }
 
