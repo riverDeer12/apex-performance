@@ -19,6 +19,6 @@ public abstract class BaseEntity
     public void  Delete()
     {
         IsDeleted = true;
-        DeletedAt = DateTimeOffset.Now;
+        DeletedAt = DateTimeOffset.UtcNow;
     }
 }

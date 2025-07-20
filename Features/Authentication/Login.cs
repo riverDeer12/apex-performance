@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -44,15 +45,13 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
         var roles = user.Roles.Select(r => r.Role.Name).ToList();
 
-        var isSuperAdmin = roles.Contains(nameof(UserRoles.SuperAdmin));
-
-        var permissions = await GetUserPermissions(isSuperAdmin, user.Roles, cancellationToken);
+        var permissions = await GetUserPermissions(roles, user.Roles, cancellationToken);
 
         var jwtToken = JwtBearer.CreateToken(
             options: o =>
             {
                 o.SigningKey = _configuration["JWTSecretKey"] ?? string.Empty;
-                o.ExpireAt = DateTime.Now.AddDays(request.RememberMe ? 30 : 1);
+                o.ExpireAt = DateTime.UtcNow.AddDays(request.RememberMe ? 30 : 1);
                 o.User.Roles.AddRange(roles);
                 o.User.Permissions.AddRange(permissions);
                 o.User.Claims.Add(("name", request.Username),
@@ -62,17 +61,34 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         await SendAsync(new LoginResponse(jwtToken), cancellation: cancellationToken);
     }
 
-    private async Task<List<string>> GetUserPermissions(bool isSuperAdmin, ICollection<UserRole> roles,
+    private async Task<List<string>> GetUserPermissions(List<string> roles, ICollection<UserRole> userRoles,
         CancellationToken cancellationToken)
     {
+        var isSuperAdmin = roles.Contains(nameof(UserRoles.SuperAdmin));
+
+        var admin = roles.Contains(nameof(UserRoles.Administrator));
+
         if (isSuperAdmin)
         {
             return await _context.Permissions.Select(x => x.Name)
                 .ToListAsync(cancellationToken: cancellationToken);
         }
 
+        if (admin)
+        {
+            Expression<Func<Permission, bool>> excludeCertainCategories = x =>
+                x.Category != "Users" &&
+                x.Category != "UserRoles" &&
+                x.Category != "Administrators";
+            
+            return await _context.Permissions
+                .Where(excludeCertainCategories)
+                .Select(x => x.Name)
+                .ToListAsync(cancellationToken: cancellationToken);
+        }
+
         var rolesPermissions = await _context.RolePermissions
-            .Where(rolePermission => roles
+            .Where(rolePermission => userRoles
                 .Select(userRole => userRole.RoleId)
                 .Contains(rolePermission.RoleId))
             .ToListAsync(cancellationToken: cancellationToken);
