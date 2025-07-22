@@ -5,12 +5,14 @@ using ApexPerformance.API.Services;
 using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
+using JetBrains.Annotations;
 using MailKit.Net.Smtp;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
 
 namespace ApexPerformance.API.Features.Coaches;
 
+[UsedImplicitly]
 public record CreateCoachRequest(
     string FirstName,
     string LastName,

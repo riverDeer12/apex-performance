@@ -2,16 +2,19 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
-using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
+[UsedImplicitly]
 public record CreateAppointmentRequest(
     Guid Type,
     Guid Status,
+    Guid TimeSlot,
+    DateOnly Day,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients,
@@ -32,14 +35,11 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
-    private readonly IEmailService _emailService;
 
-    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
-        IEmailService emailService)
+    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
     {
         _context = context;
         _appointmentService = appointmentService;
-        _emailService = emailService;
     }
 
     public override void Configure()
@@ -78,18 +78,18 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         var pendingStatus =
             await _context.AppointmentStatuses
                 .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Pending),
-                cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken);
 
         if (pendingStatus is null)
             ThrowError(ErrorMessages.NotFound);
 
         var appointment = new Appointment
         {
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
             AppointmentType = appointmentType,
             AppointmentStatus = pendingStatus
         };
+
+        await SetAppointmentTime(request, appointment);
 
         _context.Appointments.Add(appointment);
 
@@ -106,6 +106,22 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             new CreateAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
     }
+
+    private async Task SetAppointmentTime(CreateAppointmentRequest request, Appointment appointment)
+    {
+        var timeSlot = await _context.TimeSlots.FirstOrDefaultAsync(x => x.Id == request.TimeSlot);
+
+        if (timeSlot is null)
+        {
+            appointment.StartTime = request.StartTime.ToUniversalTime();
+            appointment.EndTime = request.EndTime.ToUniversalTime();
+        }
+        else
+        {
+            appointment.StartTime = new DateTimeOffset(request.Day.ToDateTime(timeSlot.StartTime), TimeSpan.Zero);
+            appointment.EndTime = new DateTimeOffset(request.Day.ToDateTime(timeSlot.EndTime), TimeSpan.Zero);
+        }
+    }
 }
 
 public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequest>
@@ -113,8 +129,6 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
     public CreateAppointmentValidator()
     {
         RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
     }
