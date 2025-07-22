@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
 
-public record GetTimeSlotResponse(Guid Id, DayOfWeek Day, TimeOnly StartTime, TimeOnly EndTime);
+public record GetTimeSlotResponse(Guid Id, string Name, TimeOnly StartTime, TimeOnly EndTime);
 
 public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotResponse>>
 {
@@ -25,7 +25,12 @@ public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotRe
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var timeSlots = await _context.TimeSlots.ToListAsync(cancellationToken: cancellationToken);
+        var timeSlots = (await _context.TimeSlots
+            .OrderBy(x => x.StartTime)
+            .ToListAsync(cancellationToken))
+            .GroupBy(x => x.StartTime)
+            .Select(g => g.First())
+            .ToList();
 
         if (timeSlots.Count == 0)
         {
@@ -34,7 +39,7 @@ public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotRe
         }
 
         await SendAsync(timeSlots.Select(x
-            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime))
+                => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}", x.StartTime, x.EndTime))
             .ToList(), cancellation: cancellationToken);
     }
 }

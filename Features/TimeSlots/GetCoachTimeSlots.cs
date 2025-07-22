@@ -44,7 +44,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlot
         var coachTimeSlots = _context.TimeSlots.Where(x => timeSlots.Contains(x.Id)).ToList();
 
         await SendAsync(coachTimeSlots.Select(x
-            => new GetTimeSlotResponse(x.Id, x.Day, x.StartTime, x.EndTime))
+            => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}", x.StartTime, x.EndTime))
             .ToList(), cancellation: cancellationToken);
     }
 }
