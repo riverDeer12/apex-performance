@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Features.TimeSlots;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ public record GetAppointmentResponse(
     DateTimeOffset UpdatedAt,
     CatalogDataDto Type,
     CatalogDataDto Status,
+    GetTimeSlotResponse? TimeSlot,
     List<AppointmentClientDto> Clients,
     List<AppointmentCoachDto> Coaches
 );
@@ -47,6 +49,7 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(appointment => appointment.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (appointments.Count is 0)
@@ -73,10 +76,19 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
 
             var statusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
-
+            
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
-                appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, typeResponse, statusResponse,
+                appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, typeResponse, statusResponse, null,
                 clientsResponse, coachesResponse);
+            
+            if (appointment.TimeSlot != null)
+            {
+                appointmentResponse = appointmentResponse with
+                {
+                    TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                        appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
+                };
+            }
 
             appointmentResponseList.Add(appointmentResponse);
         }
