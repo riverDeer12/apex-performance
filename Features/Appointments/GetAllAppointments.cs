@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Features.TimeSlots;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,7 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(appointment => appointment.TimeSlot)
             .OrderByDescending(x => x.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -65,8 +67,17 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
 
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
                 appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, appointmentTypeResponse,
-                appointmentStatusDto,
+                appointmentStatusDto, null,
                 appointmentClientsResponse, appointmentCoachesResponse);
+            
+            if (appointment.TimeSlot != null)
+            {
+                appointmentResponse = appointmentResponse with
+                {
+                    TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                        appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
+                };
+            }
 
             appointmentResponseList.Add(appointmentResponse);
         }

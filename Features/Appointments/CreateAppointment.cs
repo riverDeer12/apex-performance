@@ -12,9 +12,7 @@ namespace ApexPerformance.API.Features.Appointments;
 [UsedImplicitly]
 public record CreateAppointmentRequest(
     Guid Type,
-    Guid Status,
     Guid TimeSlot,
-    DateOnly Day,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients,
@@ -82,14 +80,23 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (pendingStatus is null)
             ThrowError(ErrorMessages.NotFound);
+        
+        var timeSlot =
+            await _context.TimeSlots
+                .FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
+                    cancellationToken: cancellationToken);
 
+        if (timeSlot is null)
+            ThrowError(ErrorMessages.NotFound);
+        
         var appointment = new Appointment
         {
             AppointmentType = appointmentType,
-            AppointmentStatus = pendingStatus
+            AppointmentStatus = pendingStatus,
+            TimeSlot = timeSlot,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime
         };
-
-        await SetAppointmentTime(request, appointment);
 
         _context.Appointments.Add(appointment);
 
@@ -105,22 +112,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         await SendAsync(
             new CreateAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
-    }
-
-    private async Task SetAppointmentTime(CreateAppointmentRequest request, Appointment appointment)
-    {
-        var timeSlot = await _context.TimeSlots.FirstOrDefaultAsync(x => x.Id == request.TimeSlot);
-
-        if (timeSlot is null)
-        {
-            appointment.StartTime = request.StartTime.ToUniversalTime();
-            appointment.EndTime = request.EndTime.ToUniversalTime();
-        }
-        else
-        {
-            appointment.StartTime = new DateTimeOffset(request.Day.ToDateTime(timeSlot.StartTime), TimeSpan.Zero);
-            appointment.EndTime = new DateTimeOffset(request.Day.ToDateTime(timeSlot.EndTime), TimeSpan.Zero);
-        }
     }
 }
 

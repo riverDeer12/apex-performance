@@ -11,6 +11,7 @@ namespace ApexPerformance.API.Features.Appointments;
 
 public record UpdateAppointmentRequest(
     Guid Type,
+    Guid TimeSlot,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients,
@@ -68,11 +69,18 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         if (inProgressStatus == null)
             ThrowError(ErrorMessages.NotFound);
+        
+        var timeSlot = await _context.TimeSlots.FirstOrDefaultAsync(
+            x => x.Id == request.TimeSlot, cancellationToken: cancellationToken);
+
+        if (timeSlot is null)
+            ThrowError(ErrorMessages.NotFound);
 
         appointment.StartTime = request.StartTime;
         appointment.EndTime = request.EndTime;
         appointment.AppointmentType = appointmentType;
         appointment.AppointmentStatus = inProgressStatus;
+        appointment.TimeSlot = timeSlot;
 
         _context.Appointments.Update(appointment);
 

@@ -12,4 +12,6 @@ public class TimeSlot
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public ICollection<CoachTimeSlot> Coaches { get; set; } = null!;
+    
+    [NotMapped] public string Name => $"{StartTime} - {EndTime}";
 }
