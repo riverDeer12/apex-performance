@@ -1,11 +1,12 @@
-using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
 
-public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotResponse>>
+public record GetCoachTimeSlotRequest(List<Guid> Coaches, DateTimeOffset Day);
+
+public class GetCoachTimeSlotsEndpoint : Endpoint<GetCoachTimeSlotRequest, List<GetTimeSlotResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -16,22 +17,25 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlot
 
     public override void Configure()
     {
-        Get("api/time-slots/coach/{id}");
+        Post("api/time-slots/coach");
         Options(x => x.WithTags("TimeSlots"));
     }
 
-    public override async Task HandleAsync(CancellationToken cancellationToken)
+    public override async Task HandleAsync(GetCoachTimeSlotRequest request, CancellationToken cancellationToken)
     {
-        var coachId = Route<Guid>("id", isRequired: true);
+        var coaches = await _context.Coaches
+            .Where(x => request.Coaches.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
 
-        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.Id == coachId,
-            cancellationToken: cancellationToken);
-
-        if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+        if (coaches.Count == 0)
+        {
+            await SendAsync([], cancellation: cancellationToken);
+            return;
+        }
 
         var timeSlots = await _context.CoachTimeSlots
-            .Where(x => x.CoachId == coachId)
+            .Where(x => coaches.Contains(x.CoachId))
             .Select(x => x.TimeSlotId)
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -41,10 +45,10 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlot
             return;
         }
 
-        var coachTimeSlots = _context.TimeSlots.Where(x => timeSlots.Contains(x.Id)).ToList();
+        var coachesTimeSlots = _context.TimeSlots.Where(x => timeSlots.Contains(x.Id)).ToList();
 
-        await SendAsync(coachTimeSlots.Select(x
-            => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}", x.StartTime, x.EndTime))
+        await SendAsync(coachesTimeSlots.Select(x
+                => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}", x.StartTime, x.EndTime))
             .ToList(), cancellation: cancellationToken);
     }
 }
