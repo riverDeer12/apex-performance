@@ -85,7 +85,8 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
             {
                 appointmentResponse = appointmentResponse with
                 {
-                    TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                    TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name, 
+                        Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day)!,
                         appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
                 };
             }
