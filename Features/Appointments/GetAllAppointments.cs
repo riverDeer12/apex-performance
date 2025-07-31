@@ -75,6 +75,7 @@ public class GetAllAppointmentsEndpoint : EndpointWithoutRequest<List<GetAppoint
                 appointmentResponse = appointmentResponse with
                 {
                     TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                        Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day)!,
                         appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
                 };
             }
