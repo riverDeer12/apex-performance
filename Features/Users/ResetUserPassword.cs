@@ -1,12 +1,9 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
-using MailKit.Net.Smtp;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 
 namespace ApexPerformance.API.Features.Users;
 
