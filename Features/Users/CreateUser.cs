@@ -32,7 +32,8 @@ public sealed class CreateUserEndpoint : Endpoint<CreateUserRequest, CreateUserR
     public override async Task HandleAsync(CreateUserRequest request, CancellationToken cancellationToken)
     {
         var userAccount =
-            await _userService.CreateUserAccount(request.Username, request.Password, request.Email, cancellationToken);
+            await _userService.CreateUserAccount(request.Username, request.Password, request.Email, null,
+                cancellationToken);
 
         var userRoles = request.Roles.Select(roleId => new UserRole
         {
