@@ -62,18 +62,7 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        var clients = await _context.Clients
-            .Where(x => request.Clients.Contains(x.Id))
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        if (clients.Count == 0)
-            ThrowError(ErrorMessages.NotFound);
-        
-        await _context.CoachClients
-            .Where(coachClient => coachClient.CoachId == coach.Id)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        await _coachService.UpdateCoachClients(clients, coach, cancellationToken);
+        await _coachService.UpdateCoachClients(coach, request.Clients, cancellationToken);
 
         await SendAsync(new(coach.Id),
             cancellation: cancellationToken);

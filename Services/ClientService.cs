@@ -59,6 +59,10 @@ public class ClientService : IClientService
     public async Task UpdateClientCoaches(Client client, List<Guid> coachesIds, CancellationToken cancellationToken)
     {
         if (coachesIds.Count == 0) return;
+        
+        await _context.CoachClients
+            .Where(coachClient => coachClient.ClientId == client.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
         var coaches = await _context.Coaches
             .Where(x => coachesIds.Contains(x.Id))
