@@ -29,8 +29,10 @@ public class UserService : IUserService
         {
             var userRole = new UserRole
             {
+                User = user,
                 UserId = user.Id,
-                RoleId = role.Id
+                RoleId = role.Id,
+                Role = role
             };
 
             _context.UserRoles.Add(userRole);

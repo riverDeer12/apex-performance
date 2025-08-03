@@ -61,9 +61,11 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
         
-        await _context.CoachClients
-            .Where(coachClient => coachClient.ClientId == client.Id)
-            .ExecuteDeleteAsync(cancellationToken);
+        if (request.Coaches.Count == 0)
+        {
+            await SendAsync(new(client.Id), cancellation: cancellationToken);
+            return;
+        }
 
         await _clientService.UpdateClientCoaches(client, request.Coaches, cancellationToken);
 
