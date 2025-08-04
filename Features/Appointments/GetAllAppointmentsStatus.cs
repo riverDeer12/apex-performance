@@ -1,39 +1,30 @@
-﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Services;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatusDto>
+public class GetAllAppointmentsStatusEndpoint : EndpointWithoutRequest<AppointmentsStatusDto>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly ICurrentUserService _currentUserService;
 
-    public GetClientAppointmentsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public GetAllAppointmentsStatusEndpoint(ApexPerformanceContext context)
     {
         _context = context;
-        _currentUserService = currentUserService;
     }
 
     public override void Configure()
     {
-        Get("api/appointments/client");
+        Get("api/appointments/status");
+        Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Appointments"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
-            cancellationToken: cancellationToken);
-
-        if (client is null)
-            ThrowError(ErrorMessages.NotFound);
-
-        var appointmentRelations = await _context.ClientAppointments
-            .Where(x => x.ClientId == client.Id)
+        var appointmentRelations = await _context.CoachAppointments
             .Select(x => x.AppointmentId)
             .ToListAsync(cancellationToken);
 
@@ -46,19 +37,19 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<Appointments
             ), cancellation: cancellationToken);
             return;
         }
-
-        var clientAppointments = await _context.Appointments
+        
+        var appointments = await _context.Appointments
             .Where(appointment => appointmentRelations.Contains(appointment.Id))
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
-            .Include(appointment => appointment.Clients)
-            .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.Coaches)
-            .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .ThenInclude(clientAppointment => clientAppointment.Coach)
+            .Include(appointment => appointment.Clients)
+            .ThenInclude(coachAppointment => coachAppointment.Client)
             .OrderByDescending(x => x.StartTime)
             .ToListAsync(cancellationToken);
 
-        if (clientAppointments.Count is 0)
+        if (appointments.Count is 0)
         {
             await SendAsync(new AppointmentsStatusDto(
                 Array.Empty<AppointmentDataDto>().ToList(),
@@ -66,14 +57,14 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<Appointments
                 Array.Empty<AppointmentDataDto>().ToList()), cancellation: cancellationToken);
             return;
         }
-
+        
         var approvedAppointments = new List<AppointmentDataDto>();
 
         var pendingAppointments = new List<AppointmentDataDto>();
 
         var inProgressAppointments = new List<AppointmentDataDto>();
 
-        foreach (var appointment in clientAppointments)
+        foreach (var appointment in appointments)
         {
             var appointmentClientsResponse = appointment.Clients
                 .Select(appointmentClient =>
@@ -82,12 +73,12 @@ public class GetClientAppointmentsEndpoint : EndpointWithoutRequest<Appointments
                 .ToList();
 
             var appointmentCoachesResponse = appointment.Coaches
-                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, coach.Coach.LastName))
+                .Select(x => new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName))
                 .ToList();
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
-            
+
             var appointmentStatusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
