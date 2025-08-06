@@ -1,18 +1,21 @@
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
 
-public record GetCoachTimeSlotRequest(List<Guid> Coaches, DateTimeOffset Day);
+public record GetAvailableCoachTimeSlotRequest(List<Guid> Coaches, int Day);
 
-public class GetCoachTimeSlotsEndpoint : Endpoint<GetCoachTimeSlotRequest, List<GetTimeSlotResponse>>
+public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTimeSlotRequest, List<GetTimeSlotResponse>>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ITimeSlotService _timeSlotService;
 
-    public GetCoachTimeSlotsEndpoint(ApexPerformanceContext context)
+    public GetAvailableCoachTimeSlotsEndpoint(ApexPerformanceContext context, ITimeSlotService timeSlotService)
     {
         _context = context;
+        _timeSlotService = timeSlotService;
     }
 
     public override void Configure()
@@ -21,7 +24,8 @@ public class GetCoachTimeSlotsEndpoint : Endpoint<GetCoachTimeSlotRequest, List<
         Options(x => x.WithTags("TimeSlots"));
     }
 
-    public override async Task HandleAsync(GetCoachTimeSlotRequest request, CancellationToken cancellationToken)
+    public override async Task HandleAsync(GetAvailableCoachTimeSlotRequest request,
+        CancellationToken cancellationToken)
     {
         var coaches = await _context.Coaches
             .Where(x => request.Coaches.Contains(x.Id))
@@ -36,7 +40,7 @@ public class GetCoachTimeSlotsEndpoint : Endpoint<GetCoachTimeSlotRequest, List<
 
         var timeSlots = await _context.CoachTimeSlots
             .Where(x => coaches.Contains(x.CoachId))
-            .Select(x => x.TimeSlotId)
+            .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (timeSlots.Count == 0)
@@ -45,12 +49,20 @@ public class GetCoachTimeSlotsEndpoint : Endpoint<GetCoachTimeSlotRequest, List<
             return;
         }
 
-        var coachesTimeSlots = _context.TimeSlots.Where(x => timeSlots.Contains(x.Id)).ToList();
+        var day = (DayOfWeek)request.Day;
+        
+        var coachesTimeSlots = timeSlots
+            .Where(x => x.Day == day)
+            .ToList();
 
-        await SendAsync(coachesTimeSlots.Select(x
+        var finalTimeSlots = await _timeSlotService.CheckTimeSlotsAvailability(coachesTimeSlots, day,
+            cancellationToken);
+        
+        await SendAsync(finalTimeSlots.Select(x
                 => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}",
                     Enum.GetName(typeof(DayOfWeek), x.Day)!,
                     x.StartTime, x.EndTime))
+            .OrderBy(x => x.StartTime)
             .ToList(), cancellation: cancellationToken);
     }
 }

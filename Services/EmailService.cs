@@ -35,9 +35,7 @@ public class EmailService : IEmailService
 
             html = html.Replace("{{Description}}",
                 "Your Appointment has been " + appointment.AppointmentStatus.Name + ".");
-
-            html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
-
+            
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
@@ -73,9 +71,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{CoachFullName}}", coach.FullName);
 
             html = html.Replace("{{Clients}}", clientsNames);
-
-            html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
-
+            
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
@@ -184,9 +180,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{CoachFullName}}", coach.FullName);
             
             html = html.Replace("{{Clients}}", clientsNames);
-
-            html = html.Replace("{{Type}}", appointment.AppointmentType.Name);
-
+            
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
