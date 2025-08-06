@@ -53,7 +53,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
 
-        if (appointment.AppointmentStatus.Name != nameof(BusinessStatuses.Approved))
+        if (appointment.AppointmentStatus.Name != BusinessStatuses.Approved)
             ThrowError(ErrorMessages.NotApproved);
 
         var appointmentRequestType =
