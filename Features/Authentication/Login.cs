@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using FastEndpoints.Security;
 using FluentValidation;
@@ -16,12 +17,13 @@ public sealed record LoginResponse(string Token);
 public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly IAuthenticationService _authenticationService;
 
-    public LoginEndpoint(ApexPerformanceContext context, IConfiguration configuration)
+    public LoginEndpoint(ApexPerformanceContext context, IConfiguration configuration,
+        IAuthenticationService authenticationService)
     {
         _context = context;
-        _configuration = configuration;
+        _authenticationService = authenticationService;
     }
 
     public override void Configure()
@@ -43,61 +45,9 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         if (!user.IsValidPassword(request.Password))
             ThrowError(ValidationMessages.WrongUserNameOrPassword);
 
-        var roles = user.Roles.Select(r => r.Role.Name).ToList();
-
-        var permissions = await GetUserPermissions(roles, user.Roles, cancellationToken);
-
-        var jwtToken = JwtBearer.CreateToken(
-            options: o =>
-            {
-                o.SigningKey = _configuration["JWTSecretKey"] ?? string.Empty;
-                o.ExpireAt = DateTime.UtcNow.AddDays(request.RememberMe ? 30 : 1);
-                o.User.Roles.AddRange(roles);
-                o.User.Permissions.AddRange(permissions);
-                o.User.Claims.Add(("name", request.Username),
-                    ("sub", user.Id.ToString()));
-            });
+        var jwtToken = await _authenticationService.GenerateJwtToken(request.RememberMe, user);
 
         await SendAsync(new LoginResponse(jwtToken), cancellation: cancellationToken);
-    }
-
-    private async Task<List<string>> GetUserPermissions(List<string> roles, ICollection<UserRole> userRoles,
-        CancellationToken cancellationToken)
-    {
-        var isSuperAdmin = roles.Contains(nameof(UserRoles.SuperAdmin));
-
-        var admin = roles.Contains(nameof(UserRoles.Administrator));
-
-        if (isSuperAdmin)
-        {
-            return await _context.Permissions.Select(x => x.Name)
-                .ToListAsync(cancellationToken: cancellationToken);
-        }
-
-        if (admin)
-        {
-            Expression<Func<Permission, bool>> excludeCertainCategories = x =>
-                x.Category != "Users" &&
-                x.Category != "UserRoles" &&
-                x.Category != "Administrators";
-            
-            return await _context.Permissions
-                .Where(excludeCertainCategories)
-                .Select(x => x.Name)
-                .ToListAsync(cancellationToken: cancellationToken);
-        }
-
-        var rolesPermissions = await _context.RolePermissions
-            .Where(rolePermission => userRoles
-                .Select(userRole => userRole.RoleId)
-                .Contains(rolePermission.RoleId))
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        var permissions = await _context.Permissions.Where(permission =>
-                rolesPermissions.Select(rolePermission => rolePermission.PermissionId).Contains(permission.Id))
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        return permissions.Select(permission => permission.Name).ToList();
     }
 }
 

@@ -39,8 +39,9 @@ public interface IEmailService
     /// </summary>
     /// <param name="user">User account that needs to get credentials.</param>
     /// <param name="password">Password value.</param>
+    /// <param name="jwtToken">JWT token value.</param>
     /// <returns></returns>
-    void SendCredentialsEmail(User user, string password);
+    void SendCredentialsEmail(User user, string password, string jwtToken);
 
     /// <summary>
     /// Send email to coaches which are connected to this
