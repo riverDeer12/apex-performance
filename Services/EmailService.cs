@@ -7,10 +7,12 @@ namespace ApexPerformance.API.Services;
 public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
+    private readonly IAuthenticationService _authenticationService;
 
-    public EmailService(IConfiguration configuration)
+    public EmailService(IConfiguration configuration, IAuthenticationService authenticationService)
     {
         _configuration = configuration;
+        _authenticationService = authenticationService;
     }
 
     public void SendAppointmentStatus(List<Client> clients, Appointment appointment)
@@ -114,7 +116,7 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
-    public void SendCredentialsEmail(User user, string password)
+    public async void SendCredentialsEmail(User user, string password, string jwtToken)
     {
         var message = new MimeMessage();
 
@@ -127,11 +129,13 @@ public class EmailService : IEmailService
 
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CredentialsEmail.html");
 
-        var html = File.ReadAllText(templatePath);
+        var html = await File.ReadAllTextAsync(templatePath);
 
         html = html.Replace("{{Username}}", user.UserName);
 
         html = html.Replace("{{Password}}", password);
+        
+        html = html.Replace("{{LoginLink}}", _configuration["WebAppUrl"] + "/authentication/mail-confirmation/" + jwtToken);
 
         message.Body = new TextPart("html") { Text = html };
 
@@ -139,13 +143,13 @@ public class EmailService : IEmailService
 
         try
         {
-            smtpClient.Connect(_configuration["MailConfiguration::Host"],
+            await smtpClient.ConnectAsync(_configuration["MailConfiguration::Host"],
                 int.Parse(_configuration["MailConfiguration::Port"]!),
                 MailKit.Security.SecureSocketOptions.StartTls);
-            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
+            await smtpClient.AuthenticateAsync(_configuration["MailConfiguration::Username"],
                 _configuration["MailConfiguration::Password"]);
-            smtpClient.Send(message);
-            smtpClient.Disconnect(true);
+            await smtpClient.SendAsync(message);
+            await smtpClient.DisconnectAsync(true);
             Console.WriteLine("Email sent successfully!");
         }
         catch (Exception ex)
