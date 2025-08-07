@@ -22,7 +22,6 @@ public class GetAllAppointmentTypesEndpoint : EndpointWithoutRequest<List<GetAll
     public override void Configure()
     {
         Get("api/appointment-types/all");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("AppointmentTypes"));
     }
 
