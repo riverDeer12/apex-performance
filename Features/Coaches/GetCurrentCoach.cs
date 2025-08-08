@@ -26,7 +26,7 @@ public class GetCurrentCoachEndpoint: EndpointWithoutRequest<PersonDataDto>
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var coach = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
+        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
             cancellationToken: cancellationToken);
 
         if (coach is null)

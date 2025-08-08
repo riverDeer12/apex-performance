@@ -1,12 +1,12 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-    using ApexPerformance.API.Services;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
 
-public record CreateCoachTimeSlotsRequest(List<Guid> TimeSlots);
+public record CreateCoachTimeSlotsRequest(List<Guid> TimeSlots, Guid CoachId);
 
 public record CreateCoachTimeSlotsResponse(Guid? Id);
 
@@ -23,16 +23,14 @@ public class CreateCoachTimeSlotsEndpoint : Endpoint<CreateCoachTimeSlotsRequest
 
     public override void Configure()
     {
-        Post("api/time-slots/coach/{id}");
+        Post("api/time-slots/coach");
         Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
         Options(x => x.WithTags("TimeSlots"));
     }
 
     public override async Task HandleAsync(CreateCoachTimeSlotsRequest request, CancellationToken cancellationToken)
     {
-        var coachId = Route<Guid>("id", isRequired: true);
-
-        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.Id == coachId,
+        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.Id == request.CoachId,
             cancellationToken: cancellationToken);
 
         if (coach is null)
@@ -50,6 +48,6 @@ public class CreateCoachTimeSlotsEndpoint : Endpoint<CreateCoachTimeSlotsRequest
 
         await _timeSlotService.UpdateCoachTimeSlots(timeSlots, coach, cancellationToken);
 
-        await SendAsync(new CreateCoachTimeSlotsResponse(coachId), cancellation: cancellationToken);
+        await SendAsync(new CreateCoachTimeSlotsResponse(coach.Id), cancellation: cancellationToken);
     }
 }
