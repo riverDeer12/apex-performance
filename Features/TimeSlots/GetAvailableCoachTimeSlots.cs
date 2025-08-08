@@ -20,7 +20,7 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
 
     public override void Configure()
     {
-        Post("api/time-slots/coach");
+        Post("api/time-slots/available");
         Options(x => x.WithTags("TimeSlots"));
     }
 
