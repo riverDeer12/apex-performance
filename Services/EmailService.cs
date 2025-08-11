@@ -135,7 +135,7 @@ public class EmailService : IEmailService
 
         html = html.Replace("{{Password}}", password);
         
-        html = html.Replace("{{LoginLink}}", _configuration["WebAppUrl"] + "/authentication/mail-confirmation/" + jwtToken);
+        html = html.Replace("{{LoginLink}}", _configuration["ApiUrl"] + "/authentication/mail-confirmation?token=" + jwtToken);
 
         message.Body = new TextPart("html") { Text = html };
 
