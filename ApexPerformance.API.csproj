@@ -7,6 +7,14 @@
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Don’t generate/transform web.config during publish -->
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+
+    <!-- Don’t publish IIS assets (includes web.config) -->
+    <PublishIISAssets>false</PublishIISAssets>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="EFCore.BulkExtensions" Version="8.0.0" />
     <PackageReference Include="FastEndpoints" Version="5.32.0" />
@@ -24,9 +32,16 @@
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Update="wwwroot\**" CopyToPublishDirectory="Never" />
+    <Content Update="web.config" CopyToPublishDirectory="Never" />
+    <Content Update="ApexPerformanceCollection" CopyToPublishDirectory="Never" />
+  </ItemGroup>
 
   <ItemGroup>
-    <None Include="Templates\ClientAppointmentStatusEmail.html" />
+    <Content Remove="wwwroot\**" />
+    <None Remove="wwwroot\**" />
   </ItemGroup>
 
 </Project>
