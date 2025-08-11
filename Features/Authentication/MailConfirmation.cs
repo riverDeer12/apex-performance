@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
@@ -6,33 +7,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Authentication;
 
+public record MailConfirmationRequest(string Token);
 public record MailConfirmationResponse(Guid Id, bool IsSuccess);
 
-public class MailConfirmationEndpoint : EndpointWithoutRequest<MailConfirmationResponse>
+public class MailConfirmationEndpoint : Endpoint<MailConfirmationRequest, MailConfirmationResponse>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly ICurrentUserService _currentUserService;
-
-    public MailConfirmationEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    private readonly IConfiguration _configuration;
+    public MailConfirmationEndpoint(ApexPerformanceContext context, IConfiguration configuration)
     {
         _context = context;
-        _currentUserService = currentUserService;
+        _configuration = configuration;
     }
 
     public override void Configure()
     {
         Get("api/authentication/mail-confirmation");
+        AllowAnonymous();
         Options(x => x.WithTags("Authentication"));
     }
 
-    public override async Task HandleAsync(CancellationToken cancellationToken)
+    public override async Task HandleAsync(MailConfirmationRequest request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == _currentUserService.UserId,
+        var handler = new JwtSecurityTokenHandler();
+
+        var jwtToken = handler.ReadJwtToken(request.Token);
+
+        var subValue = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+        if (subValue is null)
+            ThrowError(ValidationMessages.NotValid);
+
+        var userId = new Guid(subValue);
+
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId,
             cancellationToken: cancellationToken);
 
         if (user is null)
         {
-            await SendAsync(new MailConfirmationResponse(Guid.Empty, false), 
+            await SendAsync(new MailConfirmationResponse(Guid.Empty, false),
                 cancellation: cancellationToken);
             return;
         }
@@ -42,11 +55,10 @@ public class MailConfirmationEndpoint : EndpointWithoutRequest<MailConfirmationR
         _context.Users.Update(user);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
-        
+
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
-        
-        await SendAsync(new MailConfirmationResponse(user.Id, true), 
-            cancellation: cancellationToken);
+
+        await SendRedirectAsync(_configuration["WebAppUrl"] + "/mail-confirmation?token=" + request.Token);
     }
 }
