@@ -1,0 +1,43 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  - production
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  projectFile: 'ApexPerformance.API.csproj'
+
+steps:
+  - checkout: self
+    fetchDepth: 0
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET SDK (8.x LTS)'
+    inputs:
+      packageType: 'sdk'
+      version: '8.x'
+
+  - script: dotnet restore $(projectFile)
+    displayName: 'Restore'
+
+  # dotnet build 
+  - script: dotnet build $(projectFile) -c $(buildConfiguration) --no-restore
+    displayName: 'Build ($(buildConfiguration))'
+
+  # Publish using your exact command (kept variableized for flexibility)
+  - script: dotnet publish -c $(buildConfiguration) $(projectFile) -o $(Build.ArtifactStagingDirectory) --no-build
+    displayName: 'Publish (dotnet publish -c Release ApexPerformance.API.csproj)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish artifact'
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop_api_production'
+      publishLocation: 'Container'
+
