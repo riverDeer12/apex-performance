@@ -23,16 +23,6 @@ steps:
       packageType: 'sdk'
       version: '8.x'
 
-  # Optional: speed up restores between runs
-  - task: Cache@2
-    displayName: 'Cache NuGet packages'
-    inputs:
-      key: 'nuget | "$(Agent.OS)" | $(projectFile)'
-      restoreKeys: |
-        nuget | "$(Agent.OS)"
-        nuget
-      path: ~/.nuget/packages
-
   - script: dotnet restore $(projectFile)
     displayName: 'Restore'
 
