@@ -37,7 +37,7 @@ public class EmailService : IEmailService
 
             html = html.Replace("{{Description}}",
                 "Your Appointment has been " + appointment.AppointmentStatus.Name + ".");
-            
+
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
@@ -73,7 +73,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{CoachFullName}}", coach.FullName);
 
             html = html.Replace("{{Clients}}", clientsNames);
-            
+
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
@@ -134,8 +134,9 @@ public class EmailService : IEmailService
         html = html.Replace("{{Username}}", user.UserName);
 
         html = html.Replace("{{Password}}", password);
-        
-        html = html.Replace("{{LoginLink}}", _configuration["ApiUrl"] + "/authentication/mail-confirmation?token=" + jwtToken);
+
+        html = html.Replace("{{LoginLink}}",
+            _configuration["WebAppUrl"] + "/authentication/mail-confirmation?token=" + jwtToken);
 
         message.Body = new TextPart("html") { Text = html };
 
@@ -161,7 +162,7 @@ public class EmailService : IEmailService
     public void SendCancelationRequest(Client client, Appointment appointment)
     {
         var coaches = appointment.Coaches.Select(x => x.Coach).ToList();
-        
+
         foreach (var coach in coaches)
         {
             var message = new MimeMessage();
@@ -173,24 +174,25 @@ public class EmailService : IEmailService
 
             message.Subject = "You Have New Cancelation Request from: " + client.FullName;
 
-            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CancelationRequestEmail.html");
-            
+            var templatePath =
+                Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CancelationRequestEmail.html");
+
             var clientsNames = string.Join(",", appointment.Clients.Select(x => x.Client.FullName));
 
             var html = File.ReadAllText(templatePath);
 
             html = html.Replace("{{ClientFullName}}", client.FullName);
-            
+
             html = html.Replace("{{CoachFullName}}", coach.FullName);
-            
+
             html = html.Replace("{{Clients}}", clientsNames);
-            
+
             html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
 
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
 
             html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
-            
+
             var approveLink = _configuration["WebAppUrl"] + "/cancelation-request/approve";
 
             var declineLink = _configuration["WebAppUrl"] + "/cancelation-request/decline";
@@ -198,17 +200,17 @@ public class EmailService : IEmailService
             html = html.Replace("{{ApproveLink}}", approveLink);
 
             html = html.Replace("{{DeclineLink}}", declineLink);
-            
+
             message.Body = new TextPart("html") { Text = html };
 
             ConnectToMailServer(message);
         }
     }
-    
+
     private void ConnectToMailServer(MimeMessage message)
     {
         using var smtpClient = new SmtpClient();
-        
+
         try
         {
             smtpClient.Connect(_configuration["MailConfiguration::Host"],
