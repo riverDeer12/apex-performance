@@ -12,6 +12,8 @@ pool:
 variables:
   buildConfiguration: 'Release'
   projectFile: 'ApexPerformance.API.csproj'
+  startupProject: 'ApexPerformance.API'
+  outputSql: '$(Build.ArtifactStagingDirectory)\migrations.sql'
 
 steps:
   - checkout: self
@@ -29,6 +31,22 @@ steps:
   # dotnet build 
   - script: dotnet build $(projectFile) -c $(buildConfiguration) --no-restore
     displayName: 'Build ($(buildConfiguration))'
+
+  # --- EF Core: install CLI + add to PATH (Windows hosted agent) ---
+  - script: dotnet tool install -g dotnet-ef
+    displayName: 'Install dotnet-ef'
+  - script: echo ##vso[task.prependpath]%USERPROFILE%\.dotnet\tools
+    displayName: 'Add dotnet-ef to PATH'
+
+  # --- EF Core: generate an idempotent script for safe prod deploys ---
+  - script: >
+      dotnet ef migrations script
+      --project $(projectFile)
+      --startup-project $(startupProject)
+      --configuration $(buildConfiguration)
+      --idempotent
+      --output "$(outputSql)"
+    displayName: 'Generate idempotent EF migration script'
 
   # Publish using your exact command (kept variableized for flexibility)
   - script: dotnet publish -c $(buildConfiguration) $(projectFile) -o $(Build.ArtifactStagingDirectory) --no-build
