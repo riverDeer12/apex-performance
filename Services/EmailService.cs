@@ -1,4 +1,5 @@
 using ApexPerformance.API.Database.Entities;
+using FastEndpoints.Security;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -116,6 +117,32 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendForgotPasswordEmail(User user, string token)
+    {
+        var resetPasswordLink = $"{_configuration["WebAppUrl"]}/authentication/reset-password?token={token}";
+
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(user.UserName, user.Email));
+
+        message.Subject = "Forgot Password Link";
+
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ForgotPasswordEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{Username}}", user.UserName);
+
+        html = html.Replace("{{ResetPasswordLink}}", resetPasswordLink);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
+    }
+
     public async void SendCredentialsEmail(User user, string password, string jwtToken)
     {
         var message = new MimeMessage();
@@ -140,23 +167,7 @@ public class EmailService : IEmailService
 
         message.Body = new TextPart("html") { Text = html };
 
-        using var smtpClient = new SmtpClient();
-
-        try
-        {
-            await smtpClient.ConnectAsync(_configuration["MailConfiguration::Host"],
-                int.Parse(_configuration["MailConfiguration::Port"]!),
-                MailKit.Security.SecureSocketOptions.StartTls);
-            await smtpClient.AuthenticateAsync(_configuration["MailConfiguration::Username"],
-                _configuration["MailConfiguration::Password"]);
-            await smtpClient.SendAsync(message);
-            await smtpClient.DisconnectAsync(true);
-            Console.WriteLine("Email sent successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to send email: {ex.Message}");
-        }
+        ConnectToMailServer(message);
     }
 
     public void SendCancelationRequest(Client client, Appointment appointment)

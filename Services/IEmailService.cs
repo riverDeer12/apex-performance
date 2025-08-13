@@ -30,6 +30,15 @@ public interface IEmailService
     ///  new password.
     /// </summary>
     /// <param name="user">User that needs to reset email.</param>
+    /// <param name="token">Value of JWT token.</param>
+    /// <returns></returns>
+    void SendForgotPasswordEmail(User user, string token);    
+    
+    /// <summary>
+    /// Send email to user, so it is
+    /// notified about changing password.
+    /// </summary>
+    /// <param name="user">User that needs to reset email.</param>
     /// <returns></returns>
     void SendResetPasswordEmail(User user);
 
