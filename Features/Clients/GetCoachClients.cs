@@ -58,7 +58,7 @@ public class GetCoachClientsEndpoint : EndpointWithoutRequest<List<GetCoachClien
         }
 
         var clients = await _context.Clients
-            .Where(x => clientIds.Contains(x.Id))
+            .Where(x => clientIds.Contains(x.Id) && !x.IsDeleted)
             .Include(userType => userType.User)
             .ToListAsync(cancellationToken: cancellationToken);
 

@@ -10,7 +10,14 @@ public record GetCoachClientsBodyMeasurementsResponse(
     Guid Id,
     string FirstName,
     string LastName,
-    DateTimeOffset MeasuredAt);
+    DateTimeOffset CreatedAt,
+    decimal Weight,
+    decimal Shoulders,
+    decimal Chest,
+    decimal UpperArm,
+    decimal Waist,
+    decimal Thigh,
+    decimal Calves);
 
 public class
     GetCoachClientsBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetCoachClientsBodyMeasurementsResponse>>
@@ -50,11 +57,13 @@ public class
         }
 
         var bodyMeasurements = await _context.BodyMeasurements
-            .Where(x => clientIds.Contains(x.ClientId)).Include(bodyMeasurement => bodyMeasurement.Client)
+            .Where(x => clientIds.Contains(x.ClientId) && !x.IsDeleted)
+            .Include(bodyMeasurement => bodyMeasurement.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(bodyMeasurements.Select(x =>
-                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.Client.FirstName, x.Client.LastName, x.UpdatedAt))
+                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.Client.FirstName, x.Client.LastName, x.CreatedAt,
+                    x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves))
             .ToList(), cancellation: cancellationToken);
     }
 }

@@ -17,14 +17,10 @@ public record GetBodyMeasurementsResponse(
     decimal Calves,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    BodyMeasurementClientDto Client);
+    string FirstName,
+    string LastName);
 
-public record BodyMeasurementsByDayDto(
-    DateTimeOffset Day,
-    List<GetBodyMeasurementsResponse> BodyMeasurements
-);
-
-public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<BodyMeasurementsByDayDto>>
+public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMeasurementsResponse>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -53,24 +49,13 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<BodyMeasu
             return;
         }
 
-        var bodyMeasurementsList = bodyMeasurements
+        var bodyMeasurementsResponse = bodyMeasurements
             .Select(x =>
                 new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist,
-                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt,
-                    new BodyMeasurementClientDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
+                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt, x.Client.FirstName, x.Client.LastName
+                ))
             .ToList();
-
-        var bodyMeasurementsByDay = GroupBodyMeasurementsByDay(bodyMeasurementsList);
-
-        await SendAsync(bodyMeasurementsByDay, cancellation: cancellationToken);
-    }
-    
-    private List<BodyMeasurementsByDayDto> GroupBodyMeasurementsByDay(List<GetBodyMeasurementsResponse> bodyMeasurementsList)
-    {
-        var itemsByDay = bodyMeasurementsList
-            .GroupBy(item => item.CreatedAt.Date)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        return itemsByDay.Select(x => new BodyMeasurementsByDayDto(x.Key, x.Value)).ToList();
+        
+        await SendAsync(bodyMeasurementsResponse, cancellation: cancellationToken);
     }
 }
