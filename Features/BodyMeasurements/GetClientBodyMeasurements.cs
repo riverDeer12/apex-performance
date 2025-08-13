@@ -4,7 +4,6 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.X509.SigI;
 
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
@@ -28,7 +27,8 @@ public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<Get
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public GetClientBodyMeasurementsEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext context)
+    public GetClientBodyMeasurementsEndpoint(ICurrentUserService currentUserService, 
+        ApexPerformanceContext context)
     {
         _currentUserService = currentUserService;
         _context = context;
