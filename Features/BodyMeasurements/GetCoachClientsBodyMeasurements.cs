@@ -8,9 +8,11 @@ namespace ApexPerformance.API.Features.BodyMeasurements;
 
 public record GetCoachClientsBodyMeasurementsResponse(
     Guid Id,
+    Guid ClientId,
     string FirstName,
     string LastName,
     DateTimeOffset CreatedAt,
+    decimal Height,
     decimal Weight,
     decimal Shoulders,
     decimal Chest,
@@ -63,8 +65,8 @@ public class
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(bodyMeasurements.Select(x =>
-                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.Client.FirstName, x.Client.LastName, x.CreatedAt,
-                    x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, x.Glutes))
+                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.ClientId, x.Client.FirstName, x.Client.LastName, x.CreatedAt,
+                    x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, x.Glutes))
             .ToList(), cancellation: cancellationToken);
     }
 }
