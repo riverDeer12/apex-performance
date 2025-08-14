@@ -12,6 +12,7 @@ public class BodyMeasurement : BaseEntity
     public decimal Waist { get; set; }
     public decimal Thigh { get; set; }
     public decimal Calves { get; set; }
+    public decimal Glutes { get; set; }
 
     public required Client Client { get; set; }
     

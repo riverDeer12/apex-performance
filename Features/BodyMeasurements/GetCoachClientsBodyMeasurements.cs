@@ -17,7 +17,8 @@ public record GetCoachClientsBodyMeasurementsResponse(
     decimal UpperArm,
     decimal Waist,
     decimal Thigh,
-    decimal Calves);
+    decimal Calves,
+    decimal Glutes);
 
 public class
     GetCoachClientsBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetCoachClientsBodyMeasurementsResponse>>
@@ -63,7 +64,7 @@ public class
 
         await SendAsync(bodyMeasurements.Select(x =>
                 new GetCoachClientsBodyMeasurementsResponse(x.Id, x.Client.FirstName, x.Client.LastName, x.CreatedAt,
-                    x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves))
+                    x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, x.Glutes))
             .ToList(), cancellation: cancellationToken);
     }
 }

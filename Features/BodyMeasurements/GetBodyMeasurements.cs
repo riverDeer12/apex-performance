@@ -15,6 +15,7 @@ public record GetBodyMeasurementsResponse(
     decimal Waist,
     decimal Thigh,
     decimal Calves,
+    decimal Glutes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     string FirstName,
@@ -52,7 +53,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
         var bodyMeasurementsResponse = bodyMeasurements
             .Select(x =>
                 new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist,
-                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt, x.Client.FirstName, x.Client.LastName
+                    x.Thigh, x.Calves, x.Glutes, x.CreatedAt, x.UpdatedAt, x.Client.FirstName, x.Client.LastName
                 ))
             .ToList();
         

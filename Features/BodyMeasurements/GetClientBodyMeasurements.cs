@@ -17,6 +17,7 @@ public record GetClientBodyMeasurementsResponse(
     decimal Waist,
     decimal Thigh,
     decimal Calves,
+    decimal Glutes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     PersonDataDto Client
@@ -27,7 +28,7 @@ public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<Get
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public GetClientBodyMeasurementsEndpoint(ICurrentUserService currentUserService, 
+    public GetClientBodyMeasurementsEndpoint(ICurrentUserService currentUserService,
         ApexPerformanceContext context)
     {
         _currentUserService = currentUserService;
@@ -63,7 +64,7 @@ public class GetClientBodyMeasurementsEndpoint : EndpointWithoutRequest<List<Get
             .Select(x =>
                 new GetClientBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm,
                     x.Waist,
-                    x.Thigh, x.Calves, x.CreatedAt, x.UpdatedAt,
+                    x.Thigh, x.Calves, x.Glutes, x.CreatedAt, x.UpdatedAt,
                     new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
             .ToList(), cancellation: cancellationToken);
     }
