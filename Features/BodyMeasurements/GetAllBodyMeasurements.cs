@@ -36,7 +36,7 @@ public class GetAllBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBod
         await SendAsync(bodyMeasurements
             .Select(x =>
                 new GetBodyMeasurementsResponse(x.Id, x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist,
-                    x.Thigh, x.Calves, x.Glutes, x.CreatedAt, x.UpdatedAt, x.Client.FirstName, x.Client.LastName))
+                    x.Thigh, x.Calves, x.Glutes, x.CreatedAt, x.UpdatedAt, x.ClientId, x.Client.FirstName, x.Client.LastName))
             .ToList(), cancellation: cancellationToken);
     }
 }
