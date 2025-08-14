@@ -16,7 +16,8 @@ public record CreateBodyMeasurementRequest(
     decimal UpperArm,
     decimal Waist,
     decimal Thigh,
-    decimal Calves
+    decimal Calves,
+    decimal Glutes
 );
 
 public record CreateBodyMeasurementResponse(
@@ -64,7 +65,8 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
             Waist = request.Waist,
             Thigh = request.Thigh,
             Calves = request.Calves,
-            Client = client
+            Client = client,
+            Glutes = request.Glutes
         };
 
         _context.BodyMeasurements.Add(bodyMeasurement);

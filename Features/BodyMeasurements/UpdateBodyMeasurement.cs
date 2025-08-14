@@ -15,7 +15,8 @@ public record UpdateBodyMeasurementRequest(
     decimal UpperArm,
     decimal Waist,
     decimal Thigh,
-    decimal Calves
+    decimal Calves,
+    decimal Glutes
 );
 
 public record UpdateBodyMeasurementResponse(
@@ -64,6 +65,7 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
         bodyMeasurement.Thigh = request.Thigh;
         bodyMeasurement.Calves = request.Calves;
         bodyMeasurement.Client = client;
+        bodyMeasurement.Glutes = request.Glutes;
 
         _context.BodyMeasurements.Update(bodyMeasurement);
 

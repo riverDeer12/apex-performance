@@ -16,6 +16,7 @@ public class BodyMeasurementConfiguration : IEntityTypeConfiguration<BodyMeasure
         builder.Property(b => b.Waist).HasColumnType("decimal(5,2)");
         builder.Property(b => b.Thigh).HasColumnType("decimal(5,2)");
         builder.Property(b => b.Calves).HasColumnType("decimal(5,2)");
+        builder.Property(b => b.Glutes).HasColumnType("decimal(5,2)");
         
         builder.ToTable("BodyMeasurements", c => c.IsTemporal());
     }
