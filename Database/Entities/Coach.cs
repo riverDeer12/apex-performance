@@ -12,5 +12,8 @@ public class Coach : UserType
     public ICollection<CoachClient> Clients { get; set; } = null!;
     public ICollection<CoachAppointment> Appointments { get; set; } = null!;
     public ICollection<CoachTimeSlot> TimeSlots { get; set; } = null!;
+
+    public ICollection<RecurringAppointment> RecurringAppointments { get; set; } = null!;
+
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 }

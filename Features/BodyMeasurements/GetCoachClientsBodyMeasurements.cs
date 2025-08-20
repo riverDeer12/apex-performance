@@ -65,7 +65,8 @@ public class
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(bodyMeasurements.Select(x =>
-                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.ClientId, x.Client.FirstName, x.Client.LastName, x.CreatedAt,
+                new GetCoachClientsBodyMeasurementsResponse(x.Id, x.ClientId, x.Client.FirstName, x.Client.LastName,
+                    x.CreatedAt,
                     x.Height, x.Weight, x.Shoulders, x.Chest, x.UpperArm, x.Waist, x.Thigh, x.Calves, x.Glutes))
             .ToList(), cancellation: cancellationToken);
     }
