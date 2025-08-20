@@ -44,8 +44,4 @@
     <None Remove="wwwroot\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Appointments\RecurringAppointments\" />
-  </ItemGroup>
-
 </Project>
