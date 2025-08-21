@@ -19,7 +19,7 @@ public class DeleteClientEndpoint : EndpointWithoutRequest<DeleteClientResponse>
     public override void Configure()
     {
         Delete("api/clients/{id}");
-        Permissions(nameof(UserPermissions.CanDeleteClient));
+        Permissions(UserPermissions.CanDeleteClient);
         Options(x => x.WithTags("Clients"));
     }
 

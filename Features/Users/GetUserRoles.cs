@@ -19,7 +19,7 @@ public sealed class GetUserRolesEndpoint : EndpointWithoutRequest<List<GetUserRo
     public override void Configure()
     {
         Get("api/users/{id}/roles");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Users"));
     }
 

@@ -35,7 +35,7 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
     public override void Configure()
     {
         Put("api/body-measurements/{id}");
-        Permissions(nameof(UserPermissions.CanUpdateBodyMeasurement));
+        Permissions(UserPermissions.CanUpdateBodyMeasurement);
         Options(x => x.WithTags("BodyMeasurements"));
     }
 

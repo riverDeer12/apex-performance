@@ -23,7 +23,7 @@ public class GetAppointmentStatusesEndpoint : EndpointWithoutRequest<List<GetApp
     public override void Configure()
     {
         Get("api/appointment-statuses");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentStatuses"));
     }
 

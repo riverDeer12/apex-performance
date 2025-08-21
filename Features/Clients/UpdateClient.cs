@@ -33,7 +33,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
     public override void Configure()
     {
         Put("api/clients/{id}");
-        Permissions(nameof(UserPermissions.CanUpdateClient));
+        Permissions(UserPermissions.CanUpdateClient);
         Options(x => x.WithTags("Clients"));
     }
 

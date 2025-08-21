@@ -258,6 +258,13 @@ VALUES
 ('7aeb7c60-844b-4a38-b1ae-55829b8e5f3a', 'CanUpdateCoach', 'Allows updating coach.', 'Coaches'),
 ('e3b4a1d2-f0fa-4d56-b349-8bb7b78f99ff', 'CanDeleteCoach', 'Allows deleting coach.', 'Coaches')
 
+-- RecurringAppointments
+('f2b3c2d1-4a5e-4826-93b1-4e6f9e2c9a13', 'CanGetRecurringAppointments', 'Allows viewing recurring appointments.', 'RecurringAppointments'),
+('a1d7e3f4-62c5-4b9a-bf73-7e8f1d3b2c45', 'CanCreateRecurringAppointment', 'Allows creating recurring appointment.', 'RecurringAppointments'),
+('c8e9a2d6-7f41-4e5d-92a4-1f6b3d9e8c72', 'CanUpdateRecurringAppointment', 'Allows updating recurring appointment.', 'RecurringAppointments'),
+('b3d5f7e1-9a24-4c8e-85d7-2e9f6a3c4b58', 'CanDeleteRecurringAppointment', 'Allows deleting recurring appointment.', 'RecurringAppointments')
+
+
 -- CREATING PERMISSIONS RELATIONSHIPS FOR CLIENT AND COACH ROLES
     INSERT
 INTO RolePermissions (RoleId, PermissionId)

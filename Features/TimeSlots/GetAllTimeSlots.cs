@@ -19,7 +19,7 @@ public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotRe
     public override void Configure()
     {
         Get("api/time-slots");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("TimeSlots"));
     }
 

@@ -34,7 +34,7 @@ public class GetCoachClientsEndpoint : EndpointWithoutRequest<List<GetCoachClien
     public override void Configure()
     {
         Get("api/clients/coach");
-        Permissions([nameof(UserPermissions.CanGetClients)]);
+        Permissions(UserPermissions.CanGetClients);
         Options(x => x.WithTags("Clients"));
     }
 

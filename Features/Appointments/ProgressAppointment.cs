@@ -22,7 +22,7 @@ public class ProgressAppointmentEndpoint : EndpointWithoutRequest<ProgressAppoin
     public override void Configure()
     {
         Get("api/appointments/progress/{id}");
-        Permissions(nameof(UserPermissions.CanProgressAppointment));
+        Permissions(UserPermissions.CanProgressAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

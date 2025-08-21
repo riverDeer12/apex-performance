@@ -39,9 +39,9 @@ public class AuthenticationService : IAuthenticationService
     
     private async Task<List<string>> GetUserPermissions(List<string> roles, ICollection<UserRole> userRoles)
     {
-        var isSuperAdmin = roles.Contains(nameof(UserRoles.SuperAdmin));
+        var isSuperAdmin = roles.Contains(UserRoles.SuperAdmin);
 
-        var admin = roles.Contains(nameof(UserRoles.Administrator));
+        var admin = roles.Contains(UserRoles.Administrator);
 
         if (isSuperAdmin)
         {

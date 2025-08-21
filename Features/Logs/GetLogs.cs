@@ -37,7 +37,7 @@ public class GetLogsEndpoint : EndpointWithoutRequest<List<GetLogResponse>>
     public override void Configure()
     {
         Get("api/logs");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Logs"));
     }
 

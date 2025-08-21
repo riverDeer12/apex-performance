@@ -42,7 +42,7 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
     public override void Configure()
     {
         Post("api/body-measurements");
-        Permissions(nameof(UserPermissions.CanCreateBodyMeasurement));
+        Permissions(UserPermissions.CanCreateBodyMeasurement);
         Options(x => x.WithTags("BodyMeasurements"));
     }
 

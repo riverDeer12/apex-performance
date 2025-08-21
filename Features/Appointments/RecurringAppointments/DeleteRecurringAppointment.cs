@@ -19,7 +19,7 @@ public class DeleteRecurringAppointmentEndpoint : EndpointWithoutRequest<DeleteR
     public override void Configure()
     {
         Delete("api/recurring-appointments/{id}");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator), nameof(UserRoles.Coach));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("RecurringAppointments"));
     }
 

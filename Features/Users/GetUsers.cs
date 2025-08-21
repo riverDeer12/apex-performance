@@ -30,7 +30,7 @@ public sealed class GetUsersEndpoint : EndpointWithoutRequest<List<GetUserRespon
     public override void Configure()
     {
         Get("api/users");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Users"));
     }
 
