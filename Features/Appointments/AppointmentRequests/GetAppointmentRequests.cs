@@ -28,7 +28,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
     public override void Configure()
     {
         Get("api/appointment-requests");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentRequests"));
     }
 

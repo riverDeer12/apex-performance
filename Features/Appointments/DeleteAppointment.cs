@@ -27,7 +27,7 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
     public override void Configure()
     {
         Delete("api/appointments/{id}");
-        Permissions(nameof(UserPermissions.CanDeleteAppointment));
+        Permissions(UserPermissions.CanDeleteAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

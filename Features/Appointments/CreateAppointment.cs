@@ -43,7 +43,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
     public override void Configure()
     {
         Post("api/appointments");
-        Permissions(nameof(UserPermissions.CanCreateAppointment));
+        Permissions(UserPermissions.CanCreateAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

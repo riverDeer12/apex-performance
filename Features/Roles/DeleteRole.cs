@@ -19,7 +19,7 @@ public class DeleteRoleEndpoint : EndpointWithoutRequest<DeleteRoleResponse>
     public override void Configure()
     {
         Delete("api/roles/{id}");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Roles"));
     }
 

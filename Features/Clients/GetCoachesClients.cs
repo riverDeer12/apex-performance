@@ -20,7 +20,7 @@ public class GetCoachesClientsEndpoint : Endpoint<GetCoachesClientsRequest, List
     public override void Configure()
     {
         Post("api/clients/coaches");
-        Permissions([nameof(UserPermissions.CanGetClients)]);
+        Permissions(UserPermissions.CanGetClients);
         Options(x => x.WithTags("Clients"));
     }
 

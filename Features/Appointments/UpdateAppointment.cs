@@ -39,7 +39,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
     public override void Configure()
     {
         Put("api/appointments/{id}");
-        Permissions(nameof(UserPermissions.CanUpdateAppointment));
+        Permissions(UserPermissions.CanUpdateAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

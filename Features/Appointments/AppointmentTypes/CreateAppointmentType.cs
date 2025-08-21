@@ -27,7 +27,7 @@ public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeReque
     public override void Configure()
     {
         Post("api/appointment-types");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentTypes"));
     }
 

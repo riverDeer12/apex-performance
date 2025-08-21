@@ -27,7 +27,7 @@ public class UpdateRoleEndpoint : Endpoint<UpdateRoleRequest, UpdateRoleResponse
     public override void Configure()
     {
         Put("api/roles/{id}");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Roles"));
     }
 

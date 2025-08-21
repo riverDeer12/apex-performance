@@ -23,7 +23,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
     public override void Configure()
     {
         Post("api/administrators");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Administrators"));
     }
 

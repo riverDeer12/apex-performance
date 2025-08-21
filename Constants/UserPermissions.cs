@@ -29,4 +29,10 @@ public static class UserPermissions
     public const string CanCreateCoach = nameof(CanCreateCoach);
     public const string CanUpdateCoach = nameof(CanUpdateCoach);
     public const string CanDeleteCoach = nameof(CanDeleteCoach);
+    
+    // Recurring Appointments Permissions
+    public const string CanGetRecurringAppointments = nameof(CanGetRecurringAppointments);
+    public const string CanCreateRecurringAppointment = nameof(CanCreateRecurringAppointment);
+    public const string CanUpdateRecurringAppointment = nameof(CanUpdateRecurringAppointment);
+    public const string CanDeleteRecurringAppointment = nameof(CanDeleteRecurringAppointment);
 }

@@ -39,7 +39,7 @@ public class GetStatisticsEndpoint : EndpointWithoutRequest<GetStatisticsRespons
     public override void Configure()
     {
         Get("api/statistics/administrator");
-        Roles([nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator)]);
+        Roles([UserRoles.SuperAdmin, UserRoles.Administrator]);
         Options(x => x.WithTags("Statistics"));
     }
 
@@ -59,16 +59,16 @@ public class GetStatisticsEndpoint : EndpointWithoutRequest<GetStatisticsRespons
 
         var todayAppointments = await _context.Appointments
             .Where(x => !x.IsDeleted
-                        && x.AppointmentStatus.Name == nameof(BusinessStatuses.Approved)
+                        && x.AppointmentStatus.Name == BusinessStatuses.Approved
                         && x.StartTime.Date == DateTime.Today)
             .ToListAsync(cancellationToken);
 
         var pendingAppointments = await _context.Appointments
-            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == nameof(BusinessStatuses.Pending))
+            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == BusinessStatuses.Pending)
             .ToListAsync(cancellationToken);
 
         var inProgressAppointments = await _context.Appointments
-            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == nameof(BusinessStatuses.InProgress))
+            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == BusinessStatuses.InProgress)
             .ToListAsync(cancellationToken);
 
         var lowCreditStatistics = MapToStatisticsItem(

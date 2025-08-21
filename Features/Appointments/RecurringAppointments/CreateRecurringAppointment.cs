@@ -24,7 +24,7 @@ public class
     public override void Configure()
     {
         Post("api/recurring-appointments");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator), nameof(UserRoles.Coach));
+        Permissions(UserPermissions.CanCreateRecurringAppointment);
         Options(x => x.WithTags("RecurringAppointments"));
     }
 

@@ -25,7 +25,7 @@ public class DeclineAppointmentEndpoint : EndpointWithoutRequest<DeclineAppointm
     public override void Configure()
     {
         Get("api/appointments/decline/{id}");
-        Permissions(nameof(UserPermissions.CanDeclineAppointment));
+        Permissions(UserPermissions.CanDeclineAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

@@ -24,7 +24,7 @@ public class DeleteBodyMeasurementEndpoint : EndpointWithoutRequest<DeleteBodyMe
     public override void Configure()
     {
         Delete("api/body-measurements/{id}");
-        Permissions(nameof(UserPermissions.CanDeleteBodyMeasurement));
+        Permissions(UserPermissions.CanDeleteBodyMeasurement);
         Options(x => x.WithTags("BodyMeasurements"));
     }
 

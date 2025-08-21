@@ -25,7 +25,7 @@ public class CancelAppointmentEndpoint: EndpointWithoutRequest<StatusResponse>
     public override void Configure()
     {
         Get("api/appointments/cancel/{id}");
-        Permissions(nameof(UserPermissions.CanCancelAppointment));
+        Permissions(UserPermissions.CanCancelAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

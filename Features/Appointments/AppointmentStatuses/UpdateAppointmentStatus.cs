@@ -27,7 +27,7 @@ public class UpdateAppointmentStatusEndpoint : Endpoint<UpdateAppointmentStatusR
     public override void Configure()
     {
         Put("api/appointment-statuses/{id}");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentStatuses"));
     }
 

@@ -24,7 +24,7 @@ public class CreateCoachTimeSlotsEndpoint : Endpoint<CreateCoachTimeSlotsRequest
     public override void Configure()
     {
         Post("api/time-slots/coach");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("TimeSlots"));
     }
 

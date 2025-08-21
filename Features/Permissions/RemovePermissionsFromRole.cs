@@ -23,7 +23,7 @@ public sealed class
     public override void Configure()
     {
         Delete("api/permissions/{roleId}");
-        Roles(nameof(UserRoles.SuperAdmin));
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Permissions"));
     }
 

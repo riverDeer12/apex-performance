@@ -28,7 +28,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
     public override void Configure()
     {
         Get("api/appointments/approve/{id}");
-        Permissions(nameof(UserPermissions.CanApproveAppointment));
+        Permissions(UserPermissions.CanApproveAppointment);
         Options(x => x.WithTags("Appointments"));
     }
 

@@ -26,7 +26,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
     public override void Configure()
     {
         Get("api/appointment-requests/pending");
-        Roles(nameof(UserRoles.SuperAdmin), nameof(UserRoles.Administrator));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentRequests"));
     }
 

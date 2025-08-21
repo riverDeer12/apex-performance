@@ -42,7 +42,7 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
     public override void Configure()
     {
         Post("api/clients");
-        Permissions(nameof(UserPermissions.CanCreateClient));
+        Permissions(UserPermissions.CanCreateClient);
         Options(x => x.WithTags("Clients"));
     }
 
