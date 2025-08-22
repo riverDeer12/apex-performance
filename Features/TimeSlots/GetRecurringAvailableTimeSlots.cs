@@ -1,6 +1,5 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,8 +16,8 @@ public class GetRecurringAvailableTimeSlotsEndpoint : EndpointWithoutRequest<Lis
 
     public override void Configure()
     {
-        Get("api/recurring-appointments/available/{id}");
-        Options(x => x.WithTags("RecurringAppointments"));
+        Get("api/time-slots/recurring/available/{id}");
+        Options(x => x.WithTags("TimeSlots"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
@@ -48,6 +47,8 @@ public class GetRecurringAvailableTimeSlotsEndpoint : EndpointWithoutRequest<Lis
 
         var availableTimeSlots = coachTimeSlots
             .Where(x => !takenTimeSlotIds.Contains(x.TimeSlotId))
+            .OrderBy(x => x.TimeSlot.Day)
+            .ThenBy(x => x.TimeSlot.StartTime)
             .ToList();
 
         await SendAsync(availableTimeSlots.Select(x =>

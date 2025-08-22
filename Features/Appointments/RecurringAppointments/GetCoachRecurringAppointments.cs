@@ -49,9 +49,13 @@ public class GetCoachRecurringAppointmentsEndpoint : EndpointWithoutRequest<List
         }
 
         await SendAsync(recurringAppointments.Select(x =>
-                new RecurringAppointmentDto(
-                    new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
-                    new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName), x.TimeSlot)).ToList(),
+                    new RecurringAppointmentDto(
+                        new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
+                        new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName),
+                        new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name, 
+                            Enum.GetName(typeof(DayOfWeek), x.TimeSlot.Day)!,
+                            x.TimeSlot.StartTime, x.TimeSlot.EndTime)))
+                .ToList(),
             cancellation: cancellationToken);
     }
 }
