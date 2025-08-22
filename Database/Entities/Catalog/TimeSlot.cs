@@ -8,11 +8,11 @@ public class TimeSlot
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Key]
     public Guid Id { get; set; }
+
     public DayOfWeek Day { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public ICollection<CoachTimeSlot> Coaches { get; set; } = null!;
     public ICollection<RecurringAppointment> RecurringAppointments { get; set; } = null!;
-    
-    [NotMapped] public string Name => $"{StartTime} - {EndTime}";
+    [NotMapped] public string Name => $"{Enum.GetName(typeof(DayOfWeek), Day)}, {StartTime} - {EndTime}";
 }

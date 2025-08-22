@@ -5,5 +5,5 @@ namespace ApexPerformance.API.Shared.DataTransferObjects;
 public record RecurringAppointmentDto(
     PersonDataDto Client,
     PersonDataDto Coach,
-    TimeSlot TimeSlot
+    TimeSlotDto TimeSlot
 );
