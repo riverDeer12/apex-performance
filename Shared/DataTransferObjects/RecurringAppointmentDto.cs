@@ -1,5 +1,3 @@
-using ApexPerformance.API.Database.Entities.Catalog;
-
 namespace ApexPerformance.API.Shared.DataTransferObjects;
 
 public record RecurringAppointmentDto(

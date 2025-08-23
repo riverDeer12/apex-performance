@@ -1,6 +1,5 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +28,7 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
             .Include(recurringAppointment => recurringAppointment.Client)
             .Include(recurringAppointment => recurringAppointment.Coach)
             .Include(recurringAppointment => recurringAppointment.TimeSlot)
+            .OrderBy(x => x.TimeSlot.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (recurringAppointments.Count == 0)
@@ -42,7 +42,7 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
                         new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
                         new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName),
                         new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name,
-                            Enum.GetName(typeof(DayOfWeek), x.TimeSlot.Day)!,
+                            x.TimeSlot.Day,
                             x.TimeSlot.StartTime, x.TimeSlot.EndTime)))
                 .ToList(),
             cancellation: cancellationToken);
