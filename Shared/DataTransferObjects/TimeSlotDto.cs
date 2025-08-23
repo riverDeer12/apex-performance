@@ -3,7 +3,7 @@ namespace ApexPerformance.API.Shared.DataTransferObjects;
 public record TimeSlotDto(
     Guid Id,
     string Name,
-    string Day,
+    DayOfWeek Day,
     TimeOnly StartTime,
     TimeOnly EndTime
 );
