@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -37,26 +36,57 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
         if (coach is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var newTimeSlot = new TimeSlot
+        var startTime = TimeOnly.Parse(request.StartTime);
+
+        var endTime = TimeOnly.Parse(request.EndTime);
+
+        var existingTimeSlot =
+            await _context.TimeSlots.FirstOrDefaultAsync(x => x.StartTime == startTime && x.EndTime == endTime,
+                cancellationToken: cancellationToken);
+
+        if (existingTimeSlot is not null)
         {
-            Day = request.Day,
-            StartTime = TimeOnly.Parse(request.StartTime),
-            EndTime = TimeOnly.Parse(request.EndTime) 
-        };
+            var coachHasExistingTimeSlot =
+                _context.CoachTimeSlots.Any(x => x.TimeSlotId == existingTimeSlot.Id &&
+                                                 x.CoachId == coach.Id);
 
-        _context.TimeSlots.Add(newTimeSlot);
+            if (coachHasExistingTimeSlot)
+                ThrowError(ValidationMessages.NotValid);
 
-        var result = await _context.SaveChangesAsync(cancellationToken);
+            await CreateCoachTimeSlot(coach, existingTimeSlot, cancellationToken);
 
-        if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            await SendAsync(new CreateTimeSlotResponse(existingTimeSlot.Id), cancellation: cancellationToken);
+        }
+        else
+        {
+            var newTimeSlot = new TimeSlot
+            {
+                Day = request.Day,
+                StartTime = startTime,
+                EndTime = endTime
+            };
 
+            _context.TimeSlots.Add(newTimeSlot);
+
+            var result = await _context.SaveChangesAsync(cancellationToken);
+
+            if (result == 0)
+                throw new Exception(ErrorMessages.SavingError);
+
+            await CreateCoachTimeSlot(coach, newTimeSlot, cancellationToken);
+
+            await SendAsync(new CreateTimeSlotResponse(newTimeSlot.Id), cancellation: cancellationToken);
+        }
+    }
+
+    private async Task CreateCoachTimeSlot(Coach coach, TimeSlot timeSlot, CancellationToken cancellationToken)
+    {
         var coachTimeSlot = new CoachTimeSlot
         {
             CoachId = coach.Id,
             Coach = coach,
-            TimeSlotId = newTimeSlot.Id,
-            TimeSlot = newTimeSlot
+            TimeSlotId = timeSlot.Id,
+            TimeSlot = timeSlot
         };
 
         _context.CoachTimeSlots.Add(coachTimeSlot);
@@ -65,8 +95,6 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
 
         if (coachTimeSlotResult == 0)
             throw new Exception(ErrorMessages.SavingError);
-
-        await SendAsync(new CreateTimeSlotResponse(newTimeSlot.Id), cancellation: cancellationToken);
     }
 }
 

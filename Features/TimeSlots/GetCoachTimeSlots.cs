@@ -37,6 +37,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<TimeSlotDto
         var coachTimeSlots = await _context.CoachTimeSlots
             .Where(x => x.CoachId == coach.Id)
             .Include(coachTimeSlot => coachTimeSlot.TimeSlot)
+            .OrderBy(x => x.TimeSlot.Day)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (coachTimeSlots.Count == 0)
@@ -47,7 +48,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<TimeSlotDto
 
         await SendAsync(
             coachTimeSlots.Select(x => new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name, x.TimeSlot.Day,
-                    x.TimeSlot.StartTime, x.TimeSlot.EndTime))
+                    x.TimeSlot.StartTime, x.TimeSlot.EndTime, x.IsActive))
                 .ToList(), cancellation: cancellationToken);
     }
 }

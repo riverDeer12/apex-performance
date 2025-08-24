@@ -11,4 +11,6 @@ public class CoachTimeSlot
     public Guid TimeSlotId { get; set; }
 
     public TimeSlot TimeSlot { get; set; } = null!;
+
+    public bool IsActive { get; set; } = true;
 }
