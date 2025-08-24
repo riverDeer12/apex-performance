@@ -39,7 +39,7 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
         }
 
         var timeSlots = await _context.CoachTimeSlots
-            .Where(x => coaches.Contains(x.CoachId))
+            .Where(x => coaches.Contains(x.CoachId) && x.IsActive)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
