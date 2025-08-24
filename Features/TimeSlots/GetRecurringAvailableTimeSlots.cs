@@ -31,7 +31,7 @@ public class GetRecurringAvailableTimeSlotsEndpoint : EndpointWithoutRequest<Lis
             ThrowError(ErrorMessages.NotFound);
 
         var coachTimeSlots = await _context.CoachTimeSlots
-            .Where(x => x.CoachId == coach.Id)
+            .Where(x => x.CoachId == coach.Id && x.IsActive)
             .Include(coachTimeSlot => coachTimeSlot.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
