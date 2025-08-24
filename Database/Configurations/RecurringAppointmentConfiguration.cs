@@ -11,6 +11,10 @@ public class RecurringAppointmentConfiguration : IEntityTypeConfiguration<Recurr
         builder.HasKey(e => e.Id);
         
         builder
+            .Property(c => c.IsActive)
+            .HasDefaultValue(true);
+        
+        builder
             .HasOne(a => a.Client)
             .WithMany(b => b.RecurringAppointments)
             .HasForeignKey(b => b.ClientId)
