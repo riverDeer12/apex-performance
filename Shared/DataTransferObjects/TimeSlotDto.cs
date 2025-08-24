@@ -5,5 +5,6 @@ public record TimeSlotDto(
     string Name,
     DayOfWeek Day,
     TimeOnly StartTime,
-    TimeOnly EndTime
+    TimeOnly EndTime,
+    bool Status = false
 );
