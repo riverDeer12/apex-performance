@@ -9,7 +9,11 @@ public class CoachTimeSlotConfiguration : IEntityTypeConfiguration<CoachTimeSlot
     public void Configure(EntityTypeBuilder<CoachTimeSlot> builder)
     {
         builder.HasKey(bc => new { bc.CoachId, bc.TimeSlotId });
-
+        
+        builder
+            .Property(c => c.IsActive)
+            .HasDefaultValue(true);
+        
         builder
             .HasOne(bc => bc.Coach)
             .WithMany(b => b.TimeSlots)

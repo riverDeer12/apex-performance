@@ -39,11 +39,12 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
 
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
+                        x.Id,
                         new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
                         new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName),
                         new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name,
                             x.TimeSlot.Day,
-                            x.TimeSlot.StartTime, x.TimeSlot.EndTime)))
+                            x.TimeSlot.StartTime, x.TimeSlot.EndTime), x.IsActive))
                 .ToList(),
             cancellation: cancellationToken);
     }
