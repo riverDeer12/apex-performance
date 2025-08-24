@@ -11,4 +11,6 @@ public class RecurringAppointment : BaseEntity
     public required Coach Coach { get; set; }
     public Guid TimeSlotId { get; set; }
     public required TimeSlot TimeSlot { get; set; }
+    
+    public bool IsActive { get; set; }
 }
