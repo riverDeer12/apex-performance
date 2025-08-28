@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApexPerformance.API.Database.Migrations
 {
     [DbContext(typeof(ApexPerformanceContext))]
-    [Migration("20250828160923_AddedRelationshipForRecurringAppointmentClients00")]
-    partial class AddedRelationshipForRecurringAppointmentClients00
+    [Migration("20250828173722_Bugfixing02")]
+    partial class Bugfixing02
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -529,7 +529,7 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.HasIndex("RecurringAppointmentId");
 
-                    b.ToTable("ClientRecurringAppointment");
+                    b.ToTable("ClientRecurringAppointments");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
@@ -610,15 +610,15 @@ namespace ApexPerformance.API.Database.Migrations
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachAppointment", b =>
                 {
-                    b.Property<Guid>("CoachId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("AppointmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("CoachId", "AppointmentId");
+                    b.Property<Guid>("CoachId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("AppointmentId");
+                    b.HasKey("AppointmentId", "CoachId");
+
+                    b.HasIndex("CoachId");
 
                     b.ToTable("CoachAppointments");
                 });
@@ -692,9 +692,6 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<Guid>("AppointmentTypeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("CoachId")
                         .HasColumnType("uniqueidentifier");
 
@@ -737,8 +734,6 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentTypeId");
-
-                    b.HasIndex("ClientId");
 
                     b.HasIndex("CoachId");
 
@@ -1014,13 +1009,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
                         .WithMany("RecurringAppointments")
                         .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ApexPerformance.API.Database.Entities.RecurringAppointment", "RecurringAppointment")
                         .WithMany("Clients")
                         .HasForeignKey("RecurringAppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Client");
@@ -1044,13 +1039,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasOne("ApexPerformance.API.Database.Entities.Appointment", "Appointment")
                         .WithMany("Coaches")
                         .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ApexPerformance.API.Database.Entities.Coach", "Coach")
                         .WithMany("Appointments")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Appointment");
@@ -1101,13 +1096,7 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasOne("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", "AppointmentType")
                         .WithMany("RecurringAppointments")
                         .HasForeignKey("AppointmentTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
-                        .WithMany()
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ApexPerformance.API.Database.Entities.Coach", "Coach")
@@ -1123,8 +1112,6 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("AppointmentType");
-
-                    b.Navigation("Client");
 
                     b.Navigation("Coach");
 
