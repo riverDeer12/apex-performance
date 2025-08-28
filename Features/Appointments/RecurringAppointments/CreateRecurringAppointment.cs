@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.RecurringAppointments;
 
-public record CreateRecurringAppointmentRequest(Guid Client, Guid Coach, Guid TimeSlot);
+public record CreateRecurringAppointmentRequest(List<Guid> Clients, Guid Coach, Guid TimeSlot, Guid Type);
 
 public record CreateRecurringAppointmentResponse(Guid Id);
 
@@ -31,13 +31,6 @@ public class
     public override async Task HandleAsync(CreateRecurringAppointmentRequest request,
         CancellationToken cancellationToken)
     {
-        var client =
-            await _context.Clients.FirstOrDefaultAsync(x => x.Id == request.Client,
-                cancellationToken: cancellationToken);
-
-        if (client is null)
-            ThrowError(ErrorMessages.NotFound);
-
         var coach =
             await _context.Coaches.FirstOrDefaultAsync(x => x.Id == request.Coach,
                 cancellationToken: cancellationToken);
@@ -52,14 +45,21 @@ public class
         if (timeSlot is null)
             ThrowError(ErrorMessages.NotFound);
 
+        var type =
+            await _context.AppointmentTypes.FirstOrDefaultAsync(x => x.Id == request.Type,
+                cancellationToken: cancellationToken);
+
+        if (type is null)
+            ThrowError(ErrorMessages.NotFound);
+
         if (!CheckIfRecurringAvailable(request.Coach, request.TimeSlot))
             ThrowError(ValidationMessages.NotValid);
 
         var newRecurringAppointment = new RecurringAppointment
         {
-            Client = client,
             Coach = coach,
-            TimeSlot = timeSlot
+            TimeSlot = timeSlot,
+            AppointmentType = type
         };
 
         _context.RecurringAppointments.Add(newRecurringAppointment);
@@ -82,8 +82,9 @@ public sealed class CreateRecurringAppointmentValidator : Validator<CreateRecurr
 {
     public CreateRecurringAppointmentValidator()
     {
-        RuleFor(x => x.Client).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Coach).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.TimeSlot).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

@@ -44,4 +44,9 @@
     <None Remove="wwwroot\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Database\Migrations\20250828165828_RemovedCoachManyToMany00.cs" />
+    <Compile Remove="Database\Migrations\20250828165828_RemovedCoachManyToMany00.Designer.cs" />
+  </ItemGroup>
+
 </Project>

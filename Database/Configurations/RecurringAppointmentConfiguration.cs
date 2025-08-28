@@ -15,12 +15,6 @@ public class RecurringAppointmentConfiguration : IEntityTypeConfiguration<Recurr
             .HasDefaultValue(true);
         
         builder
-            .HasOne(a => a.Client)
-            .WithMany(b => b.RecurringAppointments)
-            .HasForeignKey(b => b.ClientId)
-            .OnDelete(DeleteBehavior.Restrict);
-        
-        builder
             .HasOne(a => a.Coach)
             .WithMany(b => b.RecurringAppointments)
             .HasForeignKey(b => b.CoachId)
@@ -31,6 +25,11 @@ public class RecurringAppointmentConfiguration : IEntityTypeConfiguration<Recurr
             .WithMany(b => b.RecurringAppointments)
             .HasForeignKey(b => b.TimeSlotId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        builder
+            .HasOne(a => a.AppointmentType)
+            .WithMany(b => b.RecurringAppointments)
+            .HasForeignKey(b => b.AppointmentTypeId);
 
         builder.ToTable("RecurringAppointments", c => c.IsTemporal());
     }
