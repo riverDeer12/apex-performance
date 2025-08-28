@@ -35,11 +35,13 @@ public class GetClientRecurringAppointmentsEndpoint : EndpointWithoutRequest<Lis
         if (client is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var recurringAppointments = await _context.RecurringAppointments
-            .Where(x => !x.IsDeleted && x.ClientId == client.Id)
+        var recurringAppointments = await _context.ClientRecurringAppointments
+            .Where(x => x.ClientId == client.Id)
             .Include(recurringAppointment => recurringAppointment.Client)
-            .Include(recurringAppointment => recurringAppointment.Coach)
-            .Include(recurringAppointment => recurringAppointment.TimeSlot)
+            .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
+            .ThenInclude(recurringAppointment => recurringAppointment.Coach)
+            .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
+            .ThenInclude(recurringAppointment => recurringAppointment.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (recurringAppointments.Count == 0)
@@ -50,12 +52,14 @@ public class GetClientRecurringAppointmentsEndpoint : EndpointWithoutRequest<Lis
 
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
-                        x.Id,
+                        x.RecurringAppointmentId,
                         new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
-                        new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName),
-                        new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name, 
-                            x.TimeSlot.Day,
-                            x.TimeSlot.StartTime, x.TimeSlot.EndTime), x.IsActive))
+                        new PersonDataDto(x.RecurringAppointment.Coach.Id, x.RecurringAppointment.Coach.FirstName,
+                            x.RecurringAppointment.Coach.LastName),
+                        new TimeSlotDto(x.RecurringAppointment.TimeSlot.Id, x.RecurringAppointment.TimeSlot.Name,
+                            x.RecurringAppointment.TimeSlot.Day,
+                            x.RecurringAppointment.TimeSlot.StartTime, x.RecurringAppointment.TimeSlot.EndTime),
+                        x.RecurringAppointment.IsActive))
                 .ToList(),
             cancellation: cancellationToken);
     }
