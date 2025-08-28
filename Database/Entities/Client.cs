@@ -14,8 +14,7 @@ public class Client : UserType
     
     public ICollection<BodyMeasurement> BodyMeasurements { get; set; } = null!;
     public ICollection<CoachClient> Coaches { get; set; } = null!;
-    
-    public ICollection<RecurringAppointment> RecurringAppointments { get; set; } = null!;
+    public ICollection<ClientRecurringAppointment> RecurringAppointments { get; set; } = null!;
     
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 }
