@@ -29,7 +29,8 @@ public class RecurringAppointmentConfiguration : IEntityTypeConfiguration<Recurr
         builder
             .HasOne(a => a.AppointmentType)
             .WithMany(b => b.RecurringAppointments)
-            .HasForeignKey(b => b.AppointmentTypeId);
+            .HasForeignKey(b => b.AppointmentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("RecurringAppointments", c => c.IsTemporal());
     }

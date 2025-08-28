@@ -514,6 +514,21 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("ClientAppointments");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ClientRecurringAppointment", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RecurringAppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ClientId", "RecurringAppointmentId");
+
+                    b.HasIndex("RecurringAppointmentId");
+
+                    b.ToTable("ClientRecurringAppointments");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
                 {
                     b.Property<Guid>("Id")
@@ -592,15 +607,15 @@ namespace ApexPerformance.API.Database.Migrations
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.CoachAppointment", b =>
                 {
-                    b.Property<Guid>("CoachId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("AppointmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("CoachId", "AppointmentId");
+                    b.Property<Guid>("CoachId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("AppointmentId");
+                    b.HasKey("AppointmentId", "CoachId");
+
+                    b.HasIndex("CoachId");
 
                     b.ToTable("CoachAppointments");
                 });
@@ -671,7 +686,7 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ClientId")
+                    b.Property<Guid>("AppointmentTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CoachId")
@@ -715,7 +730,7 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("AppointmentTypeId");
 
                     b.HasIndex("CoachId");
 
@@ -986,6 +1001,25 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ClientRecurringAppointment", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
+                        .WithMany("RecurringAppointments")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.RecurringAppointment", "RecurringAppointment")
+                        .WithMany("Clients")
+                        .HasForeignKey("RecurringAppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Client");
+
+                    b.Navigation("RecurringAppointment");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Coach", b =>
                 {
                     b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
@@ -1002,13 +1036,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasOne("ApexPerformance.API.Database.Entities.Appointment", "Appointment")
                         .WithMany("Coaches")
                         .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ApexPerformance.API.Database.Entities.Coach", "Coach")
                         .WithMany("Appointments")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Appointment");
@@ -1056,9 +1090,9 @@ namespace ApexPerformance.API.Database.Migrations
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.RecurringAppointment", b =>
                 {
-                    b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
+                    b.HasOne("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", "AppointmentType")
                         .WithMany("RecurringAppointments")
-                        .HasForeignKey("ClientId")
+                        .HasForeignKey("AppointmentTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1074,7 +1108,7 @@ namespace ApexPerformance.API.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Client");
+                    b.Navigation("AppointmentType");
 
                     b.Navigation("Coach");
 
@@ -1144,6 +1178,8 @@ namespace ApexPerformance.API.Database.Migrations
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.AppointmentType", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("RecurringAppointments");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Catalog.TimeSlot", b =>
@@ -1178,6 +1214,11 @@ namespace ApexPerformance.API.Database.Migrations
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Permission", b =>
                 {
                     b.Navigation("Roles");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.RecurringAppointment", b =>
+                {
+                    b.Navigation("Clients");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Role", b =>
