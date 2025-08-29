@@ -28,7 +28,6 @@ public class ApexPerformanceContext : DbContext
     public DbSet<BodyMeasurement> BodyMeasurements { get; set; }
     public DbSet<Client> Clients { get; set; }
     public DbSet<ClientAppointment> ClientAppointments { get; set; }
-    
     public DbSet<ClientRecurringAppointment> ClientRecurringAppointments { get; set; }
     public DbSet<Coach> Coaches { get; set; }
     public DbSet<CoachAppointment> CoachAppointments { get; set; }

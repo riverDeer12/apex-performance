@@ -32,6 +32,7 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ICoachService, CoachService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentService>();
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 

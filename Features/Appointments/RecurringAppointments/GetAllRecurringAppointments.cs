@@ -41,7 +41,10 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
                         x.RecurringAppointmentId,
-                        new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
+                        x.RecurringAppointment.Clients.Select(clientRecurringAppointment =>
+                            new PersonDataDto(clientRecurringAppointment.Client.Id,
+                                clientRecurringAppointment.Client.FirstName,
+                                clientRecurringAppointment.Client.LastName)).ToList(),
                         new PersonDataDto(x.RecurringAppointment.Coach.Id, x.RecurringAppointment.Coach.FirstName,
                             x.RecurringAppointment.Coach.LastName),
                         new TimeSlotDto(x.RecurringAppointment.TimeSlot.Id, x.RecurringAppointment.TimeSlot.Name,

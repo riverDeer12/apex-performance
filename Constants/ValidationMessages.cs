@@ -8,4 +8,5 @@ public static class ValidationMessages
     public const string EmailAlreadyExists = nameof(EmailAlreadyExists);
     public const string WrongUserNameOrPassword = nameof(WrongUserNameOrPassword);
     public const string NotValid = nameof(NotValid);
+    public const string DuplicatesNotAllowed = nameof(DuplicatesNotAllowed);
 }
