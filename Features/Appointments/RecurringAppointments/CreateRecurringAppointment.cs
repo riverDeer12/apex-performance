@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,13 @@ public class
     CreateRecurringAppointmentEndpoint : Endpoint<CreateRecurringAppointmentRequest, CreateRecurringAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IRecurringAppointmentService _recurringAppointmentService;
 
-    public CreateRecurringAppointmentEndpoint(ApexPerformanceContext context)
+    public CreateRecurringAppointmentEndpoint(ApexPerformanceContext context,
+        IRecurringAppointmentService recurringAppointmentService)
     {
         _context = context;
+        _recurringAppointmentService = recurringAppointmentService;
     }
 
     public override void Configure()
@@ -32,25 +36,20 @@ public class
         CancellationToken cancellationToken)
     {
         var coach =
-            await _context.Coaches.FirstOrDefaultAsync(x => x.Id == request.Coach,
+            await _context.Coaches.SingleAsync(x => x.Id == request.Coach,
                 cancellationToken: cancellationToken);
-
-        if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
 
         var timeSlot =
-            await _context.TimeSlots.FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
+            await _context.TimeSlots.SingleAsync(x => x.Id == request.TimeSlot,
                 cancellationToken: cancellationToken);
-
-        if (timeSlot is null)
-            ThrowError(ErrorMessages.NotFound);
 
         var type =
-            await _context.AppointmentTypes.FirstOrDefaultAsync(x => x.Id == request.Type,
+            await _context.AppointmentTypes.SingleAsync(x => x.Id == request.Type,
                 cancellationToken: cancellationToken);
 
-        if (type is null)
-            ThrowError(ErrorMessages.NotFound);
+        var clients = _context.Clients
+            .Where(x => request.Clients.Contains(x.Id))
+            .ToList();
 
         if (!CheckIfRecurringAvailable(request.Coach, request.TimeSlot))
             ThrowError(ValidationMessages.NotValid);
@@ -59,7 +58,8 @@ public class
         {
             Coach = coach,
             TimeSlot = timeSlot,
-            AppointmentType = type
+            AppointmentType = type,
+            IsActive = true
         };
 
         _context.RecurringAppointments.Add(newRecurringAppointment);
@@ -68,6 +68,8 @@ public class
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
+
+        await _recurringAppointmentService.UpdateClients(clients, newRecurringAppointment, cancellationToken);
 
         await SendAsync(new CreateRecurringAppointmentResponse(newRecurringAppointment.Id),
             cancellation: cancellationToken);
@@ -78,13 +80,55 @@ public class
             .Any(x => x.TimeSlotId == timeSlotId && x.CoachId == coachId);
 }
 
-public sealed class CreateRecurringAppointmentValidator : Validator<CreateRecurringAppointmentRequest>
+public sealed class CreateRecurringAppointmentValidator
+    : Validator<CreateRecurringAppointmentRequest>
 {
     public CreateRecurringAppointmentValidator()
     {
-        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Coach).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.TimeSlot).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Clients)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .Must(list => list.Distinct().Count() == list.Count)
+            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .MustAsync(async (clientIds, cancellationToken) =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                var numberOfClients = await db.Clients
+                    .Where(client => clientIds.Contains(client.Id))
+                    .CountAsync(cancellationToken);
+
+                return numberOfClients == clientIds.Count;
+            })
+            .WithMessage(ErrorMessages.NotFound);
+
+        RuleFor(x => x.Coach)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+
+        RuleFor(x => x.TimeSlot)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                return db.TimeSlots.AnyAsync(timeSlot => timeSlot.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+
+        RuleFor(x => x.Type)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                return db.AppointmentTypes.AnyAsync(appointmentType => appointmentType.Id == id,
+                    cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
     }
 }

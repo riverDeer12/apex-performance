@@ -23,7 +23,7 @@ public class GetCoachRecurringAppointmentsEndpoint : EndpointWithoutRequest<List
     public override void Configure()
     {
         Get("api/recurring-appointments/coach");
-        Roles(UserRoles.Coach);
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("RecurringAppointments"));
     }
 
@@ -52,14 +52,21 @@ public class GetCoachRecurringAppointmentsEndpoint : EndpointWithoutRequest<List
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
                         x.RecurringAppointmentId,
-                        new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName),
+                        x.RecurringAppointment.Clients.Select(clientRecurringAppointment =>
+                            new PersonDataDto(clientRecurringAppointment.Client.Id,
+                                clientRecurringAppointment.Client.FirstName,
+                                clientRecurringAppointment.Client.LastName)).ToList(),
                         new PersonDataDto(x.RecurringAppointment.Coach.Id, x.RecurringAppointment.Coach.FirstName,
                             x.RecurringAppointment.Coach.LastName),
                         new TimeSlotDto(x.RecurringAppointment.TimeSlot.Id, x.RecurringAppointment.TimeSlot.Name,
                             x.RecurringAppointment.TimeSlot.Day,
                             x.RecurringAppointment.TimeSlot.StartTime, x.RecurringAppointment.TimeSlot.EndTime),
                         x.RecurringAppointment.IsActive))
+                .DistinctBy(dto => dto.Id)
+                .OrderBy(x => x.TimeSlot.Day)
+                .ThenBy(x => x.TimeSlot.StartTime)
                 .ToList(),
-            cancellation: cancellationToken);
+            cancellation:
+            cancellationToken);
     }
 }
