@@ -14,7 +14,7 @@ public class DateExtensions
 
     public static DateTimeOffset GetNextWeekday(DayOfWeek day)
     {
-        DateTime today = DateTime.Today.AddDays(45);
+        DateTime today = DateTime.Today;
 
         int daysToAdd = ((int)day - (int)today.DayOfWeek + 7) % 7;
 

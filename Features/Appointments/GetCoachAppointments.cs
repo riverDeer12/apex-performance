@@ -48,14 +48,14 @@ public class GetCoachAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsS
         }
 
         var coachAppointments = await _context.Appointments
-            .Where(appointment => appointmentRelations.Contains(appointment.Id))
+            .Where(appointment => appointmentRelations.Contains(appointment.Id) && appointment.StartTime > DateTimeOffset.Now)
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(clientAppointment => clientAppointment.Coach)
             .Include(appointment => appointment.Clients)
             .ThenInclude(coachAppointment => coachAppointment.Client)
-            .OrderByDescending(x => x.StartTime)
+            .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken);
 
         if (coachAppointments.Count is 0)
