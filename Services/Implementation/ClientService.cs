@@ -4,7 +4,7 @@ using ApexPerformance.API.Database.Entities;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class ClientService : IClientService
 {

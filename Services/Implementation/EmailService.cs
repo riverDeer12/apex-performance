@@ -1,9 +1,8 @@
 using ApexPerformance.API.Database.Entities;
-using FastEndpoints.Security;
 using MailKit.Net.Smtp;
 using MimeKit;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class EmailService : IEmailService
 {
@@ -216,6 +215,24 @@ public class EmailService : IEmailService
 
             ConnectToMailServer(message);
         }
+    }
+
+    public void SendWeekAppointmentsSchedule(Client client, string schedule)
+    {
+        var message = new MimeMessage();
+
+        var templatePath =
+            Path.Combine(Directory.GetCurrentDirectory(), "Templates", "WeekAppointmentsSchedule.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{Username}}", client.FullName);
+
+        html = html.Replace("{{Schedule}}", schedule);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
     }
 
     private void ConnectToMailServer(MimeMessage message)

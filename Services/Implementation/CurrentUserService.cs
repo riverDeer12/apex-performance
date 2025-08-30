@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class CurrentUserService : ICurrentUserService
 {

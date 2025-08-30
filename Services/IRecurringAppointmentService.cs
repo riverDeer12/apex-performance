@@ -12,4 +12,13 @@ public interface IRecurringAppointmentService
     /// <param name="cancellationToken">Value of a cancellation token.</param>
     /// <returns></returns>
     Task UpdateClients(List<Client> clients, RecurringAppointment recurring, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Check if there is already registered
+    /// recurring appointment with values.
+    /// </summary>
+    /// <param name="coachId">Coach identifier.</param>
+    /// <param name="timeSlotId">Timeslot identifier.</param>
+    /// <returns></returns>
+    bool CheckIfRecurringAvailable(Guid coachId, Guid timeSlotId);
 }

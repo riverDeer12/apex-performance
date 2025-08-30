@@ -1,6 +1,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Middlewares;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Services.Implementation;
 using FastEndpoints;
 using FastEndpoints.Security;
 using Microsoft.EntityFrameworkCore;

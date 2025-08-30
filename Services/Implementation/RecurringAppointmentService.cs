@@ -2,7 +2,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using EFCore.BulkExtensions;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class RecurringAppointmentService : IRecurringAppointmentService
 {
@@ -19,12 +19,14 @@ public class RecurringAppointmentService : IRecurringAppointmentService
         var appointmentClients = clients
             .Select(client => new ClientRecurringAppointment()
             {
-                ClientId = client.Id,
                 Client = client,
-                RecurringAppointmentId = recurring.Id,
                 RecurringAppointment = recurring
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
     }
+
+    public bool CheckIfRecurringAvailable(Guid coachId, Guid timeSlotId) =>
+        !_context.RecurringAppointments
+            .Any(x => x.TimeSlotId == timeSlotId && x.CoachId == coachId);
 }

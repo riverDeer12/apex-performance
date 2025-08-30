@@ -5,7 +5,7 @@ using ApexPerformance.API.Database.Entities;
 using FastEndpoints.Security;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class AuthenticationService : IAuthenticationService
 {

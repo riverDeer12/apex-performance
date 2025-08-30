@@ -3,7 +3,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class UserService : IUserService
 {
