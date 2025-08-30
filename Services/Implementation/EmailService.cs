@@ -221,6 +221,13 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(client.FullName, client.Email));
+
+        message.Subject = "Next Week Schedule " + client.FullName;
+
         var templatePath =
             Path.Combine(Directory.GetCurrentDirectory(), "Templates", "WeekAppointmentsSchedule.html");
 

@@ -27,6 +27,10 @@ public class AppointmentService : IAppointmentService
     public async Task UpdateCoaches(List<Coach> coaches, Appointment appointment,
         CancellationToken cancellationToken)
     {
+        await _context.CoachAppointments
+            .Where(coachAppointment => coachAppointment.AppointmentId == appointment.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+        
         var appointmentCoaches = coaches
             .Select(coach => new CoachAppointment
             {
@@ -60,6 +64,10 @@ public class AppointmentService : IAppointmentService
     public async Task UpdateClients(List<Client> clients, Appointment appointment,
         CancellationToken cancellationToken)
     {
+        await _context.ClientAppointments
+            .Where(clientAppointment => clientAppointment.AppointmentId == appointment.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+        
         var appointmentClients = clients
             .Select(client => new ClientAppointment
             {

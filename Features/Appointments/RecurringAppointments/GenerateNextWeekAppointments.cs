@@ -78,10 +78,6 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             await _appointmentService.UpdateClients(clients, newAppointment, cancellationToken);
 
             await _appointmentService.UpdateCoaches(coaches, newAppointment, cancellationToken);
-            
-            newAppointment.Clients = clients
-                .Select(c => new ClientAppointment() { ClientId = c.Id, Client = c, Appointment = newAppointment })
-                .ToList();
 
             nextWeekAppointments.Add(newAppointment);
         }
@@ -100,14 +96,22 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
     private void SendNextWeekNotificationEmails(List<Client> recurringClients,
         List<Appointment> nextWeekAppointments)
     {
+        var nextWeekAppointmentsIds = nextWeekAppointments.Select(x => x.Id).ToList();
+
         foreach (var client in recurringClients)
         {
-            var clientAppointments = nextWeekAppointments
-                .Where(a => a.Clients.Any(ca => ca.ClientId == client.Id))
+            var clientAppointments = _context.ClientAppointments
+                .Where(clientAppointment => clientAppointment.ClientId == client.Id &&
+                                            nextWeekAppointmentsIds.Contains(clientAppointment.AppointmentId))
+                .Include(clientAppointment => clientAppointment.Appointment)
+                .Include(clientAppointment => clientAppointment.Appointment.AppointmentType )
+                .Include(clientAppointment => clientAppointment.Appointment.Coaches)
+                .ThenInclude(coachAppointment => coachAppointment.Coach)
+                .Select(x => x.Appointment)
                 .ToList();
 
             var emailBody = PrepareEmailBody(clientAppointments);
-            
+
             _emailService.SendWeekAppointmentsSchedule(client, emailBody);
         }
     }
@@ -115,7 +119,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
     private string PrepareEmailBody(List<Appointment> clientAppointments)
     {
         var emailBody = new List<string>();
-        
+
         foreach (var appointment in clientAppointments)
         {
             var day = Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day);
@@ -131,9 +135,9 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             emailBody.Add(appointmentStrings);
         }
 
-        return string.Join(Environment.NewLine, emailBody);
+        return string.Join("<br/>", emailBody);
     }
-    
+
 
     private async Task<Appointment> CreateAppointment(RecurringAppointment recurring, AppointmentStatus status,
         CancellationToken cancellationToken)
@@ -143,7 +147,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         var startTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.StartTime);
 
         var endTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.EndTime);
-        
+
         if (!await _appointmentService.CheckFreeSlot(startTime, endTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
