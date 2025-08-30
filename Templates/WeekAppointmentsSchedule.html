@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Next Week Schedule</title>
+    <style>
+        body {
+            background-color: #11111142;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        button {
+            background-color: #0074D9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #0090dd;
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.4);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .header {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            max-width: 100px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .content h2 {
+            color: #0074D9;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .credentials {
+            background-color: #222;
+            border: 1px solid #0074D9;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .credentials p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .footer {
+            background-color: #000;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            padding: 15px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://apex-performance.fit/assets/images/logo_transparent.png" alt="Company Logo"/>
+    </div>
+    <div class="content">
+        <h2>Hi, {{Username}}</h2>
+        <p>You can find your next week appointments below:</p>
+        <p>{{Schedule}}</p>
+    </div>
+    <div class="footer">
+        &copy; Apex Performance. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

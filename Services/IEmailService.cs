@@ -59,4 +59,13 @@ public interface IEmailService
     /// <param name="client">Client that sends cancellation request.</param>
     /// <param name="appointment">Appointment that client wants to cancel.</param>
     void SendCancelationRequest(Client client, Appointment appointment);
+
+    /// <summary>
+    /// Send email with appointments
+    /// schedule for next week.
+    /// </summary>
+    /// <param name="client">Client that needs to get email.</param>
+    /// <param name="schedule">HTML that represents schedule with appointments.</param>
+    void SendWeekAppointmentsSchedule(Client client, string schedule);
+
 }

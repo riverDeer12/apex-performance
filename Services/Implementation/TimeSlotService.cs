@@ -1,11 +1,10 @@
-using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Implementation;
 
 public class TimeSlotService : ITimeSlotService
 {

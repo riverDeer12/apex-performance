@@ -51,7 +51,7 @@ public class
             .Where(x => request.Clients.Contains(x.Id))
             .ToList();
 
-        if (!CheckIfRecurringAvailable(request.Coach, request.TimeSlot))
+        if (!_recurringAppointmentService.CheckIfRecurringAvailable(request.Coach, request.TimeSlot))
             ThrowError(ValidationMessages.NotValid);
 
         var newRecurringAppointment = new RecurringAppointment
@@ -74,10 +74,6 @@ public class
         await SendAsync(new CreateRecurringAppointmentResponse(newRecurringAppointment.Id),
             cancellation: cancellationToken);
     }
-
-    private bool CheckIfRecurringAvailable(Guid coachId, Guid timeSlotId) =>
-        !_context.RecurringAppointments
-            .Any(x => x.TimeSlotId == timeSlotId && x.CoachId == coachId);
 }
 
 public sealed class CreateRecurringAppointmentValidator
