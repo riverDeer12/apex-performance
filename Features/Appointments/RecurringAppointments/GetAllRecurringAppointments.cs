@@ -30,6 +30,8 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
             .ThenInclude(recurringAppointment => recurringAppointment.Coach)
             .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
             .ThenInclude(recurringAppointment => recurringAppointment.TimeSlot)
+            .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
+            .ThenInclude(recurringAppointment => recurringAppointment.AppointmentType)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (recurringAppointments.Count == 0)
@@ -50,7 +52,10 @@ public class GetAllRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<R
                         new TimeSlotDto(x.RecurringAppointment.TimeSlot.Id, x.RecurringAppointment.TimeSlot.Name,
                             x.RecurringAppointment.TimeSlot.Day,
                             x.RecurringAppointment.TimeSlot.StartTime, x.RecurringAppointment.TimeSlot.EndTime),
-                        x.RecurringAppointment.IsActive))
+                        x.RecurringAppointment.IsActive,
+                        new CatalogDataDto(x.RecurringAppointment.AppointmentType.Id,
+                            x.RecurringAppointment.AppointmentType.Name,
+                            x.RecurringAppointment.AppointmentType.Description)))
                 .ToList(),
             cancellation: cancellationToken);
     }

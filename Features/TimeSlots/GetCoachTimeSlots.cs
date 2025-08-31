@@ -35,7 +35,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<TimeSlotDto
             ThrowError(ErrorMessages.NotFound);
 
         var coachTimeSlots = await _context.CoachTimeSlots
-            .Where(x => x.CoachId == coach.Id && x.IsActive)
+            .Where(x => x.CoachId == coach.Id)
             .Include(coachTimeSlot => coachTimeSlot.TimeSlot)
             .OrderBy(x => x.TimeSlot.Day)
             .ToListAsync(cancellationToken: cancellationToken);
