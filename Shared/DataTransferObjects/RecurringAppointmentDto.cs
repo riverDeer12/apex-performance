@@ -5,5 +5,6 @@ public record RecurringAppointmentDto(
     List<PersonDataDto> Clients,
     PersonDataDto Coach,
     TimeSlotDto TimeSlot,
-    bool Status
+    bool Status,
+    CatalogDataDto Type
 );

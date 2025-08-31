@@ -41,7 +41,8 @@ public class GetRecurringAvailableTimeSlotsEndpoint : EndpointWithoutRequest<Lis
             return;
         }
 
-        var takenTimeSlotIds = await _context.RecurringAppointments.Where(x => x.CoachId == coach.Id)
+        var takenTimeSlotIds = await _context.RecurringAppointments
+            .Where(x => x.CoachId == coach.Id && x.IsActive)
             .Select(x => x.TimeSlotId)
             .ToListAsync(cancellationToken: cancellationToken);
 

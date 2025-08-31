@@ -35,13 +35,14 @@ public class GetCoachRecurringAppointmentsEndpoint : EndpointWithoutRequest<List
         if (coach is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var recurringAppointments = await _context.ClientRecurringAppointments
-            .Include(clientRecurringAppointment => clientRecurringAppointment.Client)
-            .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
-            .ThenInclude(recurringAppointment => recurringAppointment.Coach)
-            .Include(clientRecurringAppointment => clientRecurringAppointment.RecurringAppointment)
-            .ThenInclude(recurringAppointment => recurringAppointment.TimeSlot)
-            .ToListAsync(cancellationToken: cancellationToken);
+        var recurringAppointments =
+            await _context.RecurringAppointments.Where(x => x.CoachId == coach.Id)
+                .Include(recurringAppointment => recurringAppointment.Coach)
+                .Include(recurringAppointment => recurringAppointment.Clients)
+                .ThenInclude(clientRecurringAppointment => clientRecurringAppointment.Client)
+                .Include(recurringAppointment => recurringAppointment.TimeSlot)
+                .Include(recurringAppointment => recurringAppointment.AppointmentType)
+                .ToListAsync(cancellationToken: cancellationToken);
 
         if (recurringAppointments.Count == 0)
         {
@@ -51,17 +52,18 @@ public class GetCoachRecurringAppointmentsEndpoint : EndpointWithoutRequest<List
 
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
-                        x.RecurringAppointmentId,
-                        x.RecurringAppointment.Clients.Select(clientRecurringAppointment =>
+                        x.Id,
+                        x.Clients.Select(clientRecurringAppointment =>
                             new PersonDataDto(clientRecurringAppointment.Client.Id,
                                 clientRecurringAppointment.Client.FirstName,
                                 clientRecurringAppointment.Client.LastName)).ToList(),
-                        new PersonDataDto(x.RecurringAppointment.Coach.Id, x.RecurringAppointment.Coach.FirstName,
-                            x.RecurringAppointment.Coach.LastName),
-                        new TimeSlotDto(x.RecurringAppointment.TimeSlot.Id, x.RecurringAppointment.TimeSlot.Name,
-                            x.RecurringAppointment.TimeSlot.Day,
-                            x.RecurringAppointment.TimeSlot.StartTime, x.RecurringAppointment.TimeSlot.EndTime),
-                        x.RecurringAppointment.IsActive))
+                        new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
+                            x.Coach.LastName),
+                        new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name,
+                            x.TimeSlot.Day,
+                            x.TimeSlot.StartTime, x.TimeSlot.EndTime),
+                        x.IsActive,
+                        new CatalogDataDto(x.AppointmentType.Id, x.AppointmentType.Name, x.AppointmentType.Description)))
                 .DistinctBy(dto => dto.Id)
                 .OrderBy(x => x.TimeSlot.Day)
                 .ThenBy(x => x.TimeSlot.StartTime)

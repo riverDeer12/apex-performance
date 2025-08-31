@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.RecurringAppointments;
 
-public record UpdateRecurringAppointmentRequest(List<Guid> Clients, Guid Coach, Guid TimeSlot, Guid Type);
+public record UpdateRecurringAppointmentRequest(List<Guid> Clients, Guid Coach, Guid Type);
 
 public record UpdateRecurringAppointmentResponse(Guid Id);
 
@@ -27,7 +28,7 @@ public class
     public override void Configure()
     {
         Put("api/recurring-appointments/{id}");
-        Permissions(UserPermissions.CanUpdateRecurringAppointment);
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("RecurringAppointments"));
     }
 
@@ -47,9 +48,6 @@ public class
         var coach = await _context.Coaches.SingleAsync(x => x.Id == request.Coach,
             cancellationToken: cancellationToken);
 
-        var timeSlot = await _context.TimeSlots.SingleAsync(x => x.Id == request.TimeSlot,
-            cancellationToken: cancellationToken);
-
         var type = await _context.AppointmentTypes.SingleAsync(x => x.Id == request.Type,
             cancellationToken: cancellationToken);
 
@@ -57,7 +55,6 @@ public class
             .ToListAsync(cancellationToken: cancellationToken);
 
         recurringAppointment.Coach = coach;
-        recurringAppointment.TimeSlot = timeSlot;
         recurringAppointment.AppointmentType = type;
 
         _context.RecurringAppointments.Update(recurringAppointment);
@@ -101,16 +98,6 @@ public sealed class UpdateRecurringAppointmentValidator
             {
                 var db = Resolve<ApexPerformanceContext>();
                 return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
-            })
-            .WithMessage(ErrorMessages.NotFound);
-
-        RuleFor(x => x.TimeSlot)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
-            .MustAsync((id, cancellationToken)
-                =>
-            {
-                var db = Resolve<ApexPerformanceContext>();
-                return db.TimeSlots.AnyAsync(timeSlot => timeSlot.Id == id, cancellationToken);
             })
             .WithMessage(ErrorMessages.NotFound);
 
