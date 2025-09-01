@@ -41,7 +41,8 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
         var endTime = TimeOnly.Parse(request.EndTime);
 
         var existingTimeSlot =
-            await _context.TimeSlots.FirstOrDefaultAsync(x => x.StartTime == startTime && x.EndTime == endTime,
+            await _context.TimeSlots.FirstOrDefaultAsync(
+                x => x.StartTime == startTime && x.EndTime == endTime && x.Day == request.Day,
                 cancellationToken: cancellationToken);
 
         if (existingTimeSlot is not null)
@@ -49,7 +50,6 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
             var coachHasExistingTimeSlot =
                 _context.CoachTimeSlots.Any(x => x.TimeSlotId == existingTimeSlot.Id &&
                                                  x.CoachId == coach.Id);
-
             if (coachHasExistingTimeSlot)
                 ThrowError(ValidationMessages.NotValid);
 
