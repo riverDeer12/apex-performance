@@ -1,8 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
-using EFCore.BulkExtensions;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -109,7 +107,7 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         await _appointmentService.UpdateCoaches(coaches, appointment, cancellationToken);
 
-        _emailService.SendAppointmentStatus(clients, appointment);
+        _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
 
         await SendAsync(
             new UpdateAppointmentResponse(appointment.Id), cancellation: cancellationToken);

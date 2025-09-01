@@ -1,4 +1,5 @@
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -15,7 +16,7 @@ public class EmailService : IEmailService
         _authenticationService = authenticationService;
     }
 
-    public void SendAppointmentStatus(List<Client> clients, Appointment appointment)
+    public void SendAppointmentStatus(List<Client> clients, Appointment appointment, TimeSlot timeSlot)
     {
         foreach (var client in clients)
         {
@@ -37,20 +38,17 @@ public class EmailService : IEmailService
 
             html = html.Replace("{{Description}}",
                 "Your Appointment has been " + appointment.AppointmentStatus.Name + ".");
-
-            html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
-
-            html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
-
-            html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
-
+            
+            html = html.Replace("{{AppointmentTime}}", timeSlot.Name);
+            
             message.Body = new TextPart("html") { Text = html };
 
             ConnectToMailServer(message);
         }
     }
 
-    public void SendAppointmentRequestEmail(List<Coach> coaches, Appointment appointment)
+    public void SendAppointmentRequestEmail(List<Coach> coaches, List<Client> clients, Appointment appointment,
+        TimeSlot timeSlot)
     {
         foreach (var coach in coaches)
         {
@@ -68,17 +66,13 @@ public class EmailService : IEmailService
 
             var html = File.ReadAllText(templatePath);
 
-            var clientsNames = string.Join(",", appointment.Clients.Select(x => x.Client.FullName));
+            var clientsNames = string.Join(",", clients.Select(x => x.FullName));
 
             html = html.Replace("{{CoachFullName}}", coach.FullName);
 
             html = html.Replace("{{Clients}}", clientsNames);
 
-            html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
-
-            html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
-
-            html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
+            html = html.Replace("{{AppointmentTime}}", timeSlot.Name);
 
             var approveLink = _configuration["WebAppUrl"] + "/new-appointment-request/approve";
 

@@ -19,7 +19,9 @@ public class AppointmentService : IAppointmentService
         DateTimeOffset appointmentEndTime, CancellationToken cancellationToken, Guid? appointmentId = null)
     {
         return Task.FromResult(!_context.Appointments.Any(existing =>
-            appointmentStartTime < existing.EndTime && appointmentEndTime > existing.StartTime &&
+            appointmentStartTime < existing.EndTime && 
+            appointmentEndTime > existing.StartTime &&
+            existing.AppointmentStatus.Name == BusinessStatuses.Approved &&
             existing.Id != appointmentId
         ));
     }

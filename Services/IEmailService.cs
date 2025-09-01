@@ -1,4 +1,5 @@
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 
 namespace ApexPerformance.API.Services;
 
@@ -11,17 +12,21 @@ public interface IEmailService
     /// <param name="clients">Clients that need to get notification
     /// about a new appointment.</param>
     /// <param name="appointment">Appointment that needs to be sent.</param>
+    /// <param name="timeSlot">Appointment time slot.</param>
     /// <returns></returns>
-    void SendAppointmentStatus(List<Client> clients, Appointment appointment);
+    void SendAppointmentStatus(List<Client> clients, Appointment appointment, TimeSlot timeSlot);
 
     /// <summary>
     /// Send email to coach for new
     /// appointment request.
     /// </summary>
     /// <param name="coaches">Coaches that need to get email notification.</param>
+    /// <param name="clients">Clients that need to get email notification.</param>
     /// <param name="appointment">Appointment from request.</param>
+    /// <param name="timeSlot">Appointment time slot.</param>
     /// <returns></returns>
-    void SendAppointmentRequestEmail(List<Coach> coaches, Appointment appointment);
+    void SendAppointmentRequestEmail(List<Coach> coaches, List<Client> clients, Appointment appointment,
+        TimeSlot timeSlot);
 
     /// <summary>
     /// Send email to user for resetting
@@ -32,8 +37,8 @@ public interface IEmailService
     /// <param name="user">User that needs to reset email.</param>
     /// <param name="token">Value of JWT token.</param>
     /// <returns></returns>
-    void SendForgotPasswordEmail(User user, string token);    
-    
+    void SendForgotPasswordEmail(User user, string token);
+
     /// <summary>
     /// Send email to user, so it is
     /// notified about changing password.
@@ -67,5 +72,4 @@ public interface IEmailService
     /// <param name="client">Client that needs to get email.</param>
     /// <param name="schedule">HTML that represents schedule with appointments.</param>
     void SendWeekAppointmentsSchedule(Client client, string schedule);
-
 }

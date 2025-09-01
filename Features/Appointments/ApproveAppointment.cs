@@ -40,7 +40,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
             await _context.Appointments
                 .Include(appointment => appointment.Clients)
                 .ThenInclude(clientAppointment => clientAppointment.Client)
-                .Include(appointment => appointment.AppointmentType)
+                .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.TimeSlot)
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
@@ -64,7 +64,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
 
         var clients = appointment.Clients.Select(x => x.Client).ToList();
 
-        _emailService.SendAppointmentStatus(clients, appointment);
+        _emailService.SendAppointmentStatus(clients, appointment, appointment.TimeSlot);
 
         await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
