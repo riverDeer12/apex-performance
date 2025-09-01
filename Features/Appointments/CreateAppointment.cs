@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using FluentValidation;
@@ -33,11 +34,16 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
+    private readonly IEmailService _emailService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
+    public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
+        IEmailService emailService, ICurrentUserService currentUserService)
     {
         _context = context;
         _appointmentService = appointmentService;
+        _emailService = emailService;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -73,14 +79,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
 
-        var pendingStatus =
-            await _context.AppointmentStatuses
-                .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Pending),
-                    cancellationToken: cancellationToken);
-
-        if (pendingStatus is null)
-            ThrowError(ErrorMessages.NotFound);
-        
         var timeSlot =
             await _context.TimeSlots
                 .FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
@@ -88,11 +86,11 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (timeSlot is null)
             ThrowError(ErrorMessages.NotFound);
-        
+
         var appointment = new Appointment
         {
             AppointmentType = appointmentType,
-            AppointmentStatus = pendingStatus,
+            AppointmentStatus = await GetAppointmentStatus(cancellationToken),
             TimeSlot = timeSlot,
             StartTime = request.StartTime,
             EndTime = request.EndTime
@@ -109,9 +107,45 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         await _appointmentService.UpdateCoaches(coaches, appointment, cancellationToken);
 
+        SendNotificationEmails(coaches, clients, appointment, timeSlot);
+
         await SendAsync(
             new CreateAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
+    }
+
+    private void SendNotificationEmails(List<Coach> coaches, List<Client> clients, Appointment appointment,
+        TimeSlot timeSlot)
+    {
+        if (_currentUserService.UserIsClient)
+        {
+            _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
+        }
+        else
+        {
+            _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
+        }
+    }
+
+    private async Task<AppointmentStatus> GetAppointmentStatus(CancellationToken cancellationToken)
+    {
+        var pendingStatus =
+            await _context.AppointmentStatuses
+                .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Pending),
+                    cancellationToken: cancellationToken);
+
+        if (pendingStatus is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        var approvedStatus =
+            await _context.AppointmentStatuses
+                .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Approved),
+                    cancellationToken: cancellationToken);
+
+        if (approvedStatus is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        return _currentUserService.UserIsClient ? pendingStatus : approvedStatus;
     }
 }
 

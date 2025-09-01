@@ -1,3 +1,4 @@
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
@@ -42,12 +43,13 @@ public class TimeSlotService : ITimeSlotService
             .ToList();
 
         var takenTimeSlots = await _context.Appointments
-            .Where(x => timeSlotsIds.Contains(x.TimeSlotId))
+            .Where(x => timeSlotsIds.Contains(x.TimeSlotId) 
+                        && x.AppointmentStatus.Name == BusinessStatuses.Approved)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (takenTimeSlots.Count == 0) return coachesTimeSlots;
-        
+
         var availableTimeSlotIds = coachesTimeSlots
             .Where(timeSlot => !takenTimeSlots.Contains(timeSlot))
             .ToList();
