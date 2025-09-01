@@ -38,6 +38,7 @@ public class GetCoachTimeSlotsEndpoint : EndpointWithoutRequest<List<TimeSlotDto
             .Where(x => x.CoachId == coach.Id)
             .Include(coachTimeSlot => coachTimeSlot.TimeSlot)
             .OrderBy(x => x.TimeSlot.Day)
+            .ThenBy(x => x.TimeSlot.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (coachTimeSlots.Count == 0)
