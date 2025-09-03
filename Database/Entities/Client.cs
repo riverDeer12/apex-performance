@@ -16,5 +16,7 @@ public class Client : UserType
     public ICollection<CoachClient> Coaches { get; set; } = null!;
     public ICollection<ClientRecurringAppointment> RecurringAppointments { get; set; } = null!;
     
+    public ICollection<FunctionalMovementScreen> FunctionalMovementScreens { get; set; } = null!;
+    
     [NotMapped] public string FullName => $"{FirstName} {LastName}";
 }

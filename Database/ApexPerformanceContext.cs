@@ -33,6 +33,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<CoachAppointment> CoachAppointments { get; set; }
     public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<CoachTimeSlot> CoachTimeSlots { get; set; }
+    
+    public DbSet<FunctionalMovementScreen> FunctionalMovementScreens { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RecurringAppointment> RecurringAppointments { get; set; }
     public DbSet<Role> Roles { get; set; }
