@@ -113,8 +113,9 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
                 .ToList();
 
             var emailBody = PrepareEmailBody(clientAppointments);
-
-            _emailService.SendWeekAppointmentsSchedule(client, emailBody);
+            
+            if(!string.IsNullOrEmpty(emailBody))
+                _emailService.SendWeekAppointmentsSchedule(client, emailBody);
         }
     }
 
