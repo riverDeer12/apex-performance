@@ -71,6 +71,8 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         {
             var newAppointment = await CreateAppointment(recurring, approvedStatus, cancellationToken);
 
+            if (newAppointment is null) continue;
+
             var clients = recurring.Clients.Select(x => x.Client).ToList();
 
             var coaches = new List<Coach> { recurring.Coach };
@@ -104,7 +106,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
                 .Where(clientAppointment => clientAppointment.ClientId == client.Id &&
                                             nextWeekAppointmentsIds.Contains(clientAppointment.AppointmentId))
                 .Include(clientAppointment => clientAppointment.Appointment)
-                .Include(clientAppointment => clientAppointment.Appointment.AppointmentType )
+                .Include(clientAppointment => clientAppointment.Appointment.AppointmentType)
                 .Include(clientAppointment => clientAppointment.Appointment.Coaches)
                 .ThenInclude(coachAppointment => coachAppointment.Coach)
                 .Select(x => x.Appointment)
@@ -139,7 +141,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
     }
 
 
-    private async Task<Appointment> CreateAppointment(RecurringAppointment recurring, AppointmentStatus status,
+    private async Task<Appointment?> CreateAppointment(RecurringAppointment recurring, AppointmentStatus status,
         CancellationToken cancellationToken)
     {
         var appointmentDate = DateExtensions.GetNextWeekday(recurring.TimeSlot.Day);
@@ -149,7 +151,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         var endTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.EndTime);
 
         if (!await _appointmentService.CheckFreeSlot(startTime, endTime, cancellationToken))
-            ThrowError(ValidationMessages.NotValid);
+            return null;
 
         var newAppointment = new Appointment
         {
