@@ -1,5 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +18,15 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
     private readonly ApexPerformanceContext _context;
     private readonly IEmailService _emailService;
     private readonly IClientService _clientService;
+    private readonly IAppointmentService _appointmentService;
 
     public ApproveAppointmentEndpoint(ApexPerformanceContext context, IEmailService emailService,
-        IClientService clientService)
+        IClientService clientService, IAppointmentService appointmentService)
     {
         _context = context;
         _emailService = emailService;
         _clientService = clientService;
+        _appointmentService = appointmentService;
     }
 
     public override void Configure()
@@ -46,14 +50,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var appointmentStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Approved),
-                cancellationToken: cancellationToken);
-
-        if (appointmentStatus is null)
-            ThrowError(ErrorMessages.NotFound);
-
-        appointment.AppointmentStatus = appointmentStatus;
+        appointment.AppointmentStatus = await SetNewAppointmentStatus(appointment, cancellationToken);
 
         _context.Appointments.Update(appointment);
 
@@ -71,5 +68,28 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
         await SendAsync(
             new ApproveAppointmentResponse(appointment.Id, true),
             cancellation: cancellationToken);
+    }
+
+    private async Task<AppointmentStatus> SetNewAppointmentStatus(Appointment appointment,
+        CancellationToken cancellationToken)
+    {
+        var approvedStatus = await _context.AppointmentStatuses
+            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Approved, 
+                cancellationToken: cancellationToken);
+
+        if (approvedStatus is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        var declinedStatus = await _context.AppointmentStatuses
+            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Declined, 
+                cancellationToken: cancellationToken);
+
+        if (declinedStatus is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        var freeTimeSlot = await _appointmentService.CheckFreeSlot(appointment.StartTime,
+            appointment.EndTime, cancellationToken);
+
+        return appointment.AppointmentStatus = freeTimeSlot ? approvedStatus : declinedStatus;
     }
 }
