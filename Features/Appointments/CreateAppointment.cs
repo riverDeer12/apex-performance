@@ -117,7 +117,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
     private void SendNotificationEmails(List<Coach> coaches, List<Client> clients, Appointment appointment,
         TimeSlot timeSlot)
     {
-        if (_currentUserService.UserIsClient)
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
         {
             _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
         }
@@ -145,7 +145,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (approvedStatus is null)
             ThrowError(ErrorMessages.NotFound);
 
-        return _currentUserService.UserIsClient ? pendingStatus : approvedStatus;
+        return _currentUserService.LoggedUserHasRole(UserRoles.Client) ? pendingStatus : approvedStatus;
     }
 }
 
