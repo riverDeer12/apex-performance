@@ -1,5 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -19,35 +21,23 @@ public record GetAppointmentRequestsResponse(
 public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetAppointmentRequestsResponse>>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetAppointmentRequestsEndpoint(ApexPerformanceContext context)
+    public GetAppointmentRequestsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
     {
         Get("api/appointment-requests");
-        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("AppointmentRequests"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var appointmentRequests = await _context.AppointmentRequests
-            .Include(appointmentRequest => appointmentRequest.Appointment)
-            .ThenInclude(appointment => appointment.AppointmentStatus)
-            .Include(appointmentRequest => appointmentRequest.Appointment)
-            .ThenInclude(appointment => appointment.AppointmentType)
-            .Include(appointmentRequest => appointmentRequest.Appointment)
-            .ThenInclude(appointment => appointment.Clients)
-            .ThenInclude(clientAppointment => clientAppointment.Client)
-            .Include(appointmentRequest => appointmentRequest.Appointment)
-            .ThenInclude(appointment => appointment.Coaches)
-            .ThenInclude(coachAppointment => coachAppointment.Coach)
-            .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
-            .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
-            .ToListAsync(cancellationToken: cancellationToken);
+        var appointmentRequests = await GetAppointmentRequestsForUser(cancellationToken);
 
         if (appointmentRequests.Count is 0)
         {
@@ -102,5 +92,97 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
         }
 
         await SendAsync(appointmentRequestsResponse, cancellation: cancellationToken);
+    }
+    
+    private async Task<List<AppointmentRequest>> GetAppointmentRequestsForUser(CancellationToken cancellationToken)
+    {
+        if (_currentUserService.LoggedUserHasRole(UserRoles.SuperAdmin) ||
+            _currentUserService.LoggedUserHasRole(UserRoles.Administrator))
+            return await GetAllAppointmentRequests(cancellationToken);
+
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Coach))
+            return await GetCoachAppointmentRequests(cancellationToken);
+
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
+            return await GetClientAppointmentRequests(cancellationToken);
+
+        return new List<AppointmentRequest>();
+    }
+    
+    private async Task<List<AppointmentRequest>> GetAllAppointmentRequests(CancellationToken cancellationToken)
+    {
+        return await _context.AppointmentRequests
+            .Where(x => !x.IsDeleted)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentType)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Clients)
+            .ThenInclude(clientAppointment => clientAppointment.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Coaches)
+            .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    private async Task<List<AppointmentRequest>> GetCoachAppointmentRequests(CancellationToken cancellationToken)
+    {
+        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
+            cancellationToken: cancellationToken);
+
+        if (coach is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        var coachClients = await _context.CoachClients.Where(x => x.CoachId == coach.Id)
+            .Select(x => x.ClientId)
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var appointmentRequests = await _context.AppointmentRequests
+            .Where(x => coachClients.Contains(x.ClientId) && !x.IsDeleted)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentType)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Clients)
+            .ThenInclude(clientAppointment => clientAppointment.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Coaches)
+            .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return appointmentRequests;
+    }
+
+    private async Task<List<AppointmentRequest>> GetClientAppointmentRequests(CancellationToken cancellationToken)
+    {
+        var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
+            cancellationToken: cancellationToken);
+
+        if (client is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        var appointmentRequests = await _context.AppointmentRequests
+            .Where(x => !x.IsDeleted && x.ClientId == client.Id)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.AppointmentType)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Clients)
+            .ThenInclude(clientAppointment => clientAppointment.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.Coaches)
+            .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return appointmentRequests;
     }
 }
