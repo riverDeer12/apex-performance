@@ -21,13 +21,11 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
-    public bool UserIsClient
+    public bool LoggedUserHasRole(string requiredRole)
     {
-        get
-        {
-            var roleValues = _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
+        var roleValues = _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
 
-            return roleValues?.Contains(UserRoles.Client) ?? false; ;
-        }
+        return roleValues?.Contains(requiredRole) ?? false;
+        ;
     }
 }
