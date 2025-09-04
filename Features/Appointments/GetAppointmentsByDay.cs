@@ -16,7 +16,7 @@ public record GetAppointmentResponse(
     CatalogDataDto Status,
     GetTimeSlotResponse? TimeSlot,
     List<AppointmentClientDto> Clients,
-    List<AppointmentCoachDto> Coaches
+    List<PersonDataDto> Coaches
 );
 
 public record AppointmentsByDayDto(
@@ -69,27 +69,25 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
                 .ToList();
 
             var coachesResponse = appointment.Coaches
-                .Select(coach => new AppointmentCoachDto(coach.CoachId, coach.Coach.FullName)).ToList();
+                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, coach.Coach.LastName))
+                .ToList();
 
             var typeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
 
             var statusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
-            
+
             var appointmentResponse = new GetAppointmentResponse(appointment.Id,
                 appointment.StartTime, appointment.EndTime, appointment.UpdatedAt, typeResponse, statusResponse, null,
                 clientsResponse, coachesResponse);
-            
-            if (appointment.TimeSlot != null)
+
+            appointmentResponse = appointmentResponse with
             {
-                appointmentResponse = appointmentResponse with
-                {
-                    TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name, 
-                        Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day)!,
-                        appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
-                };
-            }
+                TimeSlot = new GetTimeSlotResponse(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                    Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day)!,
+                    appointment.TimeSlot.StartTime, appointment.TimeSlot.EndTime)
+            };
 
             appointmentResponseList.Add(appointmentResponse);
         }
