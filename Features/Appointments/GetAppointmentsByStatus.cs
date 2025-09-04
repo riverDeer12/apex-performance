@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public class GetAllAppointmentsStatusEndpoint : EndpointWithoutRequest<AppointmentsStatusDto>
+public class GetAppointmentsByStatusEndpoint : EndpointWithoutRequest<AppointmentsStatusDto>
 {
     private readonly ApexPerformanceContext _context;
 
-    public GetAllAppointmentsStatusEndpoint(ApexPerformanceContext context)
+    public GetAppointmentsByStatusEndpoint(ApexPerformanceContext context)
     {
         _context = context;
     }
@@ -37,7 +37,7 @@ public class GetAllAppointmentsStatusEndpoint : EndpointWithoutRequest<Appointme
             ), cancellation: cancellationToken);
             return;
         }
-        
+
         var appointments = await _context.Appointments
             .Where(appointment => appointmentRelations.Contains(appointment.Id))
             .Include(appointment => appointment.AppointmentType)
@@ -57,7 +57,7 @@ public class GetAllAppointmentsStatusEndpoint : EndpointWithoutRequest<Appointme
                 Array.Empty<AppointmentDataDto>().ToList()), cancellation: cancellationToken);
             return;
         }
-        
+
         var approvedAppointments = new List<AppointmentDataDto>();
 
         var pendingAppointments = new List<AppointmentDataDto>();
