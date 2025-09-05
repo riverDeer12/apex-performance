@@ -10,12 +10,10 @@ namespace ApexPerformance.API.Features.Appointments.AppointmentRequests;
 public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveAppointmentResponse>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly IAppointmentService _appointmentService;
 
-    public ApproveAppointmentRequestEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService)
+    public ApproveAppointmentRequestEndpoint(ApexPerformanceContext context)
     {
         _context = context;
-        _appointmentService = appointmentService;
     }
 
     public override void Configure()
