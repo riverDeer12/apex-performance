@@ -21,7 +21,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
     public override void Configure()
     {
         Get("api/appointment-requests/approve/{id}");
-        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("AppointmentRequests"));
     }
 
