@@ -34,16 +34,13 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
     public override void Configure()
     {
         Get("api/functional-movement-screens");
-        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("FunctionalMovementScreens"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var functionalMovementScreens =
-            _currentUserService.LoggedUserHasRole(UserRoles.Coach)
-                ? await GetCoachFunctionalMovementScreens()
-                : await GetAllFunctionalMovementScreens();
+            await GetFunctionalMovementScreensForUser(cancellationToken);
 
         if (functionalMovementScreens.Count is 0)
         {
@@ -66,17 +63,36 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
         ).ToList(), cancellation: cancellationToken);
     }
 
-    private async Task<List<FunctionalMovementScreen>> GetAllFunctionalMovementScreens()
+    private async Task<List<FunctionalMovementScreen>> GetFunctionalMovementScreensForUser(
+        CancellationToken cancellationToken)
+    {
+        if (_currentUserService.LoggedUserHasRole(UserRoles.SuperAdmin) ||
+            _currentUserService.LoggedUserHasRole(UserRoles.Administrator))
+            return await GetAllFunctionalMovementScreens(cancellationToken);
+
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Coach))
+            return await GetCoachFunctionalMovementScreens(cancellationToken);
+
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
+            return await GetClientFunctionalMovementScreens(cancellationToken);
+
+        return new List<FunctionalMovementScreen>();
+    }
+
+    private async Task<List<FunctionalMovementScreen>> GetAllFunctionalMovementScreens(
+        CancellationToken cancellationToken)
     {
         return await _context.FunctionalMovementScreens
             .Where(x => !x.IsDeleted)
             .Include(functionalMovementScreen => functionalMovementScreen.Client)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    private async Task<List<FunctionalMovementScreen>> GetCoachFunctionalMovementScreens()
+    private async Task<List<FunctionalMovementScreen>> GetCoachFunctionalMovementScreens(
+        CancellationToken cancellationToken)
     {
-        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId);
+        var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
+            cancellationToken: cancellationToken);
 
         if (coach is null)
             ThrowError(ErrorMessages.NotFound);
@@ -84,13 +100,28 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
         var coachClientsIds = await _context.CoachClients
             .Where(x => x.CoachId == coach.Id)
             .Select(x => x.ClientId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
 
         if (coachClientsIds.Count is 0) return [];
 
         return await _context.FunctionalMovementScreens
             .Where(x => coachClientsIds.Contains(x.ClientId) && !x.IsDeleted)
             .Include(functionalMovementScreen => functionalMovementScreen.Client)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    private async Task<List<FunctionalMovementScreen>> GetClientFunctionalMovementScreens(
+        CancellationToken cancellationToken)
+    {
+        var client = await _context.Clients.FirstOrDefaultAsync(x => x.UserId == _currentUserService.UserId,
+            cancellationToken: cancellationToken);
+
+        if (client is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        return await _context.FunctionalMovementScreens
+            .Where(x => x.ClientId == client.Id && !x.IsDeleted)
+            .Include(functionalMovementScreen => functionalMovementScreen.Client)
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 }
