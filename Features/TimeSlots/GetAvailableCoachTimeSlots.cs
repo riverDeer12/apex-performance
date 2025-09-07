@@ -27,19 +27,19 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
     public override async Task HandleAsync(GetAvailableCoachTimeSlotRequest request,
         CancellationToken cancellationToken)
     {
-        var coaches = await _context.Coaches
+        var coachesIds = await _context.Coaches
             .Where(x => request.Coaches.Contains(x.Id))
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
 
-        if (coaches.Count == 0)
+        if (coachesIds.Count == 0)
         {
             await SendAsync([], cancellation: cancellationToken);
             return;
         }
 
         var timeSlots = await _context.CoachTimeSlots
-            .Where(x => coaches.Contains(x.CoachId) && x.IsActive)
+            .Where(x => coachesIds.Contains(x.CoachId) && x.IsActive)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 

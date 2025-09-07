@@ -1,4 +1,5 @@
-use [apex-performance]
+use
+[apex-performance]
 
 go
 
@@ -258,6 +259,13 @@ VALUES
 ('7aeb7c60-844b-4a38-b1ae-55829b8e5f3a', 'CanUpdateCoach', 'Allows updating coach.', 'Coaches'),
 ('e3b4a1d2-f0fa-4d56-b349-8bb7b78f99ff', 'CanDeleteCoach', 'Allows deleting coach.', 'Coaches')
 
+-- FunctionalMovementScreens
+('2f6a3f41-5d27-4a29-9e9f-8c85e3c58f79', 'CanGetFunctionalMovementScreens', 'Allows viewing functional movement screens.', 'FunctionalMovementScreens'),
+('4e0d92f7-657a-4762-9f93-d4f83b3cb2a6', 'CanCreateFunctionalMovementScreen', 'Allows creating functional movement screen.', 'FunctionalMovementScreens'),
+('8b7c6e54-1a5c-4a98-9fb3-cc9d5c6de74f', 'CanUpdateFunctionalMovementScreen', 'Allows updating functional movement screen.', 'FunctionalMovementScreens'),
+('a1d8c8b2-23c9-4d6d-9231-0d8e49e61c5a', 'CanDeleteFunctionalMovementScreen', 'Allows deleting functional movement screen.', 'FunctionalMovementScreens')
+
+
 -- RecurringAppointments
 ('f2b3c2d1-4a5e-4826-93b1-4e6f9e2c9a13', 'CanGetRecurringAppointments', 'Allows viewing recurring appointments.', 'RecurringAppointments'),
 ('a1d7e3f4-62c5-4b9a-bf73-7e8f1d3b2c45', 'CanCreateRecurringAppointment', 'Allows creating recurring appointment.', 'RecurringAppointments'),
@@ -266,8 +274,8 @@ VALUES
 
 
 -- CREATING PERMISSIONS RELATIONSHIPS FOR CLIENT AND COACH ROLES
-    INSERT
-INTO RolePermissions (RoleId, PermissionId)
+INSERT
+    INTO RolePermissions (RoleId, PermissionId)
 VALUES
 -- Appointment's Permissions
     ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', 'c1a4f730-9c92-47c0-97b0-9ce7e94fc20a'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', 'c1a4f730-9c92-47c0-97b0-9ce7e94fc20a'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', '11c09349-6f32-4a43-a4b2-dbd58c244b1a'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', '11c09349-6f32-4a43-a4b2-dbd58c244b1a'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', 'f9fa3e15-8819-48f0-8751-02cf42e22a1d'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', 'f9fa3e15-8819-48f0-8751-02cf42e22a1d'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', '6a6c1fd6-8c28-49cf-8a71-91bead303a6f'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', '6a6c1fd6-8c28-49cf-8a71-91bead303a6f'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', '5a0c2c49-6e9a-4c45-a6db-d50f802816ef'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', '5a0c2c49-6e9a-4c45-a6db-d50f802816ef'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', '3a3f30a7-c0fc-43e7-aac0-861a53836479'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', '3a3f30a7-c0fc-43e7-aac0-861a53836479'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', 'b8f6cb70-ccf7-4a1c-8e6a-3f4a13c2735d'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', 'b8f6cb70-ccf7-4a1c-8e6a-3f4a13c2735d'), ('d12f1605-c1d1-4a81-bd27-ca118b1b55a5', 'fea29130-f5c3-465e-b09e-cd5828a7071f'), ('263f820c-5f83-4228-97e1-30e52f51b4ca', 'fea29130-f5c3-465e-b09e-cd5828a7071f'),

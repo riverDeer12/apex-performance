@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<GetCoachClientsEndpointResponse>>
+public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDataDto>>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -17,14 +17,14 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<GetCoachC
 
     public override void Configure()
     {
-        Get("api/clients/coach/{coachId}");
-        Permissions(UserPermissions.CanGetClients);
+        Get("api/clients/coach/{id}");
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("Clients"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var coachId = Route<Guid>("coachId", isRequired: true);
+        var coachId = Route<Guid>("id", isRequired: true);
 
         var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.Id == coachId,
             cancellationToken: cancellationToken);
@@ -32,49 +32,13 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<GetCoachC
         if (coach is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var clientIds = _context.CoachClients
-            .Where(x => x.CoachId == coach.Id)
-            .Select(x => x.ClientId)
-            .ToList();
-
-        if (clientIds.Count == 0)
-        {
-            await SendAsync([], cancellation: cancellationToken);
-            return;
-        }
-
-        var clients = await _context.Clients
-            .Where(x => clientIds.Contains(x.Id) && !x.IsDeleted)
-            .Include(userType => userType.User)
+        var coachClients = await _context.CoachClients
+            .Where(x => x.CoachId == coachId)
+            .Select(x => x.Client)
+            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        if (clients.Count is 0)
-        {
-            await SendAsync([], cancellation: cancellationToken);
-            return;
-        }
-
-        var response = new List<GetCoachClientsEndpointResponse>();
-
-        foreach (var client in clients)
-        {
-            var clientUser = client.User;
-
-            if (clientUser == null) continue;
-
-            var clientUserResponse = new ClientUserDto(clientUser.Id, clientUser.UserName, clientUser.Email);
-
-            var roleResponse = new GetCoachClientsEndpointResponse(client.Id,
-                client.FirstName, client.LastName, client.Email,
-                client.Phone,
-                client.Credits,
-                client.CreatedAt,
-                client.UpdatedAt,
-                client.IsDeleted, clientUserResponse);
-
-            response.Add(roleResponse);
-        }
-
-        await SendAsync(response, cancellation: cancellationToken);
+        await SendAsync(coachClients.Select(x => new PersonDataDto(x.Id, x.FirstName, x.LastName)).ToList(),
+            cancellation: cancellationToken);
     }
 }
