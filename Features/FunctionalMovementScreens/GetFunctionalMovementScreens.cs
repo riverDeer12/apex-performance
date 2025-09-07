@@ -17,6 +17,7 @@ public record FunctionalMovementScreenResponse(
     string TrunkStabilityPushUp,
     string RotaryStability,
     string ShoulderMobility,
+    DateTimeOffset CreatedAt,
     PersonDataDto Client
 );
 
@@ -58,6 +59,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
                 x.TrunkStabilityPushUp,
                 x.RotaryStability,
                 x.ShoulderMobility,
+                x.CreatedAt,
                 new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)
             )
         ).ToList(), cancellation: cancellationToken);
