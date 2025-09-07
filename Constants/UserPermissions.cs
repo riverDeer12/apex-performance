@@ -30,6 +30,12 @@ public static class UserPermissions
     public const string CanUpdateCoach = nameof(CanUpdateCoach);
     public const string CanDeleteCoach = nameof(CanDeleteCoach);
     
+    // Functional Movement Screens Permissions
+    public const string CanGetFunctionalMovementScreens = nameof(CanGetFunctionalMovementScreens);
+    public const string CanCreateFunctionalMovementScreen = nameof(CanCreateFunctionalMovementScreen);
+    public const string CanUpdateFunctionalMovementScreen = nameof(CanUpdateFunctionalMovementScreen);
+    public const string CanDeleteFunctionalMovementScreen = nameof(CanDeleteFunctionalMovementScreen);
+    
     // Recurring Appointments Permissions
     public const string CanGetRecurringAppointments = nameof(CanGetRecurringAppointments);
     public const string CanCreateRecurringAppointment = nameof(CanCreateRecurringAppointment);

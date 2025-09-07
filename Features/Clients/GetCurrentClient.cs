@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ public record GetCurrentClientResponse(
     string Email,
     string Phone,
     int Credits,
-    ClientUserDto User
+    PersonDataDto User
 );
 
 public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientResponse>
@@ -47,7 +48,7 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
         if (user is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var userResponse = new ClientUserDto(user.Id, user.UserName, user.Email);
+        var userResponse = new PersonDataDto(user.Id, user.UserName, user.Email);
 
         await SendAsync(new GetCurrentClientResponse(
             client.Id,
