@@ -73,14 +73,8 @@ public class EmailService : IEmailService
             html = html.Replace("{{Clients}}", clientsNames);
 
             html = html.Replace("{{AppointmentTime}}", timeSlot.Name);
-
-            var approveLink = _configuration["WebAppUrl"] + "/new-appointment-request/approve";
-
-            var declineLink = _configuration["WebAppUrl"] + "/new-appointment-request/decline";
-
-            html = html.Replace("{{ApproveLink}}", approveLink);
-
-            html = html.Replace("{{DeclineLink}}", declineLink);
+            
+            html = html.Replace("{{DashboardLink}}", _configuration["WebAppUrl"] + "/admin/dashboard");
 
             message.Body = new TextPart("html") { Text = html };
 
@@ -196,14 +190,8 @@ public class EmailService : IEmailService
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
 
             html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
-
-            var approveLink = _configuration["WebAppUrl"] + "/cancelation-request/approve";
-
-            var declineLink = _configuration["WebAppUrl"] + "/cancelation-request/decline";
-
-            html = html.Replace("{{ApproveLink}}", approveLink);
-
-            html = html.Replace("{{DeclineLink}}", declineLink);
+            
+            html = html.Replace("{{DashboardLink}}", _configuration["WebAppUrl"] + "/admin/dashboard");
 
             message.Body = new TextPart("html") { Text = html };
 
