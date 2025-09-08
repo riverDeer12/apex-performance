@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
 
-public class GetClientsEndpoint : EndpointWithoutRequest<List<PersonDataDto>>
+public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -36,7 +36,10 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<PersonDataDto>>
             return;
         }
 
-        await SendAsync(clients.Select(x => new PersonDataDto(x.Id, x.FirstName, x.LastName)).ToList(),
+        await SendAsync(clients.Select(x =>
+                    new ClientDataDto(x.Id, x.FirstName, x.LastName, x.Credits, x.Phone, x.Email, x.CreatedAt,
+                        x.UpdatedAt))
+                .ToList(),
             cancellation: cancellationToken);
     }
 
@@ -73,7 +76,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<PersonDataDto>>
             .ToListAsync(cancellationToken: cancellationToken);
 
         return await _context.Clients
-                .Where(x => coachClientsIds.Contains(x.Id) && !x.IsDeleted)
+            .Where(x => coachClientsIds.Contains(x.Id) && !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }
