@@ -35,7 +35,6 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDat
         var coachClients = await _context.CoachClients
             .Where(x => x.CoachId == coachId)
             .Select(x => x.Client)
-            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(coachClients.Select(x => new PersonDataDto(x.Id, x.FirstName, x.LastName)).ToList(),

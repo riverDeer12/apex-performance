@@ -119,7 +119,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
         CancellationToken cancellationToken)
     {
         return await _context.AppointmentRequests
-            .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending && !x.IsDeleted)
+            .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending)
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)
@@ -154,7 +154,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
         return await _context.AppointmentRequests
             .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending &&
-                        coachClientIds.Contains(x.ClientId) && !x.IsDeleted)
+                        coachClientIds.Contains(x.ClientId))
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)
@@ -182,7 +182,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
         return await _context.AppointmentRequests
             .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending &&
-                x.ClientId == client.Id && !x.IsDeleted)
+                x.ClientId == client.Id)
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)

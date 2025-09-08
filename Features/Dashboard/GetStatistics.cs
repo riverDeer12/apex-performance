@@ -46,29 +46,27 @@ public class GetStatisticsEndpoint : EndpointWithoutRequest<GetStatisticsRespons
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var activeClients = await _context.Clients
-            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
 
         var activeCoaches = await _context.Coaches
-            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
 
         var lowCreditClients = await _context.Clients
-            .Where(x => !x.IsDeleted && x.Credits <= 0)
+            .Where(x => x.Credits <= 0)
             .ToListAsync(cancellationToken: cancellationToken);
 
         var todayAppointments = await _context.Appointments
-            .Where(x => !x.IsDeleted
-                        && x.AppointmentStatus.Name == BusinessStatuses.Approved
+            .Where(x => 
+                        x.AppointmentStatus.Name == BusinessStatuses.Approved
                         && x.StartTime.Date == DateTime.Today)
             .ToListAsync(cancellationToken);
 
         var pendingAppointments = await _context.Appointments
-            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == BusinessStatuses.Pending)
+            .Where(x => x.AppointmentStatus.Name == BusinessStatuses.Pending)
             .ToListAsync(cancellationToken);
 
         var inProgressAppointments = await _context.Appointments
-            .Where(x => !x.IsDeleted && x.AppointmentStatus.Name == BusinessStatuses.InProgress)
+            .Where(x => x.AppointmentStatus.Name == BusinessStatuses.InProgress)
             .ToListAsync(cancellationToken);
 
         var lowCreditStatistics = MapToStatisticsItem(

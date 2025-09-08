@@ -100,7 +100,6 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
     private async Task<List<Appointment>> GetAllAppointments(CancellationToken cancellationToken)
     {
         return await _context.Appointments
-            .Where(x => !x.IsDeleted)
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.AppointmentType)

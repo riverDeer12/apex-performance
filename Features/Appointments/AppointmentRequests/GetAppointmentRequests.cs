@@ -112,7 +112,6 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
     private async Task<List<AppointmentRequest>> GetAllAppointmentRequests(CancellationToken cancellationToken)
     {
         return await _context.AppointmentRequests
-            .Where(x => !x.IsDeleted)
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)
@@ -141,7 +140,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             .ToListAsync(cancellationToken: cancellationToken);
 
         var appointmentRequests = await _context.AppointmentRequests
-            .Where(x => coachClients.Contains(x.ClientId) && !x.IsDeleted)
+            .Where(x => coachClients.Contains(x.ClientId))
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)
@@ -168,7 +167,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             ThrowError(ErrorMessages.NotFound);
 
         var appointmentRequests = await _context.AppointmentRequests
-            .Where(x => !x.IsDeleted && x.ClientId == client.Id)
+            .Where(x => x.ClientId == client.Id)
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)

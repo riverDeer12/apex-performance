@@ -85,7 +85,6 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
         CancellationToken cancellationToken)
     {
         return await _context.FunctionalMovementScreens
-            .Where(x => !x.IsDeleted)
             .Include(functionalMovementScreen => functionalMovementScreen.Client)
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -107,7 +106,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
         if (coachClientsIds.Count is 0) return [];
 
         return await _context.FunctionalMovementScreens
-            .Where(x => coachClientsIds.Contains(x.ClientId) && !x.IsDeleted)
+            .Where(x => coachClientsIds.Contains(x.ClientId))
             .Include(functionalMovementScreen => functionalMovementScreen.Client)
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -122,7 +121,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
             ThrowError(ErrorMessages.NotFound);
 
         return await _context.FunctionalMovementScreens
-            .Where(x => x.ClientId == client.Id && !x.IsDeleted)
+            .Where(x => x.ClientId == client.Id)
             .Include(functionalMovementScreen => functionalMovementScreen.Client)
             .ToListAsync(cancellationToken: cancellationToken);
     }

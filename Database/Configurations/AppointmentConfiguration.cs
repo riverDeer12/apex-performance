@@ -10,6 +10,8 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     {
         builder.HasKey(e => e.Id);
         
+        builder.HasQueryFilter(x => !x.IsDeleted);
+        
         builder
             .HasOne(a => a.AppointmentType)
             .WithMany(b => b.Appointments)
