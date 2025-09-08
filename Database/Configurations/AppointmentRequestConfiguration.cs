@@ -8,7 +8,10 @@ public class AppointmentRequestConfiguration : IEntityTypeConfiguration<Appointm
 {
     public void Configure(EntityTypeBuilder<AppointmentRequest> builder)
     {
+        builder.HasQueryFilter(x => !x.IsDeleted);
+        
         builder.Property(e => e.Comment).HasMaxLength(200);
+        
         builder.ToTable("AppointmentRequests");
     }
 }

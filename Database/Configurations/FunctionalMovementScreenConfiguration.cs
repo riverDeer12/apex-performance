@@ -8,6 +8,8 @@ public class FunctionalMovementScreenConfiguration : IEntityTypeConfiguration<Fu
 {
     public void Configure(EntityTypeBuilder<FunctionalMovementScreen> builder)
     {
+        builder.HasQueryFilter(x => !x.IsDeleted);
+        
         builder.Property(f => f.DeepSquat)
             .HasMaxLength(50);
 

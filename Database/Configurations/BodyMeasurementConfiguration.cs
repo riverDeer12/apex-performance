@@ -8,14 +8,24 @@ public class BodyMeasurementConfiguration : IEntityTypeConfiguration<BodyMeasure
 {
     public void Configure(EntityTypeBuilder<BodyMeasurement> builder)
     {
+        builder.HasQueryFilter(x => !x.IsDeleted);
+        
         builder.Property(b => b.Height).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Weight).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Shoulders).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Chest).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.UpperArm).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Waist).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Thigh).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Calves).HasColumnType("decimal(5,2)");
+        
         builder.Property(b => b.Glutes).HasColumnType("decimal(5,2)");
         
         builder.ToTable("BodyMeasurements", c => c.IsTemporal());

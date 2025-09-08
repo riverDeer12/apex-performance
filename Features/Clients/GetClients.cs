@@ -58,7 +58,6 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
     private async Task<List<Client>> GetAllClients(CancellationToken cancellationToken)
     {
         return await _context.Clients
-            .Where(x => !x.IsDeleted)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -76,7 +75,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .ToListAsync(cancellationToken: cancellationToken);
 
         return await _context.Clients
-            .Where(x => coachClientsIds.Contains(x.Id) && !x.IsDeleted)
+            .Where(x => coachClientsIds.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }

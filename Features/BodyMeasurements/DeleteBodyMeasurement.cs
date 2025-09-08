@@ -13,12 +13,10 @@ public record DeleteBodyMeasurementResponse(
 public class DeleteBodyMeasurementEndpoint : EndpointWithoutRequest<DeleteBodyMeasurementResponse>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly IClientService _clientService;
 
-    public DeleteBodyMeasurementEndpoint(ApexPerformanceContext context, IClientService clientService)
+    public DeleteBodyMeasurementEndpoint(ApexPerformanceContext context)
     {
         _context = context;
-        _clientService = clientService;
     }
 
     public override void Configure()
@@ -47,8 +45,8 @@ public class DeleteBodyMeasurementEndpoint : EndpointWithoutRequest<DeleteBodyMe
 
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
-            
-        await  SendAsync(
+
+        await SendAsync(
             new DeleteBodyMeasurementResponse(bodyMeasurement.Id),
             cancellation: cancellationToken);
     }

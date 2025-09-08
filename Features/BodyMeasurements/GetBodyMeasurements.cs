@@ -72,7 +72,6 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
     private async Task<List<BodyMeasurement>> GetAllBodyMeasurements(CancellationToken cancellationToken)
     {
         return await _context.BodyMeasurements
-            .Where(x => !x.IsDeleted)
             .Include(x => x.Client)
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -87,7 +86,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
             ThrowError(ErrorMessages.NotFound);
 
         var bodyMeasurements = await _context.BodyMeasurements
-            .Where(x => x.ClientId == client.Id && !x.IsDeleted)
+            .Where(x => x.ClientId == client.Id)
             .Include(bodyMeasurement => bodyMeasurement.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -109,7 +108,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
         if (clientIds.Count == 0) return [];
 
         var bodyMeasurements = await _context.BodyMeasurements
-            .Where(x => clientIds.Contains(x.ClientId) && !x.IsDeleted)
+            .Where(x => clientIds.Contains(x.ClientId))
             .Include(bodyMeasurement => bodyMeasurement.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
