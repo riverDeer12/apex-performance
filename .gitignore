@@ -3,7 +3,3 @@
 /obj/
 /Logs/
 appsettings*.json
-!appsettings.Development.json
-
-
-!/appsettings.Development.json
