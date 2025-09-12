@@ -33,7 +33,7 @@ public class GetProductsEndpoint : EndpointWithoutRequest<List<ProductDto>>
         }
 
         await SendAsync(products.Select(x => 
-                new ProductDto(x.Name, x.Description, x.Price)).ToList(),
+                new ProductDto(x.Name, x.Description, x.Price, x.CreatedAt, x.UpdatedAt)).ToList(),
             cancellation: cancellationToken);
     }
 }

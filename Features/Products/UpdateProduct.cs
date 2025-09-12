@@ -21,7 +21,7 @@ public class UpdateProductEndpoint : Endpoint<UpdateProductRequest, UpdateProduc
 
     public override void Configure()
     {
-        Post("api/products/{id}");
+        Put("api/products/{id}");
         Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
         Options(x => x.WithTags("Products"));
     }
