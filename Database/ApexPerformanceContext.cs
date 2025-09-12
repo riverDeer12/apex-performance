@@ -33,9 +33,17 @@ public class ApexPerformanceContext : DbContext
     public DbSet<CoachAppointment> CoachAppointments { get; set; }
     public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<CoachTimeSlot> CoachTimeSlots { get; set; }
-    
     public DbSet<FunctionalMovementScreen> FunctionalMovementScreens { get; set; }
+    
+    public DbSet<Payment> Payments { get; set; }
+    
+    public DbSet<PaymentProduct> PaymentProducts { get; set; }
+    
+    public DbSet<PaymentStatus> PaymentStatuses { get; set; }
+    
+    public DbSet<PaymentType> PaymentTypes { get; set; }
     public DbSet<Permission> Permissions { get; set; }
+    public DbSet<Product> Products { get; set; }
     public DbSet<RecurringAppointment> RecurringAppointments { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
