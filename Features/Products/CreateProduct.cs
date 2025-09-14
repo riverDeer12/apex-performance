@@ -32,7 +32,8 @@ public class CreateProductEndpoint : Endpoint<CreateProductRequest, CreateProduc
         {
             Name = request.Name,
             Description = request.Description,
-            Price = request.Price
+            Price = request.Price,
+            IsActive = true
         };
 
         _context.Products.Add(newProduct);

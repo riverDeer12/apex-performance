@@ -5,16 +5,16 @@ namespace ApexPerformance.API.Database.Entities;
 
 public class Payment : BaseEntity
 {
-    public decimal Price { get; set; }
-    public int Quantity { get; set; }
-    public string CustomerFirstName { get; set; }
-    public string CustomerLastName { get; set; }
-    public string CustomerPhone { get; set; }
-    public string CustomerEmail { get; set; }
-    public string CustomerAddress { get; set; }
-    public PaymentType PaymentType { get; set; }
+    public required decimal Price { get; set; }
+    public required int Quantity { get; set; }
+    public required string CustomerFirstName { get; set; }
+    public required string CustomerLastName { get; set; }
+    public required string CustomerPhone { get; set; }
+    public required string CustomerEmail { get; set; }
+    public required string CustomerAddress { get; set; }
+    public required PaymentType PaymentType { get; set; }
     public Guid PaymentTypeId { get; set; }
-    public PaymentStatus PaymentStatus { get; set; }
+    public required PaymentStatus PaymentStatus { get; set; }
     public Guid PaymentStatusId { get; set; }
-    public ICollection<PaymentProduct> Products  { get; set; } = null!;
+    public ICollection<PaymentProduct> Products { get; set; } = null!;
 }
