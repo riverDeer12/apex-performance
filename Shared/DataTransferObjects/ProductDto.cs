@@ -6,5 +6,5 @@ public record ProductDto(
     string Description,
     decimal Price,
     bool Status,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset? CreatedAt = null,
+    DateTimeOffset? UpdatedAt = null);
