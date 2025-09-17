@@ -44,6 +44,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<PaymentType> PaymentTypes { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Product> Products { get; set; }
+    
+    public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<RecurringAppointment> RecurringAppointments { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
