@@ -78,6 +78,9 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
             ThrowError(ValidationMessages.NotValid);
+        
+        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
+            ThrowError(ValidationMessages.NotValid);
 
         var timeSlot =
             await _context.TimeSlots

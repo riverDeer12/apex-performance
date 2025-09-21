@@ -45,5 +45,13 @@ public interface IAppointmentService
     /// <param name="businessAction">Triggered business action.</param>
     /// <param name="cancellationToken"></param>
     void ChangeAppointmentStatus(Appointment appointment,
-        string businessAction, CancellationToken cancellationToken);
+        string businessAction, CancellationToken cancellationToken);    
+    
+    /// <summary>
+    /// Check if clients have enough
+    /// credits to create new appointment.
+    /// </summary>
+    /// <param name="clients">Clients that need to be checked.</param>
+    /// <param name="cancellationToken"></param>
+    Task<bool> CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken);
 }

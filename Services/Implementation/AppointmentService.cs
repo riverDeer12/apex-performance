@@ -19,7 +19,7 @@ public class AppointmentService : IAppointmentService
         DateTimeOffset appointmentEndTime, CancellationToken cancellationToken, Guid? appointmentId = null)
     {
         return Task.FromResult(!_context.Appointments.Any(existing =>
-            appointmentStartTime < existing.EndTime && 
+            appointmentStartTime < existing.EndTime &&
             appointmentEndTime > existing.StartTime &&
             existing.AppointmentStatus.Name == BusinessStatuses.Approved &&
             existing.Id != appointmentId
@@ -32,7 +32,7 @@ public class AppointmentService : IAppointmentService
         await _context.CoachAppointments
             .Where(coachAppointment => coachAppointment.AppointmentId == appointment.Id)
             .ExecuteDeleteAsync(cancellationToken);
-        
+
         var appointmentCoaches = coaches
             .Select(coach => new CoachAppointment
             {
@@ -49,14 +49,14 @@ public class AppointmentService : IAppointmentService
         string businessAction, CancellationToken cancellationToken)
     {
         if (businessAction != BusinessActions.CancelationRequest) return;
-        
+
         var updatedStatus = await _context.AppointmentStatuses.SingleAsync(
             x => x.Name == BusinessStatuses.Canceled, cancellationToken: cancellationToken);
-            
+
         appointment.AppointmentStatus = updatedStatus;
-            
+
         _context.Appointments.Update(appointment);
-        
+
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
@@ -69,7 +69,7 @@ public class AppointmentService : IAppointmentService
         await _context.ClientAppointments
             .Where(clientAppointment => clientAppointment.AppointmentId == appointment.Id)
             .ExecuteDeleteAsync(cancellationToken);
-        
+
         var appointmentClients = clients
             .Select(client => new ClientAppointment
             {
@@ -80,5 +80,10 @@ public class AppointmentService : IAppointmentService
             }).ToList();
 
         await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
+    }
+
+    public Task<bool> CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(!clients.Any(client => client.Credits <= 0));
     }
 }
