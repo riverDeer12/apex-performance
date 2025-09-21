@@ -6,9 +6,11 @@ using Stripe.Checkout;
 
 namespace ApexPerformance.API.Features.Payments;
 
-public record CreatePaymentRequest(List<CheckoutItemDto> Items);
+public record CreatePaymentRequest(
+    PersonDataDto Customer,
+    List<CheckoutItemDto> Items);
 
-public record CreatePaymentResponse(Session session);
+public record CreatePaymentResponse(string SessionId);
 
 public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymentResponse>
 {
@@ -30,7 +32,7 @@ public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymen
         var options = new SessionCreateOptions
         {
             PaymentMethodTypes = ["card"],
-            
+
             LineItems = request.Items.Select(item => new SessionLineItemOptions
             {
                 PriceData = new SessionLineItemPriceDataOptions
@@ -40,23 +42,23 @@ public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymen
                     {
                         Name = item.Name
                     },
-                    UnitAmount = (long)(item.Price * 100)
+                    UnitAmount = (long)(item.Price * item.Quantity * 100)
                 },
                 Quantity = item.Quantity
             }).ToList(),
-            
+
             Mode = "payment",
-            
-            SuccessUrl = _configuration["Stripe::SuccessUrl"],
-            
-            CancelUrl = _configuration["Stripe::CancelUrl"]
+
+            SuccessUrl = "http://localhost:4200/successful-payment",
+
+            CancelUrl = "http://localhost:4200/unsuccessful-payment"
         };
 
         var service = new SessionService();
 
         var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
 
-        await SendAsync(new CreatePaymentResponse(session), cancellation: cancellationToken);
+        await SendAsync(new CreatePaymentResponse(session.Id), cancellation: cancellationToken);
     }
 }
 
@@ -64,6 +66,7 @@ public sealed class CreatePaymentRequestValidator : Validator<CreatePaymentReque
 {
     public CreatePaymentRequestValidator()
     {
+        RuleFor(x => x.Customer).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Items).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

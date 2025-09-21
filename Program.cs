@@ -6,6 +6,7 @@ using FastEndpoints;
 using FastEndpoints.Security;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
+
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var app = builder.Build();
 
