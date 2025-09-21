@@ -107,7 +107,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointment => appointment.TimeSlot)
-            .OrderByDescending(x => x.StartTime)
+            .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -163,7 +163,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
-            .OrderByDescending(x => x.StartTime)
+            .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken);
     }
 }
