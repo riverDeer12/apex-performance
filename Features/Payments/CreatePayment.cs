@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using FluentValidation;
+using Stripe;
 using Stripe.Checkout;
 
 namespace ApexPerformance.API.Features.Payments;
@@ -24,6 +25,7 @@ public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymen
     public override void Configure()
     {
         Post("api/payments");
+        AllowAnonymous();
         Options(x => x.WithTags("Payments"));
     }
 
@@ -46,18 +48,22 @@ public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymen
                 },
                 Quantity = item.Quantity
             }).ToList(),
+            
+            BillingAddressCollection = "required",
 
             Mode = "payment",
 
-            SuccessUrl = "http://localhost:4200/successful-payment",
+            SuccessUrl = _configuration["Stripe:ApexPerformance:SuccessUrl"],
 
-            CancelUrl = "http://localhost:4200/unsuccessful-payment"
+            CancelUrl = _configuration["Stripe:ApexPerformance:CancelUrl"]
         };
 
         var service = new SessionService();
 
-        var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
-
+        var session = await service.CreateAsync(options,
+            requestOptions: new RequestOptions { ApiKey = _configuration["Stripe:ApexPerformance:SecretKey"] },
+            cancellationToken: cancellationToken);
+        
         await SendAsync(new CreatePaymentResponse(session.Id), cancellation: cancellationToken);
     }
 }

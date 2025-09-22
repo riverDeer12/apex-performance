@@ -41,8 +41,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
 
-StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
-
 var app = builder.Build();
 
 app.UseCors(corsPolicyBuilder => corsPolicyBuilder

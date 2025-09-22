@@ -74,14 +74,14 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
         CancellationToken cancellationToken)
     {
         var approvedStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Approved, 
+            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Approved,
                 cancellationToken: cancellationToken);
 
         if (approvedStatus is null)
             ThrowError(ErrorMessages.NotFound);
 
         var declinedStatus = await _context.AppointmentStatuses
-            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Declined, 
+            .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Declined,
                 cancellationToken: cancellationToken);
 
         if (declinedStatus is null)
