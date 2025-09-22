@@ -1,3 +1,4 @@
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using MailKit.Net.Smtp;
@@ -34,13 +35,18 @@ public class EmailService : IEmailService
 
             var html = File.ReadAllText(templatePath);
 
+            var statusColor = appointment.AppointmentStatus.Name == BusinessStatuses.Approved 
+                ? "#2edc59" : "#f36464";
+
             html = html.Replace("{{ClientFullName}}", client.FullName);
 
             html = html.Replace("{{Description}}",
-                "Your Appointment has been " + appointment.AppointmentStatus.Name + ".");
-            
+                "Your Appointment has been <span style=\"color:" + statusColor + ";text-decoration: underline;\">"
+                + appointment.AppointmentStatus.Name +
+                "</span>.");
+
             html = html.Replace("{{AppointmentTime}}", timeSlot.Name);
-            
+
             message.Body = new TextPart("html") { Text = html };
 
             ConnectToMailServer(message);
@@ -73,7 +79,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{Clients}}", clientsNames);
 
             html = html.Replace("{{AppointmentTime}}", timeSlot.Name);
-            
+
             html = html.Replace("{{DashboardLink}}", _configuration["WebAppUrl"] + "/admin/dashboard");
 
             message.Body = new TextPart("html") { Text = html };
@@ -190,7 +196,7 @@ public class EmailService : IEmailService
             html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
 
             html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
-            
+
             html = html.Replace("{{DashboardLink}}", _configuration["WebAppUrl"] + "/admin/dashboard");
 
             message.Body = new TextPart("html") { Text = html };

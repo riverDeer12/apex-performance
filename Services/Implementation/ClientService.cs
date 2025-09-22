@@ -19,7 +19,7 @@ public class ClientService : IClientService
     {
         foreach (var client in clients)
         {
-            client.Credits = +amount;
+            client.Credits += amount;
         }
 
         _context.Clients.UpdateRange(clients);
@@ -34,7 +34,7 @@ public class ClientService : IClientService
     {
         foreach (var client in clients)
         {
-            client.Credits = -amount;
+            client.Credits -= amount;
         }
 
         _context.Clients.UpdateRange(clients);
