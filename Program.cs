@@ -41,6 +41,11 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
 
+builder.Services.AddSingleton<ProductService>(sp =>
+    new ProductService(sp.GetRequiredService<StripeClient>()));
+builder.Services.AddSingleton<PriceService>(sp =>
+    new PriceService(sp.GetRequiredService<StripeClient>()));
+
 var app = builder.Build();
 
 app.UseCors(corsPolicyBuilder => corsPolicyBuilder

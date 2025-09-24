@@ -53,8 +53,8 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             LineItems = lineItems,
             BillingAddressCollection = "required",
             Mode = "payment",
-            SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"],
-            CancelUrl  = _configuration["Stripe:ReVivPlus:CancelUrl"], // use a real cancel URL
+            SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
+            CancelUrl  = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}", 
         };
 
         var service = new SessionService();
