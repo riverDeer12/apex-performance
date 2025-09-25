@@ -9,11 +9,11 @@ public record GetCheckoutSessionResponse(
     string Status,
     string PaymentStatus,
     string Currency,
-    long? AmountSubtotal,
-    long? AmountTotal,
-    long? TaxTotal,
-    long? DiscountTotal,
-    long? ShippingTotal,
+    string? AmountSubtotal,
+    string? AmountTotal,
+    string? TaxTotal,
+    string? DiscountTotal,
+    string? ShippingTotal,
     string ShippingTitle,
     string CustomerEmail,
     string CustomerName,
@@ -24,9 +24,9 @@ public record LineItem(
     string Description,
     long Quantity,
     string Currency,
-    long? UnitAmount,
-    long? AmountSubtotal,
-    long? AmountTotal
+    string? UnitAmount,
+    string? AmountSubtotal,
+    string? AmountTotal
 );
 
 public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSessionResponse>
@@ -80,33 +80,34 @@ public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSess
                 ApiKey = _configuration["Stripe:ReVivPlus:SecretKey"]
             },
             cancellationToken: cancellationToken);
-
-        // Build DTO
+        
         var items = lineItems.Data.Select(li => new LineItem
         (
             li.Description ?? li.Price?.Nickname ?? li.Price?.Product?.ToString(),
             li.Quantity ?? 0,
             li.Currency,
-            li.Price?.UnitAmount, // in the smallest currency unit (e.g., cents)
-            li.AmountSubtotal, // qty * unit - per-item discounts
-            li.AmountTotal // after per-item discounts/tax
+            $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00} €",
+            $"{(li.AmountSubtotal) / 100m:0.00} €",
+            $"{(li.AmountTotal) / 100m:0.00} €"
         )).ToList();
 
         var summary = new GetCheckoutSessionResponse
         (
-             session.Id,
-            session.Status, // "complete", "open", etc.
-            session.PaymentStatus, // "paid", "unpaid", "no_payment_required"
+            session.Id,
+            session.Status,
+            session.PaymentStatus,
             session.Currency,
-           session.AmountSubtotal, // before shipping/tax/discounts
-            session.AmountTotal, // final total charged/authorized
-            session.TotalDetails?.AmountTax,
-            session.TotalDetails?.AmountDiscount,
-            session.ShippingCost?.AmountSubtotal ?? 0,
+            $"{(session.AmountSubtotal ?? 0) / 100m:0.00} €",
+            $"{(session.AmountTotal ?? 0) / 100m:0.00} €",
+            $"{(session.TotalDetails?.AmountTax ?? 0) / 100m:0.00} €",
+            $"{(session.TotalDetails?.AmountDiscount ?? 0) / 100m:0.00} €",
+            $"{(session.ShippingCost?.AmountSubtotal ?? 0) / 100m:0.00} €",
             session.ShippingCost?.ShippingRate?.DisplayName,
             session.CustomerDetails?.Email,
             session.CustomerDetails?.Name,
             items
         );
+
+        await SendAsync(summary, cancellation: cancellationToken);
     }
 }
