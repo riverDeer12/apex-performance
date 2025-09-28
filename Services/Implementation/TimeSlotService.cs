@@ -38,7 +38,11 @@ public class TimeSlotService : ITimeSlotService
     public async Task<List<TimeSlot>> CheckTimeSlotsAvailability(List<TimeSlot> coachesTimeSlots, DayOfWeek day,
         CancellationToken cancellationToken)
     {
-        var timeSlotsIds = coachesTimeSlots
+        var dayCoachesTimeSlots = coachesTimeSlots
+            .Where(x => x.Day == day)
+            .ToList();
+        
+        var timeSlotsIds = dayCoachesTimeSlots
             .Select(x => x.Id)
             .ToList();
 
@@ -48,9 +52,9 @@ public class TimeSlotService : ITimeSlotService
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        if (takenTimeSlots.Count == 0) return coachesTimeSlots;
+        if (takenTimeSlots.Count == 0) return dayCoachesTimeSlots;
 
-        var availableTimeSlotIds = coachesTimeSlots
+        var availableTimeSlotIds = dayCoachesTimeSlots
             .Where(timeSlot => !takenTimeSlots.Contains(timeSlot))
             .ToList();
 

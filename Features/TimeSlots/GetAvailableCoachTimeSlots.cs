@@ -38,22 +38,18 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
             return;
         }
 
-        var timeSlots = await _context.CoachTimeSlots
+        var coachesTimeSlots = await _context.CoachTimeSlots
             .Where(x => coachesIds.Contains(x.CoachId) && x.IsActive)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        if (timeSlots.Count == 0)
+        if (coachesTimeSlots.Count == 0)
         {
             await SendAsync([], cancellation: cancellationToken);
             return;
         }
 
         var day = (DayOfWeek)request.Day;
-        
-        var coachesTimeSlots = timeSlots
-            .Where(x => x.Day == day)
-            .ToList();
 
         var finalTimeSlots = await _timeSlotService.CheckTimeSlotsAvailability(coachesTimeSlots, day,
             cancellationToken);
