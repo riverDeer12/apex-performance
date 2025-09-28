@@ -22,4 +22,24 @@ public class DateExtensions
 
         return new DateTimeOffset(today.AddDays(daysToAdd), DateTimeOffset.Now.Offset);
     }
+    
+    /// <summary>
+    /// Returns the next date of the specified day of week after the given start date.
+    /// </summary>
+    /// <param name="day">The day of week to find (e.g., DayOfWeek.Monday).</param>
+    /// <param name="startDate">The date to start searching from. Defaults to today.</param>
+    /// <returns>The next DateTime that falls on the specified day of the week.</returns>
+    public static DateTime GetNextDateOfDay(DayOfWeek day, DateTime? startDate = null)
+    {
+        DateTime fromDate = startDate ?? DateTime.Today;
+        
+        // Calculate the days to add to reach the next desired day
+        int daysToAdd = ((int)day - (int)fromDate.DayOfWeek + 7) % 7;
+
+        // If today is the requested day, move to the next week's occurrence
+        if (daysToAdd == 0)
+            daysToAdd = 7;
+
+        return fromDate.AddDays(daysToAdd);
+    }
 }
