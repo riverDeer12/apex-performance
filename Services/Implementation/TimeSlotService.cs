@@ -48,7 +48,7 @@ public class TimeSlotService : ITimeSlotService
         var takenTimeSlots = await _context.Appointments
             .Where(x => timeSlotsIds.Contains(x.TimeSlotId)
                         && x.AppointmentStatus.Name == BusinessStatuses.Approved
-                        && x.StartTime.Date == day)
+                        && x.StartTime.Date == day.Date)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken);
 
