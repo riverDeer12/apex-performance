@@ -95,8 +95,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             AppointmentType = appointmentType,
             AppointmentStatus = await GetAppointmentStatus(cancellationToken),
             TimeSlot = timeSlot,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime
+            StartTime = request.StartTime.UtcDateTime,
+            EndTime = request.EndTime.UtcDateTime
         };
 
         _context.Appointments.Add(appointment);
