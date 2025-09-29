@@ -37,8 +37,9 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
         }
 
         await SendAsync(clients.Select(x =>
-                    new ClientDataDto(x.Id, x.FirstName, x.LastName, x.Credits, x.Phone, x.Email, x.CreatedAt,
-                        x.UpdatedAt))
+                    new ClientDataDto(x.Id, x.FirstName, x.LastName, 
+                        x.Credits, x.Phone, x.Email, x.CreatedAt,
+                        x.UpdatedAt, x.FullName))
                 .ToList(),
             cancellation: cancellationToken);
     }

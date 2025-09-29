@@ -36,19 +36,19 @@ public class TimeSlotService : ITimeSlotService
         await _context.BulkInsertOrUpdateAsync(coachTimeSlots, cancellationToken: cancellationToken);
     }
 
-    public async Task<List<TimeSlot>> CheckTimeSlotsAvailability(List<TimeSlot> coachesTimeSlots, DayOfWeek day,
+    public async Task<List<TimeSlot>> CheckTimeSlotsAvailability(List<TimeSlot> coachesTimeSlots, DateTime day,
         CancellationToken cancellationToken)
     {
-        var dayCoachesTimeSlots = coachesTimeSlots.Where(x => x.Day == day).ToList();
-
-        var requestedDay = DateExtensions.GetNextDateOfDay(day);
+        var requestedDay = day.DayOfWeek;
+        
+        var dayCoachesTimeSlots = coachesTimeSlots.Where(x => x.Day == requestedDay).ToList();
 
         var timeSlotsIds = dayCoachesTimeSlots.Select(x => x.Id).ToList();
 
         var takenTimeSlots = await _context.Appointments
             .Where(x => timeSlotsIds.Contains(x.TimeSlotId)
                         && x.AppointmentStatus.Name == BusinessStatuses.Approved
-                        && x.StartTime.Date == requestedDay)
+                        && x.StartTime.Date == day)
             .Select(x => x.TimeSlot)
             .ToListAsync(cancellationToken);
 

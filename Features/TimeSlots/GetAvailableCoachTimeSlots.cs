@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
 
-public record GetAvailableCoachTimeSlotRequest(List<Guid> Coaches, int Day);
+public record GetAvailableCoachTimeSlotRequest(List<Guid> Coaches, DateTime Day);
 
 public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTimeSlotRequest, List<GetTimeSlotResponse>>
 {
@@ -49,9 +49,7 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
             return;
         }
 
-        var day = (DayOfWeek)request.Day;
-
-        var finalTimeSlots = await _timeSlotService.CheckTimeSlotsAvailability(coachesTimeSlots, day,
+        var finalTimeSlots = await _timeSlotService.CheckTimeSlotsAvailability(coachesTimeSlots, request.Day,
             cancellationToken);
         
         await SendAsync(finalTimeSlots.Select(x

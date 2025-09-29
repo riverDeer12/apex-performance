@@ -140,8 +140,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         return string.Join("<br/>", emailBody);
     }
-
-
+    
     private async Task<Appointment?> CreateAppointment(RecurringAppointment recurring, AppointmentStatus status,
         CancellationToken cancellationToken)
     {

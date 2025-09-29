@@ -1,15 +1,16 @@
 namespace ApexPerformance.API.Shared.Extensions;
 
-public class DateExtensions
+public static class DateExtensions
 {
     public static DateTimeOffset CombineDateAndTime(DateTimeOffset date, TimeOnly time)
     {
-        return new DateTimeOffset(
+        var utcDateTime = new DateTime(
             date.Year, date.Month, date.Day,
-            time.Hour, time.Minute,
-            time.Second,
-            date.Offset
+            time.Hour, time.Minute, time.Second,
+            DateTimeKind.Utc
         );
+
+        return new DateTimeOffset(utcDateTime);
     }
 
     public static DateTimeOffset GetNextWeekday(DayOfWeek day)

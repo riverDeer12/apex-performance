@@ -8,5 +8,6 @@ public record ClientDataDto(
     string Phone,
     string Email,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt
+    DateTimeOffset UpdatedAt,
+    string FullName
 );
