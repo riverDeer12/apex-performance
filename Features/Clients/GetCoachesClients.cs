@@ -48,7 +48,8 @@ public class GetCoachesClientsEndpoint : Endpoint<GetCoachesClientsRequest, List
             return;
         }
 
-        await SendAsync(relatedClients.Select(x => new PersonDataDto(x.Id, x.FirstName, x.LastName))
+        await SendAsync(relatedClients.Select(x => 
+                    new PersonDataDto(x.Id, x.FirstName, x.LastName, x.FullName))
                 .ToList(),
             cancellation: cancellationToken);
     }

@@ -69,7 +69,8 @@ public class GetAppointmentsByDayEndpoint : EndpointWithoutRequest<List<Appointm
                 .ToList();
 
             var coachesResponse = appointment.Coaches
-                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, coach.Coach.LastName))
+                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, 
+                    coach.Coach.LastName, coach.Coach.FullName))
                 .ToList();
 
             var typeResponse = new CatalogDataDto(appointment.AppointmentType.Id,

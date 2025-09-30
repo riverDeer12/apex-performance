@@ -14,6 +14,7 @@ public record GetCoachResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
+    string FullName,
     List<CoachClientDto> Clients,
     CoachUserDto User
 );
@@ -77,6 +78,7 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
                 coach.CreatedAt,
                 coach.UpdatedAt,
                 coach.IsDeleted,
+                coach.FullName,
                 coachClients,
                 clientUserResponse);
 

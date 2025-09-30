@@ -48,7 +48,7 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
         if (user is null)
             ThrowError(ErrorMessages.NotFound);
 
-        var userResponse = new PersonDataDto(user.Id, user.UserName, user.Email);
+        var userResponse = new PersonDataDto(user.Id, user.UserName, user.Email, user.UserName);
 
         await SendAsync(new GetCurrentClientResponse(
             client.Id,

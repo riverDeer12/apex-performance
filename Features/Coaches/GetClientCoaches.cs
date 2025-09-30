@@ -40,7 +40,7 @@ public class GetClientCoachesEndpoint : EndpointWithoutRequest<List<PersonDataDt
 
         await SendAsync(
             clientCoaches.Select(x =>
-                new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName)).ToList(),
+                new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName, x.Coach.FullName)).ToList(),
             cancellation: cancellationToken);
     }
 }

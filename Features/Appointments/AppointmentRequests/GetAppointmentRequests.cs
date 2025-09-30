@@ -74,11 +74,13 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 relatedAppointment.AppointmentStatus.Description);
 
             var clients = relatedAppointment.Clients
-                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName))
+                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, 
+                    x.Client.LastName, x.Client.FullName))
                 .ToList();
 
             var coaches = relatedAppointment.Coaches
-                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName))
+                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, 
+                    x.Coach.LastName,  x.Coach.FullName))
                 .ToList();
 
             var appointmentResponse = new AppointmentDataDto(

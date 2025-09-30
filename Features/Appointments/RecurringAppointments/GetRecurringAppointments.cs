@@ -39,11 +39,13 @@ public class GetRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<Recu
                     new RecurringAppointmentDto(
                         x.Id,
                         x.Clients.Select(clientRecurringAppointment =>
-                            new PersonDataDto(clientRecurringAppointment.Client.Id,
-                                clientRecurringAppointment.Client.FirstName,
-                                clientRecurringAppointment.Client.LastName)).ToList(),
+                                new PersonDataDto(clientRecurringAppointment.Client.Id,
+                                    clientRecurringAppointment.Client.FirstName,
+                                    clientRecurringAppointment.Client.LastName,
+                                    clientRecurringAppointment.Client.FullName))
+                            .ToList(),
                         new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
-                            x.Coach.LastName),
+                            x.Coach.LastName, x.Coach.FullName),
                         new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name,
                             x.TimeSlot.Day,
                             x.TimeSlot.StartTime, x.TimeSlot.EndTime),

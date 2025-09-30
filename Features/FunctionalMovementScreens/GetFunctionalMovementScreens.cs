@@ -60,7 +60,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
                 x.RotaryStability,
                 x.ShoulderMobility,
                 x.CreatedAt,
-                new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)
+                new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName, x.Client.FullName)
             )
         ).ToList(), cancellation: cancellationToken);
     }

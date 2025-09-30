@@ -35,7 +35,8 @@ public class GetCurrentCoachEndpoint: EndpointWithoutRequest<PersonDataDto>
         await SendAsync(new PersonDataDto(
             coach.Id,
             coach.FirstName,
-            coach.LastName
+            coach.LastName,
+            coach.FullName
         ), cancellation: cancellationToken);
     }
 }

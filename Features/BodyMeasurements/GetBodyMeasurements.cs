@@ -49,7 +49,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
                     x.Height, x.Weight, x.Shoulders,
                     x.Chest, x.UpperArm, x.Waist, x.Thigh,
                     x.Calves, x.Glutes, x.CreatedAt, x.UpdatedAt,
-                    new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName)))
+                    new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName, x.Client.FullName)))
             .ToList(), cancellation: cancellationToken);
     }
 

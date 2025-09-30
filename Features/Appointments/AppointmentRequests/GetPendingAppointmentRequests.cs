@@ -63,7 +63,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 ThrowError(ErrorMessages.NotFound);
 
             var requestSenderResponse =
-                new PersonDataDto(requestSender.Id, requestSender.FirstName, requestSender.LastName);
+                new PersonDataDto(requestSender.Id, requestSender.FirstName, 
+                    requestSender.LastName, requestSender.FullName);
 
             var relatedAppointment = appointments
                 .FirstOrDefault(x => x.Id == appointmentRequest.AppointmentId);
@@ -80,11 +81,13 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 relatedAppointment.AppointmentStatus.Description);
 
             var clients = relatedAppointment.Clients
-                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName))
+                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, 
+                    x.Client.LastName, x.Client.FullName))
                 .ToList();
 
             var coaches = relatedAppointment.Coaches
-                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, x.Coach.LastName))
+                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, 
+                    x.Coach.LastName, x.Coach.FullName))
                 .ToList();
 
             var appointmentResponse = new AppointmentDataDto(

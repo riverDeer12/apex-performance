@@ -46,11 +46,12 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             var appointmentClientsResponse = appointment.Clients
                 .Select(appointmentClient =>
                     new PersonDataDto(appointmentClient.Client.Id, appointmentClient.Client.FirstName,
-                        appointmentClient.Client.LastName))
+                        appointmentClient.Client.LastName, appointmentClient.Client.FullName))
                 .ToList();
 
             var appointmentCoachesResponse = appointment.Coaches
-                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, coach.Coach.LastName))
+                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, 
+                    coach.Coach.LastName, coach.Coach.FullName))
                 .ToList();
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,

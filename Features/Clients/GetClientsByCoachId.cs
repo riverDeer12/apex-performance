@@ -37,7 +37,8 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDat
             .Select(x => x.Client)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        await SendAsync(coachClients.Select(x => new PersonDataDto(x.Id, x.FirstName, x.LastName)).ToList(),
+        await SendAsync(coachClients.Select(x => 
+                new PersonDataDto(x.Id, x.FirstName, x.LastName, x.FullName)).ToList(),
             cancellation: cancellationToken);
     }
 }
