@@ -74,13 +74,13 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 relatedAppointment.AppointmentStatus.Description);
 
             var clients = relatedAppointment.Clients
-                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, 
+                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName,
                     x.Client.LastName, x.Client.FullName))
                 .ToList();
 
             var coaches = relatedAppointment.Coaches
-                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, 
-                    x.Coach.LastName,  x.Coach.FullName))
+                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
+                    x.Coach.LastName, x.Coach.FullName))
                 .ToList();
 
             var appointmentResponse = new AppointmentDataDto(
@@ -95,7 +95,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
         await SendAsync(appointmentRequestsResponse, cancellation: cancellationToken);
     }
-    
+
     private async Task<List<AppointmentRequest>> GetAppointmentRequestsForUser(CancellationToken cancellationToken)
     {
         if (_currentUserService.LoggedUserHasRole(UserRoles.SuperAdmin) ||
@@ -110,7 +110,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
         return new List<AppointmentRequest>();
     }
-    
+
     private async Task<List<AppointmentRequest>> GetAllAppointmentRequests(CancellationToken cancellationToken)
     {
         return await _context.AppointmentRequests

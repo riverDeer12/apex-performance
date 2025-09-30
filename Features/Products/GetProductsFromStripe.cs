@@ -45,14 +45,16 @@ public class GetProductsFromStripeEndpoint : Endpoint<GetProductsFromStripeReque
                     ApiKey = _configuration["Stripe:ReVivPlus:SecretKey"]
                 }, cancellationToken: cancellationToken);
 
+            var stripeCurrency = "€";
+            
+            var formattedPrice = $"{productPrice.UnitAmountDecimal / 100:0.00} {stripeCurrency}";
+
             var stripeProduct = new StripeProduct
             (
                 productId,
                 product.DefaultPriceId,
                 product.Name,
-                productPrice != null
-                    ? $"{(productPrice.UnitAmountDecimal / 100):C}"
-                    : "N/A"
+                formattedPrice
             );
 
             stripeProducts.Add(stripeProduct);
