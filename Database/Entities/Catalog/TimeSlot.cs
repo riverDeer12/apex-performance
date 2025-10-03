@@ -15,4 +15,5 @@ public class TimeSlot
     public ICollection<CoachTimeSlot> Coaches { get; set; } = null!;
     public ICollection<RecurringAppointment> RecurringAppointments { get; set; } = null!;
     [NotMapped] public string Name => $"{Enum.GetName(typeof(DayOfWeek), Day)}, {StartTime} - {EndTime}";
+    [NotMapped] public string Description => $"{StartTime} - {EndTime}";
 }

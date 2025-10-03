@@ -63,7 +63,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 ThrowError(ErrorMessages.NotFound);
 
             var requestSenderResponse =
-                new PersonDataDto(requestSender.Id, requestSender.FirstName, 
+                new PersonDataDto(requestSender.Id, requestSender.FirstName,
                     requestSender.LastName, requestSender.FullName);
 
             var relatedAppointment = appointments
@@ -71,6 +71,9 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
             if (relatedAppointment is null)
                 ThrowError(ErrorMessages.NotFound);
+
+            var timeSlot = new CatalogDataDto(relatedAppointment.TimeSlot.Id, relatedAppointment.TimeSlot.Name,
+                relatedAppointment.TimeSlot.Description);
 
             var appointmentType = new CatalogDataDto(relatedAppointment.AppointmentType.Id,
                 relatedAppointment.AppointmentType.Name,
@@ -81,19 +84,19 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 relatedAppointment.AppointmentStatus.Description);
 
             var clients = relatedAppointment.Clients
-                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName, 
+                .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName,
                     x.Client.LastName, x.Client.FullName))
                 .ToList();
 
             var coaches = relatedAppointment.Coaches
-                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName, 
+                .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
                     x.Coach.LastName, x.Coach.FullName))
                 .ToList();
 
             var appointmentResponse = new AppointmentDataDto(
                 relatedAppointment.Id, relatedAppointment.StartTime, relatedAppointment.EndTime, appointmentType,
                 appointmentStatus,
-                clients, coaches);
+                clients, coaches, timeSlot);
 
             appointmentRequestsResponse.Add(new GetPendingAppointmentRequestResponse(appointmentRequest.Id,
                 appointmentRequest.Comment, requestSenderResponse, requestType, appointmentResponse));
@@ -185,7 +188,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
         return await _context.AppointmentRequests
             .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending &&
-                x.ClientId == client.Id)
+                        x.ClientId == client.Id)
             .Include(appointmentRequest => appointmentRequest.Appointment)
             .ThenInclude(appointment => appointment.AppointmentStatus)
             .Include(appointmentRequest => appointmentRequest.Appointment)

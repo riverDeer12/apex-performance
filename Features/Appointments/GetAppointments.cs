@@ -50,19 +50,22 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
                 .ToList();
 
             var appointmentCoachesResponse = appointment.Coaches
-                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName, 
+                .Select(coach => new PersonDataDto(coach.CoachId, coach.Coach.FirstName,
                     coach.Coach.LastName, coach.Coach.FullName))
                 .ToList();
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,
                 appointment.AppointmentType.Name, appointment.AppointmentType.Description);
-            
+
             var appointmentStatusResponse = new CatalogDataDto(appointment.AppointmentStatus.Id,
                 appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description);
 
+            var timeSlotResponse = new CatalogDataDto(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
+                appointment.TimeSlot.Description);
+
             var appointmentResponse = new AppointmentDataDto(appointment.Id,
                 appointment.StartTime, appointment.EndTime, appointmentTypeResponse, appointmentStatusResponse,
-                appointmentClientsResponse, appointmentCoachesResponse);
+                appointmentClientsResponse, appointmentCoachesResponse, timeSlotResponse);
 
             switch (appointment.AppointmentStatus.Name)
             {
@@ -108,6 +111,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointment => appointment.TimeSlot)
+            .Include(coachAppointment => coachAppointment.TimeSlot)
             .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -137,6 +141,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             .ThenInclude(clientAppointment => clientAppointment.Coach)
             .Include(appointment => appointment.Clients)
             .ThenInclude(coachAppointment => coachAppointment.Client)
+            .Include(coachAppointment => coachAppointment.TimeSlot)
             .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken);
     }
@@ -164,6 +169,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(coachAppointment => coachAppointment.Coach)
+            .Include(coachAppointment => coachAppointment.TimeSlot)
             .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken);
     }

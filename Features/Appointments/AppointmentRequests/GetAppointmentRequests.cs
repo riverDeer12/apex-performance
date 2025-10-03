@@ -56,6 +56,9 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
 
             if (relatedAppointment is null)
                 ThrowError(ErrorMessages.NotFound);
+            
+            var timeSlot = new CatalogDataDto(relatedAppointment.TimeSlot.Id, relatedAppointment.TimeSlot.Name,
+                relatedAppointment.TimeSlot.Description);
 
             var requestType = new CatalogDataDto(appointmentRequest.AppointmentRequestType.Id,
                 appointmentRequest.AppointmentRequestType.Name,
@@ -86,7 +89,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             var appointmentResponse = new AppointmentDataDto(
                 relatedAppointment.Id, relatedAppointment.StartTime, relatedAppointment.EndTime, appointmentType,
                 appointmentStatus,
-                clients, coaches);
+                clients, coaches, timeSlot);
 
             appointmentRequestsResponse.Add(new GetAppointmentRequestsResponse(appointmentRequest.Id,
                 appointmentRequest.Comment, requestType, requestStatus, appointmentResponse,

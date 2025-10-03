@@ -7,5 +7,6 @@ public record AppointmentDataDto(
     CatalogDataDto Type,
     CatalogDataDto Status,
     List<PersonDataDto> Clients,
-    List<PersonDataDto> Coaches
+    List<PersonDataDto> Coaches,
+    CatalogDataDto TimeSlot
 );
