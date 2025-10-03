@@ -52,6 +52,7 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             PaymentMethodTypes = new List<string> { "card" },
             LineItems = lineItems,
             BillingAddressCollection = "required",
+            CustomerCreation = "always",
             Mode = "payment",
             SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
             CancelUrl  = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}", 
