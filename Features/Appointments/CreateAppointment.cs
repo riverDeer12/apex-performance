@@ -85,10 +85,10 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             ThrowError(ErrorMessages.NotFound);
 
         if (!await _appointmentService.CheckFreeSlot(request.StartTime, timeSlot, cancellationToken))
-            ThrowError(ValidationMessages.NotValid);
+            ThrowError("Appointment is not available.");
         
         if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
-            ThrowError(ValidationMessages.NotValid);
+            ThrowError("Client does not have any credits available.");
 
         var appointment = new Appointment
         {
