@@ -9,5 +9,5 @@ public record ClientDataDto(
     string Email,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    string FullName
-);
+    string FullName,
+    List<PersonDataDto> Coaches);

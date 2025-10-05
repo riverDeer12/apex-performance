@@ -37,9 +37,12 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
         }
 
         await SendAsync(clients.Select(x =>
-                    new ClientDataDto(x.Id, x.FirstName, x.LastName, 
+                    new ClientDataDto(x.Id, x.FirstName, x.LastName,
                         x.Credits, x.Phone, x.Email, x.CreatedAt,
-                        x.UpdatedAt, x.FullName))
+                        x.UpdatedAt, x.FullName,
+                        x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
+                                coach.Coach.LastName, coach.Coach.FullName))
+                            .ToList()))
                 .ToList(),
             cancellation: cancellationToken);
     }
@@ -59,6 +62,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
     private async Task<List<Client>> GetAllClients(CancellationToken cancellationToken)
     {
         return await _context.Clients
+            .Include(x => x.Coaches)
+            .ThenInclude(x => x.Coach)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -77,6 +82,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
 
         return await _context.Clients
             .Where(x => coachClientsIds.Contains(x.Id))
+            .Include(x => x.Coaches)
+            .ThenInclude(x => x.Coach)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }
