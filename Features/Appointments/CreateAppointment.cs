@@ -35,15 +35,17 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
     private readonly IEmailService _emailService;
+    private readonly IClientService _clientService;
     private readonly ICurrentUserService _currentUserService;
 
     public CreateAppointmentEndpoint(ApexPerformanceContext context, IAppointmentService appointmentService,
-        IEmailService emailService, ICurrentUserService currentUserService)
+        IEmailService emailService, ICurrentUserService currentUserService, IClientService clientService)
     {
         _context = context;
         _appointmentService = appointmentService;
         _emailService = emailService;
         _currentUserService = currentUserService;
+        _clientService = clientService;
     }
 
     public override void Configure()
@@ -109,6 +111,9 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         await _appointmentService.UpdateClients(clients, appointment, cancellationToken);
 
         await _appointmentService.UpdateCoaches(coaches, appointment, cancellationToken);
+
+        if (appointment.AppointmentStatus.Name == BusinessStatuses.Approved)
+            await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
         SendNotificationEmails(coaches, clients, appointment, timeSlot);
 
