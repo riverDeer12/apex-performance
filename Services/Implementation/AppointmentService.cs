@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Database.Entities.Catalog;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,15 +16,18 @@ public class AppointmentService : IAppointmentService
         _context = context;
     }
 
-    public Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime,
-        DateTimeOffset appointmentEndTime, CancellationToken cancellationToken, Guid? appointmentId = null)
+    public async Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime,
+        TimeSlot timeSlot, CancellationToken cancellationToken, Guid? appointmentId = null)
     {
-        return Task.FromResult(!_context.Appointments.Any(existing =>
-            appointmentStartTime < existing.EndTime &&
-            appointmentEndTime > existing.StartTime &&
-            existing.AppointmentStatus.Name == BusinessStatuses.Approved &&
-            existing.Id != appointmentId
-        ));
+        var today = appointmentStartTime.Date;
+
+        var takenAppointments = await _context.Appointments
+            .Where(x => x.StartTime.Date == today &&
+                        x.AppointmentStatus.Name == BusinessStatuses.Approved &&
+                        x.TimeSlotId == timeSlot.Id)
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return takenAppointments.Count is 0;
     }
 
     public async Task UpdateCoaches(List<Coach> coaches, Appointment appointment,

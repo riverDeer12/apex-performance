@@ -44,7 +44,8 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
             await _context.Appointments
                 .Include(appointment => appointment.Clients)
                 .ThenInclude(clientAppointment => clientAppointment.Client)
-                .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.TimeSlot)
+                .Include(appointment => appointment.AppointmentType)
+                .Include(appointment => appointment.TimeSlot)
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
@@ -88,7 +89,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
             ThrowError(ErrorMessages.NotFound);
 
         var freeTimeSlot = await _appointmentService.CheckFreeSlot(appointment.StartTime,
-            appointment.EndTime, cancellationToken);
+            appointment.TimeSlot, cancellationToken);
 
         return appointment.AppointmentStatus = freeTimeSlot ? approvedStatus : declinedStatus;
     }

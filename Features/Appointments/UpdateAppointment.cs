@@ -51,8 +51,14 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
 
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
+        
+        var timeSlot = await _context.TimeSlots.FirstOrDefaultAsync(
+            x => x.Id == request.TimeSlot, cancellationToken: cancellationToken);
 
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime,
+        if (timeSlot is null)
+            ThrowError(ErrorMessages.NotFound);
+
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, timeSlot,
                 cancellationToken, appointmentId))
             ThrowError(ValidationMessages.NotValid);
 
@@ -66,12 +72,6 @@ public class UpdateAppointmentEndpoint : Endpoint<UpdateAppointmentRequest, Upda
             .FirstOrDefault(x => x.Name == nameof(BusinessStatuses.InProgress));
 
         if (inProgressStatus == null)
-            ThrowError(ErrorMessages.NotFound);
-        
-        var timeSlot = await _context.TimeSlots.FirstOrDefaultAsync(
-            x => x.Id == request.TimeSlot, cancellationToken: cancellationToken);
-
-        if (timeSlot is null)
             ThrowError(ErrorMessages.NotFound);
 
         appointment.StartTime = request.StartTime;

@@ -75,13 +75,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (appointmentType is null)
             ThrowError(ErrorMessages.NotFound);
-
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, request.EndTime, cancellationToken))
-            ThrowError(ValidationMessages.NotValid);
         
-        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
-            ThrowError(ValidationMessages.NotValid);
-
         var timeSlot =
             await _context.TimeSlots
                 .FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
@@ -89,6 +83,12 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (timeSlot is null)
             ThrowError(ErrorMessages.NotFound);
+
+        if (!await _appointmentService.CheckFreeSlot(request.StartTime, timeSlot, cancellationToken))
+            ThrowError(ValidationMessages.NotValid);
+        
+        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
+            ThrowError(ValidationMessages.NotValid);
 
         var appointment = new Appointment
         {

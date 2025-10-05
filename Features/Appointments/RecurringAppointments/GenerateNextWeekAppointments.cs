@@ -150,7 +150,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         var endTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.EndTime);
 
-        if (!await _appointmentService.CheckFreeSlot(startTime, endTime, cancellationToken))
+        if (!await _appointmentService.CheckFreeSlot(startTime, recurring.TimeSlot, cancellationToken))
             return null;
 
         var newAppointment = new Appointment

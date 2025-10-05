@@ -12,11 +12,11 @@ public interface IAppointmentService
     /// the time when the previous one is finished.
     /// </summary>
     /// <param name="appointmentStartTime">Start of new appointment.</param>
-    /// <param name="appointmentEndTime">End of new appointment.</param>
+    /// <param name="timeSlot">Selected time slot.</param>
     /// <param name="cancellationToken">Cancellation Token value.</param>
     /// <param name="appointmentId">Id of appointment.</param>
     /// <returns></returns>
-    Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, DateTimeOffset appointmentEndTime,
+    Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime, TimeSlot timeSlot,
         CancellationToken cancellationToken, Guid? appointmentId = null);
 
     /// <summary>
