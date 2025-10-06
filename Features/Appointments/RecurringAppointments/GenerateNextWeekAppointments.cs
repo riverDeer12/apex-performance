@@ -156,7 +156,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         var appointmentClients = recurring.Clients.Select(x => x.Client).ToList();
 
-        if (!await _appointmentService.CheckClientsCredits(appointmentClients, cancellationToken))
+        if (!_appointmentService.CheckClientsCredits(appointmentClients, cancellationToken))
             return null;
 
         if (!await _appointmentService.CheckFreeSlot(startTime, recurring.TimeSlot, cancellationToken))

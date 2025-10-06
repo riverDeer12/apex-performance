@@ -9,10 +9,12 @@ namespace ApexPerformance.API.Services.Implementation;
 public class ClientService : IClientService
 {
     private readonly ApexPerformanceContext _context;
-
-    public ClientService(ApexPerformanceContext context)
+    private readonly IEmailService _emailService;
+    
+    public ClientService(ApexPerformanceContext context, IEmailService emailService)
     {
         _context = context;
+        _emailService = emailService;
     }
 
     public async Task AddClientsCredits(List<Client> clients, int amount, CancellationToken cancellationToken)
@@ -35,6 +37,9 @@ public class ClientService : IClientService
         foreach (var client in clients)
         {
             client.Credits -= amount;
+            
+            if(client.Credits == 1)
+                _emailService.SendLowCreditsAlertEmail(client);
         }
 
         _context.Clients.UpdateRange(clients);

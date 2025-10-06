@@ -10,10 +10,12 @@ namespace ApexPerformance.API.Services.Implementation;
 public class AppointmentService : IAppointmentService
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IEmailService _emailService;
 
-    public AppointmentService(ApexPerformanceContext context)
+    public AppointmentService(ApexPerformanceContext context, IEmailService emailService)
     {
         _context = context;
+        _emailService = emailService;
     }
 
     public async Task<bool> CheckFreeSlot(DateTimeOffset appointmentStartTime,
@@ -86,8 +88,19 @@ public class AppointmentService : IAppointmentService
         await _context.BulkInsertOrUpdateAsync(appointmentClients, cancellationToken: cancellationToken);
     }
 
-    public Task<bool> CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken)
+    public bool CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken)
     {
-        return Task.FromResult(!clients.Any(client => client.Credits <= 0));
+        var allClientsHaveValidCredits = true;
+
+        foreach (var client in clients)
+        {
+            if (client.Credits > 0) continue;
+            
+            allClientsHaveValidCredits = false;
+            
+            _emailService.SendNoCreditsEmail(client);
+        }
+
+        return allClientsHaveValidCredits;
     }
 }

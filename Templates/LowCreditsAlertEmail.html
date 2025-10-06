@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Low Credits Alert – Only 1 Credit Left</title>
+    <style>
+        body {
+            background-color: #11111142;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .header {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            max-width: 100px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .content h2 {
+            color: #0074D9;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .credentials {
+            background-color: #222;
+            border: 1px solid #0074D9;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .credentials p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .credentials span {
+            font-weight: bold;
+            color: #0074D9;
+            display: inline-block;
+            width: 90px;
+        }
+
+        .footer {
+            background-color: #000;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            padding: 15px;
+        }
+
+        button {
+            background-color: #0074D9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #0090dd;
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.4);
+        }
+
+        button .icon {
+            margin-left: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #ffffff;
+            width: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://apex-performance.fit/assets/images/logo_light.png" alt="Company Logo"/>
+    </div>
+    <div class="content">
+        <h2>Hello, {{ClientFullName}}</h2>
+        
+        <p>We noticed that your account balance has dropped to 1 credit.</p>
+        
+        <p>To avoid any interruptions to your service, we recommend topping up your credits soon.</p>
+        
+        <p>Best Regards,</p>
+    </div>
+    <div class="footer">
+        &copy; Apex Performance. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

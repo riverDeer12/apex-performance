@@ -53,5 +53,5 @@ public interface IAppointmentService
     /// </summary>
     /// <param name="clients">Clients that need to be checked.</param>
     /// <param name="cancellationToken"></param>
-    Task<bool> CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken);
+    bool CheckClientsCredits(List<Client> clients, CancellationToken cancellationToken);
 }

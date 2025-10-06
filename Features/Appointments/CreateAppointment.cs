@@ -65,7 +65,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (clients.Count == 0)
             ThrowError("Clients not found.");
         
-        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
+        if (!_appointmentService.CheckClientsCredits(clients, cancellationToken))
             ThrowError("Client does not have any credits available.");
 
         var coaches = await _context.Coaches

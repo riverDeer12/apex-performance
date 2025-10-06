@@ -230,6 +230,52 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendLowCreditsAlertEmail(Client client)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(client.FullName, client.Email));
+
+        message.Subject = "Low Credits Alert – Only 1 Credit Left";
+
+        var templatePath =
+            Path.Combine(Directory.GetCurrentDirectory(), "Templates", "LowCreditsAlertEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{ClientFullName}}", client.FullName);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
+    }
+
+    public void SendNoCreditsEmail(Client client)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(client.FullName, client.Email));
+
+        message.Subject = "No Credits Available";
+
+        var templatePath =
+            Path.Combine(Directory.GetCurrentDirectory(), "Templates", "NoCreditsEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{ClientFullName}}", client.FullName);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
+    }
+
     private void ConnectToMailServer(MimeMessage message)
     {
         using var smtpClient = new SmtpClient();

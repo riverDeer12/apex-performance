@@ -72,4 +72,18 @@ public interface IEmailService
     /// <param name="client">Client that needs to get email.</param>
     /// <param name="schedule">HTML that represents schedule with appointments.</param>
     void SendWeekAppointmentsSchedule(Client client, string schedule);
+    
+    /// <summary>
+    /// Send email as alert
+    /// for low credits.
+    /// </summary>
+    /// <param name="client">Client that needs to get email.</param>
+    void SendLowCreditsAlertEmail(Client client);
+    
+    /// <summary>
+    /// Send email as alert
+    /// for no credits available.
+    /// </summary>
+    /// <param name="client">Client that needs to get email.</param>
+    void SendNoCreditsEmail(Client client);
 }
