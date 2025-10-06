@@ -14,15 +14,17 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAppointmentService _appointmentService;
+    private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
 
     public GenerateNextWeekAppointmentsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
-        IAppointmentService appointmentService, IEmailService emailService)
+        IAppointmentService appointmentService, IEmailService emailService, IClientService clientService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _appointmentService = appointmentService;
         _emailService = emailService;
+        _clientService = clientService;
     }
 
     public override void Configure()
@@ -65,6 +67,12 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         if (approvedStatus is null)
             ThrowError(ErrorMessages.NotFound);
 
+        var recurringClients = coachRecurringAppointments
+            .SelectMany(x => x.Clients.Select(y => y.Client))
+            .GroupBy(c => c.Id)
+            .Select(g => g.First())
+            .ToList();
+
         var nextWeekAppointments = new List<Appointment>();
 
         foreach (var recurring in coachRecurringAppointments)
@@ -80,15 +88,11 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             await _appointmentService.UpdateClients(clients, newAppointment, cancellationToken);
 
             await _appointmentService.UpdateCoaches(coaches, newAppointment, cancellationToken);
+            
+            await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
             nextWeekAppointments.Add(newAppointment);
         }
-
-        var recurringClients = coachRecurringAppointments
-            .SelectMany(x => x.Clients.Select(y => y.Client))
-            .GroupBy(c => c.Id)
-            .Select(g => g.First())
-            .ToList();
 
         SendNextWeekNotificationEmails(recurringClients, nextWeekAppointments);
 
@@ -113,8 +117,8 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
                 .ToList();
 
             var emailBody = PrepareEmailBody(clientAppointments);
-            
-            if(!string.IsNullOrEmpty(emailBody))
+
+            if (!string.IsNullOrEmpty(emailBody))
                 _emailService.SendWeekAppointmentsSchedule(client, emailBody);
         }
     }
@@ -140,7 +144,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         return string.Join("<br/>", emailBody);
     }
-    
+
     private async Task<Appointment?> CreateAppointment(RecurringAppointment recurring, AppointmentStatus status,
         CancellationToken cancellationToken)
     {
@@ -149,6 +153,11 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         var startTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.StartTime);
 
         var endTime = DateExtensions.CombineDateAndTime(appointmentDate, recurring.TimeSlot.EndTime);
+
+        var appointmentClients = recurring.Clients.Select(x => x.Client).ToList();
+
+        if (!await _appointmentService.CheckClientsCredits(appointmentClients, cancellationToken))
+            return null;
 
         if (!await _appointmentService.CheckFreeSlot(startTime, recurring.TimeSlot, cancellationToken))
             return null;

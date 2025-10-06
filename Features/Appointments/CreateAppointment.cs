@@ -14,6 +14,7 @@ namespace ApexPerformance.API.Features.Appointments;
 public record CreateAppointmentRequest(
     Guid Type,
     Guid TimeSlot,
+    Guid Location,
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     List<Guid> Clients,
@@ -62,35 +63,35 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count == 0)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("Clients not found.");
+        
+        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
+            ThrowError("Client does not have any credits available.");
 
         var coaches = await _context.Coaches
             .Where(x => request.Coaches.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (coaches.Count == 0)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("Coaches are not found.");
 
         var appointmentType = await _context.AppointmentTypes
             .FirstOrDefaultAsync(x => x.Id == request.Type,
                 cancellationToken: cancellationToken);
 
         if (appointmentType is null)
-            ThrowError(ErrorMessages.NotFound);
-        
+            ThrowError("Appointment Type is not found.");
+
         var timeSlot =
             await _context.TimeSlots
                 .FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
                     cancellationToken: cancellationToken);
 
         if (timeSlot is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("TimeSlot is not found.");
 
         if (!await _appointmentService.CheckFreeSlot(request.StartTime, timeSlot, cancellationToken))
             ThrowError("Appointment is not available.");
-        
-        if (!await _appointmentService.CheckClientsCredits(clients, cancellationToken))
-            ThrowError("Client does not have any credits available.");
 
         var appointment = new Appointment
         {
@@ -143,7 +144,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
                     cancellationToken: cancellationToken);
 
         if (pendingStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("Pending Status not found.");
 
         var approvedStatus =
             await _context.AppointmentStatuses
@@ -151,7 +152,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
                     cancellationToken: cancellationToken);
 
         if (approvedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("Approved Status not found.");
 
         return _currentUserService.LoggedUserHasRole(UserRoles.Client) ? pendingStatus : approvedStatus;
     }
@@ -163,6 +164,7 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
     {
         RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.TimeSlot).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }
