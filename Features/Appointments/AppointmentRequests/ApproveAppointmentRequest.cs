@@ -61,7 +61,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
                 cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorMessages.NotFound);
 
         await ChangeAppointmentStatus(appointment, cancellationToken);
 

@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
+using ApexPerformance.API.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -205,6 +206,48 @@ public class EmailService : IEmailService
         }
     }
 
+    public void SendJoinRequest(Client client, Appointment appointment)
+    {
+        var coaches = appointment.Coaches.Select(x => x.Coach).ToList();
+
+        foreach (var coach in coaches)
+        {
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+                _configuration["MailConfiguration::FromAddress"]));
+
+            message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
+
+            message.Subject = "You Have New Join Request from: " + client.FullName;
+
+            var templatePath =
+                Path.Combine(Directory.GetCurrentDirectory(), "Templates", "JoinRequestEmail.html");
+
+            var clientsNames = string.Join(",", appointment.Clients.Select(x => x.Client.FullName));
+
+            var html = File.ReadAllText(templatePath);
+
+            html = html.Replace("{{ClientFullName}}", client.FullName);
+
+            html = html.Replace("{{CoachFullName}}", coach.FullName);
+
+            html = html.Replace("{{Clients}}", clientsNames);
+
+            html = html.Replace("{{Day}}", appointment.StartTime.ToString("dd.MM.yyyy"));
+
+            html = html.Replace("{{StartTime}}", appointment.StartTime.ToString("HH:mm"));
+
+            html = html.Replace("{{EndTime}}", appointment.EndTime.ToString("HH:mm"));
+
+            html = html.Replace("{{DashboardLink}}", _configuration["WebAppUrl"] + "/admin/dashboard");
+
+            message.Body = new TextPart("html") { Text = html };
+
+            ConnectToMailServer(message);
+        }
+    }
+
     public void SendWeekAppointmentsSchedule(Client client, string schedule)
     {
         var message = new MimeMessage();
@@ -274,6 +317,36 @@ public class EmailService : IEmailService
         message.Body = new TextPart("html") { Text = html };
 
         ConnectToMailServer(message);
+    }
+
+    public void SendJoinedAppointmentEmail(Appointment appointment, List<Client> appointmentClients, Client joiningClient)
+    {
+        foreach (var client in appointmentClients)
+        {
+            var message = new MimeMessage();
+
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
+                _configuration["MailConfiguration::FromAddress"]));
+
+            message.To.Add(new MailboxAddress(client.FullName, client.Email));
+
+            message.Subject = joiningClient.FullName + " has joined your appointment";
+
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates",
+                "ClientJoinedAppointmentEmail.html");
+
+            var html = File.ReadAllText(templatePath);
+
+            html = html.Replace("{{ClientFullName}}", client.FullName);
+            
+            html = html.Replace("{{JoiningClientFullName}}", joiningClient.FullName);
+
+            html = html.Replace("{{AppointmentTime}}", appointment.TimeSlot.Name);
+
+            message.Body = new TextPart("html") { Text = html };
+            
+            ConnectToMailServer(message);
+        }
     }
 
     private void ConnectToMailServer(MimeMessage message)

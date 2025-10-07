@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

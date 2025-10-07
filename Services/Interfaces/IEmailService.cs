@@ -1,7 +1,7 @@
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Interfaces;
 
 public interface IEmailService
 {
@@ -63,7 +63,15 @@ public interface IEmailService
     /// </summary>
     /// <param name="client">Client that sends cancellation request.</param>
     /// <param name="appointment">Appointment that client wants to cancel.</param>
-    void SendCancelationRequest(Client client, Appointment appointment);
+    void SendCancelationRequest(Client client, Appointment appointment);    
+    
+    /// <summary>
+    /// Send email to coaches which are connected to this
+    /// appointment about client's request for joining another appointment.
+    /// </summary>
+    /// <param name="client">Client that sends join request.</param>
+    /// <param name="appointment">Appointment that client wants to join.</param>
+    void SendJoinRequest(Client client, Appointment appointment);
 
     /// <summary>
     /// Send email with appointments
@@ -86,4 +94,14 @@ public interface IEmailService
     /// </summary>
     /// <param name="client">Client that needs to get email.</param>
     void SendNoCreditsEmail(Client client);
+
+    /// <summary>
+    /// Send email as notification
+    /// for new client that is joining existing one.
+    /// </summary>
+    /// <param name="appointment">Selected appointment</param>
+    /// <param name="appointmentClients">Existing clients</param>
+    /// <param name="joiningClient">New client that is joining selected appointment</param>
+    void SendJoinedAppointmentEmail(Appointment appointment, List<Client> appointmentClients, 
+        Client joiningClient);
 }
