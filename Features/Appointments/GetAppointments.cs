@@ -104,6 +104,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
     private async Task<List<Appointment>> GetAllAppointments(CancellationToken cancellationToken)
     {
         return await _context.Appointments
+            .Where(appointment => appointment.StartTime > DateTimeOffset.Now)
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .Include(appointment => appointment.AppointmentType)
@@ -134,7 +135,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
         return await _context.Appointments
             .Where(appointment =>
                 appointmentRelations.Contains(appointment.Id) &&
-                appointment.StartTime > DateTimeOffset.Now && !appointment.IsDeleted)
+                appointment.StartTime > DateTimeOffset.Now)
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
@@ -162,7 +163,9 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
         if (appointmentRelations.Count is 0) return [];
 
         return await _context.Appointments
-            .Where(appointment => appointmentRelations.Contains(appointment.Id) && !appointment.IsDeleted)
+            .Where(appointment =>
+                appointmentRelations.Contains(appointment.Id) &&
+                appointment.StartTime > DateTimeOffset.Now)
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Clients)

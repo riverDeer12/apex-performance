@@ -60,6 +60,8 @@ public class JoinAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
             ThrowError("Appointment Request is not found.");
 
         appointmentRequest.AppointmentRequestStatus = approvedStatus;
+        
+        var appointmentExistingClients = appointment.Clients.Select(x => x.Client).ToList();
 
         var joiningClient = new ClientAppointment
         {
@@ -81,9 +83,7 @@ public class JoinAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
             ThrowError(ErrorMessages.SavingError);
 
         await _clientService.RemoveClientsCredits([appointmentRequest.Client], 1, cancellationToken);
-
-        var appointmentExistingClients = appointment.Clients.Select(x => x.Client).ToList();
-
+        
         _emailService.SendJoinedAppointmentEmail(appointment, appointmentExistingClients,
             appointmentRequest.Client);
 
