@@ -1,6 +1,8 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +24,14 @@ public record UpdateClientResponse(
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IEmailService _emailService;
     private readonly IClientService _clientService;
 
-    public UpdateClientEndpoint(ApexPerformanceContext context, IClientService clientService)
+    public UpdateClientEndpoint(ApexPerformanceContext context, IClientService clientService, IEmailService emailService)
     {
         _context = context;
         _clientService = clientService;
+        _emailService = emailService;
     }
 
     public override void Configure()
@@ -69,7 +73,22 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         await _clientService.UpdateClientCoaches(client, request.Coaches, cancellationToken);
 
+        SendAlertEmails(client);
+
         await SendAsync(new(client.Id), cancellation: cancellationToken);
+    }
+
+    private void SendAlertEmails(Client client)
+    {
+        switch (client.Credits)
+        {
+            case 0:
+                _emailService.SendNoCreditsEmail(client);
+                break;
+            case 1:
+                _emailService.SendLowCreditsAlertEmail(client);
+                break;
+        }
     }
 }
 
