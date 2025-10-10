@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cancelation Request from {{ClientFullName}}</title>
     <style>
         body {
@@ -102,6 +106,40 @@
             color: #ffffff;
             width: 1rem;
         }
+
+        /* ---- DARK MODE OVERRIDES (keep header white) ---- */
+        /* Apple Mail / iOS Mail toggles: re-assert white header */
+        @media (prefers-color-scheme: dark) {
+            .header-lock {
+                background: #ffffff !important;
+            }
+
+            .header-lock * {
+                color: #000000 !important;
+            }
+
+            .header-lock img {
+                mix-blend-mode: normal !important;
+            }
+        }
+
+        /* Outlook.com / OWA adds data-ogsc in dark mode */
+        [data-ogsc] .header-lock {
+            background: #ffffff !important;
+        }
+
+        [data-ogsc] .header-lock * {
+            color: #000000 !important;
+        }
+
+        /* Gmail mobile dark mode needs higher specificity; body gets "gmail-body" */
+        u + .gmail-body .header-lock {
+            background: #ffffff !important;
+        }
+
+        u + .gmail-body .header-lock * {
+            color: #000000 !important;
+        }
     </style>
 </head>
 <body>
@@ -110,20 +148,21 @@
            class="header-lock"
            bgcolor="#ffffff"
            style="background:#ffffff;">
-      <tr>
-        <td align="center" style="padding:20px;background:#ffffff;">
-          <!--[if mso]>
-          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-                       href="#" arcsize="0%" stroke="f" fillcolor="#ffffff"
-                       style="width:600pt;height:auto;">
-            <w:anchorlock/>
-            <center style="width:100%;height:100%;">
-          <![endif]-->
-          <img src="https://apex-performance.fit/assets/images/logo_light_theme.png" width="100" alt="Company Logo"
-               style="display:block;max-width:100px;height:auto;border:0;outline:0;text-decoration:none;">
-          <!--[if mso]></center></v:roundrect><![endif]-->
-        </td>
-      </tr>
+        <tr>
+            <td align="center" style="padding:20px;background:#ffffff;">
+                <!--[if mso]>
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                             href="#" arcsize="0%" stroke="f" fillcolor="#ffffff"
+                             style="width:600pt;height:auto;">
+                    <w:anchorlock/>
+                    <center style="width:100%;height:100%;">
+                <![endif]-->
+                <img src="https://apex-performance.fit/assets/images/logo_light_theme.png" width="100"
+                     alt="Company Logo"
+                     style="display:block;max-width:100px;height:auto;border:0;outline:0;text-decoration:none;">
+                <!--[if mso]></center></v:roundrect><![endif]-->
+            </td>
+        </tr>
     </table>
     <div class="content">
         <h2>Hello, {{CoachFullName}}</h2>
@@ -131,7 +170,7 @@
 
         <div class="credentials">
             <p><span>Clients:</span> {{Clients}}</p>
-            
+
             <p><span>Day:</span> {{Day}}</p>
             <p><span>Time:</span> {{StartTime}} - {{EndTime}}</p>
             <p style="margin-top: 2rem">
