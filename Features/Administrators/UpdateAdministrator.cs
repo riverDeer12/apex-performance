@@ -57,6 +57,5 @@ public sealed class UpdateAdministratorValidator : Validator<UpdateAdministrator
     {
         RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

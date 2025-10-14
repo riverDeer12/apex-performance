@@ -63,9 +63,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             .Where(x => request.Clients.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
-        if (clients.Count == 0)
-            ThrowError("Clients not found.");
-
         if (!_appointmentService.CheckClientsCredits(clients, cancellationToken))
             ThrowError("Client does not have any credits available.");
 
@@ -73,23 +70,14 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
             .Where(x => request.Coaches.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
-        if (coaches.Count == 0)
-            ThrowError("Coaches are not found.");
-
         var appointmentType = await _context.AppointmentTypes
-            .FirstOrDefaultAsync(x => x.Id == request.Type,
+            .SingleAsync(x => x.Id == request.Type,
                 cancellationToken: cancellationToken);
-
-        if (appointmentType is null)
-            ThrowError("Appointment Type is not found.");
 
         var timeSlot =
             await _context.TimeSlots
-                .FirstOrDefaultAsync(x => x.Id == request.TimeSlot,
+                .SingleAsync(x => x.Id == request.TimeSlot,
                     cancellationToken: cancellationToken);
-
-        if (timeSlot is null)
-            ThrowError("TimeSlot is not found.");
 
         if (!await CheckValidity(request.StartTime, timeSlot, cancellationToken))
             ThrowError("Appointment is not valid.");
@@ -179,9 +167,56 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
 {
     public CreateAppointmentValidator()
     {
-        RuleFor(x => x.Type).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.TimeSlot).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Type)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                
+                return db.AppointmentTypes.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+        
+        RuleFor(x => x.TimeSlot)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                
+                return db.TimeSlots.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+        
+        RuleFor(x => x.Clients)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .Must(list => list.Distinct().Count() == list.Count)
+            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .MustAsync(async (clientIds, cancellationToken) =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                var numberOfClients = await db.Clients
+                    .Where(client => clientIds.Contains(client.Id))
+                    .CountAsync(cancellationToken);
+
+                return numberOfClients == clientIds.Count;
+            })
+            .WithMessage(ErrorMessages.NotFound);
+        
+        RuleFor(x => x.Coaches)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .Must(list => list.Distinct().Count() == list.Count)
+            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .MustAsync(async (coachIds, cancellationToken) =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                var numberOfCoaches = await db.Coaches
+                    .Where(coach => coachIds.Contains(coach.Id))
+                    .CountAsync(cancellationToken);
+
+                return numberOfCoaches == coachIds.Count;
+            })
+            .WithMessage(ErrorMessages.NotFound);
     }
 }

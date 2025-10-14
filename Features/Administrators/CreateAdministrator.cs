@@ -29,10 +29,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
 
     public override async Task HandleAsync(CreateAdministratorRequest request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == request.User, cancellationToken);
-
-        if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+        var user = await _context.Users.SingleAsync(x => x.Id == request.User, cancellationToken);
 
         var administratorExists = _context.Administrators.Any(x => x.UserId == user.Id);
 
@@ -46,7 +43,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
             FirstName = request.FirstName,
             LastName = request.LastName
         };
-        
+
         _context.Administrators.Add(newAdministrator);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
@@ -63,8 +60,18 @@ public sealed class CreateAdministratorValidator : Validator<CreateAdministrator
 {
     public CreateAdministratorValidator()
     {
+        RuleFor(x => x.User)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                
+                return db.Users.AnyAsync(user => user.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+
         RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.User).NotEmpty().WithMessage(ValidationMessages.Required);
     }
 }

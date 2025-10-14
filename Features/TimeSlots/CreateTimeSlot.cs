@@ -102,7 +102,17 @@ public sealed class CreateTimeSlotValidator : Validator<CreateTimeSlotRequest>
 {
     public CreateTimeSlotValidator()
     {
-        RuleFor(x => x.Coach).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Coach)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                
+                return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);   
+        
         RuleFor(x => x.Day).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);

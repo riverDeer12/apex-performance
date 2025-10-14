@@ -87,7 +87,17 @@ public sealed class CreateBodyMeasurementValidator : Validator<CreateBodyMeasure
 {
     public CreateBodyMeasurementValidator()
     {
-        RuleFor(x => x.Client).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Client)
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MustAsync((id, cancellationToken)
+                =>
+            {
+                var db = Resolve<ApexPerformanceContext>();
+                
+                return db.Clients.AnyAsync(client => client.Id == id, cancellationToken);
+            })
+            .WithMessage(ErrorMessages.NotFound);
+        
         RuleFor(x => x.Height).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Weight).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ValidationMessages.Required);
