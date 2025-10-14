@@ -65,7 +65,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
 
         if (clients.Count == 0)
             ThrowError("Clients not found.");
-        
+
         if (!_appointmentService.CheckClientsCredits(clients, cancellationToken))
             ThrowError("Client does not have any credits available.");
 
@@ -91,8 +91,8 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         if (timeSlot is null)
             ThrowError("TimeSlot is not found.");
 
-        if (!await _appointmentService.CheckFreeSlot(request.StartTime, timeSlot, cancellationToken))
-            ThrowError("Appointment is not available.");
+        if (!await CheckValidity(request.StartTime, timeSlot, cancellationToken))
+            ThrowError("Appointment is not valid.");
 
         var appointment = new Appointment
         {
@@ -122,6 +122,22 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         await SendAsync(
             new CreateAppointmentResponse(appointment.Id),
             cancellation: cancellationToken);
+    }
+
+    private async Task<bool> CheckValidity(DateTimeOffset requestStartTime, TimeSlot timeSlot,
+        CancellationToken cancellationToken)
+    {
+        var today = DateTime.Now.Date;
+
+        var requestedDay = requestStartTime.Date;
+
+        if (today == requestedDay && _currentUserService.LoggedUserHasRole(UserRoles.Client))
+            return false;
+        
+        if (!await _appointmentService.CheckFreeSlot(requestStartTime, timeSlot, cancellationToken))
+            return false;
+
+        return true;
     }
 
     private void SendNotificationEmails(List<Coach> coaches, List<Client> clients, Appointment appointment,
