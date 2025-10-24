@@ -6,7 +6,7 @@ using FluentValidation;
 
 namespace ApexPerformance.API.Features.Products;
 
-public record CreateProductRequest(string Name, string Description, decimal Price);
+public record CreateProductRequest(List<IFormFile> Photos, string Name, string Description, decimal Price);
 
 public record CreateProductResponse(Guid Id);
 
@@ -51,6 +51,16 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductReque
 {
     public CreateProductRequestValidator()
     {
+        RuleFor(x => x.Photos).NotEmpty().WithMessage(ValidationMessages.Required);
+
+        RuleForEach(x => x.Photos!).ChildRules(file =>
+        {
+            file.RuleFor(f => f.ContentType).Must(ct => ct.StartsWith("image/"))
+                .WithMessage("Only image uploads are allowed.");
+            file.RuleFor(f => f.Length).LessThanOrEqualTo(1024 * 1024)
+                .WithMessage("Max size is 1MB.");
+        });
+
         RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
         RuleFor(x => x.Price).NotEmpty().WithMessage(ValidationMessages.Required);

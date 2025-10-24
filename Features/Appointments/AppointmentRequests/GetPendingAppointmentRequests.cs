@@ -44,7 +44,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
         }
 
         var appointments = appointmentRequests
-            .Select(x => x.Appointment).ToList();
+            .Select(x => x.Appointment)
+            .ToList();
 
         var appointmentRequestSenders = appointmentRequests.Select(x => x.Client).ToList();
 
@@ -139,6 +140,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
             .Include(appointmentRequest => appointmentRequest.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -174,6 +177,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
             .Include(appointmentRequest => appointmentRequest.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -202,6 +207,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
             .Include(appointmentRequest => appointmentRequest.Client)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }
