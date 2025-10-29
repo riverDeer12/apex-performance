@@ -135,7 +135,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
         return await _context.Appointments
             .Where(appointment =>
                 appointmentRelations.Contains(appointment.Id) &&
-                appointment.StartTime > DateTimeOffset.Now)
+                appointment.StartTime > DateTimeOffset.Now.AddDays(-1))
             .Include(appointment => appointment.AppointmentType)
             .Include(appointment => appointment.AppointmentStatus)
             .Include(appointment => appointment.Coaches)
