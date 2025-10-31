@@ -70,7 +70,6 @@ public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSess
             },
             cancellationToken: cancellationToken);
 
-        // Pull line items (names, quantities, amounts, etc.)
         var lineItemService = new SessionLineItemService();
 
         var lineItems = await lineItemService.ListAsync(sessionId, new SessionLineItemListOptions
