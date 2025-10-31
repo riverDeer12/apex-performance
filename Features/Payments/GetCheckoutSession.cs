@@ -17,6 +17,9 @@ public record GetCheckoutSessionResponse(
     string ShippingTitle,
     string CustomerEmail,
     string CustomerName,
+    Dictionary<string, string>? SessionMetadata,
+    Dictionary<string, string>? PaymentIntentMetadata,
+    Dictionary<string, string>? CustomerMetadata,
     List<LineItem> LineItems
 );
 
@@ -105,6 +108,9 @@ public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSess
             session.ShippingCost?.ShippingRate?.DisplayName,
             session.CustomerDetails?.Email,
             session.CustomerDetails?.Name,
+            session.PaymentIntent.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
+            session.PaymentIntent?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
+            session.Customer?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
             items
         );
 

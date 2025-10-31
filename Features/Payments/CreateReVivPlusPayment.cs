@@ -6,7 +6,11 @@ namespace ApexPerformance.API.Features.Payments;
 
 public record ReVivPlusCheckoutItemDto(string ProductId, int Quantity);
 
-public record CreateReVivPlusPaymentRequest(List<ReVivPlusCheckoutItemDto> Items);
+public record CreateReVivPlusPaymentRequest(
+    List<ReVivPlusCheckoutItemDto> Items,
+    string BoxNowLockerId,
+    string BoxNowLockerAddressLine1,
+    string BoxNowLockerPostalCode);
 
 public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, CreatePaymentResponse>
 {
@@ -54,8 +58,23 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             BillingAddressCollection = "required",
             CustomerCreation = "always",
             Mode = "payment",
+            Metadata = new Dictionary<string, string?>
+            {
+                { "BoxNowLockerId", request.BoxNowLockerId },
+                { "BoxNowLockerAddressLine1", request.BoxNowLockerAddressLine1 },
+                { "BoxNowLockerPostalCode", request.BoxNowLockerPostalCode }
+            },
+            PaymentIntentData = new SessionPaymentIntentDataOptions
+            {
+                Metadata = new Dictionary<string, string?>
+                {
+                    { "BoxNowLockerId", request.BoxNowLockerId },
+                    { "BoxNowLockerAddressLine1", request.BoxNowLockerAddressLine1 },
+                    { "BoxNowLockerPostalCode", request.BoxNowLockerPostalCode }
+                }
+            },
             SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
-            CancelUrl  = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}", 
+            CancelUrl = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
         };
 
         var service = new SessionService();
