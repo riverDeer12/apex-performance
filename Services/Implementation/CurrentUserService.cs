@@ -26,6 +26,5 @@ public class CurrentUserService : ICurrentUserService
         var roleValues = _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
 
         return roleValues?.Contains(requiredRole) ?? false;
-        ;
     }
 }
