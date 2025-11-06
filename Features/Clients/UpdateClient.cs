@@ -5,6 +5,7 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
@@ -73,13 +74,15 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         await _clientService.UpdateClientCoaches(client, request.Coaches, cancellationToken);
 
-        SendAlertEmails(client);
+        BackgroundJob.Enqueue(() => SendAlertEmails(client.Id));
 
         await SendAsync(new(client.Id), cancellation: cancellationToken);
     }
 
-    private void SendAlertEmails(Client client)
+    public async Task SendAlertEmails(Guid clientId)
     {
+        var client = await _context.Clients.SingleAsync(x => x.Id == clientId);
+        
         switch (client.Credits)
         {
             case 0:

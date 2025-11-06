@@ -111,21 +111,25 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         var nextWeekAppointmentsIds = nextWeekAppointments.Select(x => x.Id).ToList();
 
-        var appointments = _context.Appointments
-            .Where(appointment => nextWeekAppointmentsIds.Contains(appointment.Id))
-            .Include(appointment => appointment.TimeSlot)
-            .Include(appointment => appointment.Coaches)
-            .Include(appointment => appointment.AppointmentType)
-            .ToList();
+        BackgroundJob.Enqueue(() =>
+            SendNextWeekNotificationEmails(emailClients.Select(x => x.Id).ToList(), nextWeekAppointmentsIds));
 
-        SendNextWeekNotificationEmails(emailClients, appointments);
-        
         await SendAsync(StatusCodes.Status201Created, cancellation: cancellationToken);
     }
 
-    private void SendNextWeekNotificationEmails(List<Client> emailClients,
-        List<Appointment> nextWeekAppointments)
+    public void SendNextWeekNotificationEmails(List<Guid> emailClientIds,
+        List<Guid> nextWeekAppointmentsIds)
     {
+        var nextWeekAppointments = _context.Appointments
+            .Where(appointment => nextWeekAppointmentsIds.Contains(appointment.Id))
+            .Include(appointment => appointment.TimeSlot)
+            .Include(appointment => appointment.Coaches)
+            .ThenInclude(appointment => appointment.Coach)
+            .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.Clients)
+            .ToList();
+
+        var emailClients = _context.Clients.Where(x => emailClientIds.Contains(x.Id)).ToList();
+
         foreach (var emailClient in emailClients)
         {
             var emailClientAppointments = nextWeekAppointments
