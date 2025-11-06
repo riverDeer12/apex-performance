@@ -6,6 +6,7 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.Extensions;
 using FastEndpoints;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.RecurringAppointments;
@@ -76,51 +77,65 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
         var nextWeekAppointments = new List<Appointment>();
 
+        var removeCreditClients = new List<Client>();
+
         foreach (var recurring in coachRecurringAppointments)
         {
             var newAppointment = await CreateAppointment(recurring, approvedStatus, cancellationToken);
 
             if (newAppointment is null) continue;
 
-            var clients = recurring.Clients.Select(x => x.Client).ToList();
+            nextWeekAppointments.Add(newAppointment);
 
-            var coaches = new List<Coach> { recurring.Coach };
-
-            await _appointmentService.UpdateClients(clients, newAppointment, cancellationToken);
-
-            await _appointmentService.UpdateCoaches(coaches, newAppointment, cancellationToken);
-            
-            await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+            removeCreditClients.AddRange(recurring.Clients.Select(x => x.Client).ToList());
 
             nextWeekAppointments.Add(newAppointment);
         }
 
-        SendNextWeekNotificationEmails(recurringClients, nextWeekAppointments);
+        if (nextWeekAppointments.Count is 0)
+        {
+            await SendAsync(StatusCodes.Status204NoContent, cancellation: cancellationToken);
+            return;
+        }
 
+        _context.Appointments.AddRange(nextWeekAppointments);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorMessages.SavingError);
+
+        await _clientService.RemoveClientsCredits(removeCreditClients, 1, cancellationToken);
+
+        var emailClients = recurringClients.DistinctBy(x => x.Id).ToList();
+
+        var nextWeekAppointmentsIds = nextWeekAppointments.Select(x => x.Id).ToList();
+
+        var appointments = _context.Appointments
+            .Where(appointment => nextWeekAppointmentsIds.Contains(appointment.Id))
+            .Include(appointment => appointment.TimeSlot)
+            .Include(appointment => appointment.Coaches)
+            .Include(appointment => appointment.AppointmentType)
+            .ToList();
+
+        SendNextWeekNotificationEmails(emailClients, appointments);
+        
         await SendAsync(StatusCodes.Status201Created, cancellation: cancellationToken);
     }
 
-    private void SendNextWeekNotificationEmails(List<Client> recurringClients,
+    private void SendNextWeekNotificationEmails(List<Client> emailClients,
         List<Appointment> nextWeekAppointments)
     {
-        var nextWeekAppointmentsIds = nextWeekAppointments.Select(x => x.Id).ToList();
-
-        foreach (var client in recurringClients)
+        foreach (var emailClient in emailClients)
         {
-            var clientAppointments = _context.ClientAppointments
-                .Where(clientAppointment => clientAppointment.ClientId == client.Id &&
-                                            nextWeekAppointmentsIds.Contains(clientAppointment.AppointmentId))
-                .Include(clientAppointment => clientAppointment.Appointment)
-                .Include(clientAppointment => clientAppointment.Appointment.AppointmentType)
-                .Include(clientAppointment => clientAppointment.Appointment.Coaches)
-                .ThenInclude(coachAppointment => coachAppointment.Coach)
-                .Select(x => x.Appointment)
+            var emailClientAppointments = nextWeekAppointments
+                .Where(appointment => appointment.Clients.Any(c => c.ClientId == emailClient.Id))
                 .ToList();
 
-            var emailBody = PrepareEmailBody(clientAppointments);
+            var emailBody = PrepareEmailBody(emailClientAppointments);
 
             if (!string.IsNullOrEmpty(emailBody))
-                _emailService.SendWeekAppointmentsSchedule(client, emailBody);
+                _emailService.SendWeekAppointmentsSchedule(emailClient, emailBody);
         }
     }
 
@@ -172,12 +187,27 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             EndTime = endTime
         };
 
-        _context.Appointments.Add(newAppointment);
+        var clients = recurring.Clients.Select(x => x.Client).ToList();
 
-        var result = await _context.SaveChangesAsync(cancellationToken);
+        var coaches = new List<Coach> { recurring.Coach };
 
-        if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+        newAppointment.Clients = clients
+            .Select(client => new ClientAppointment
+            {
+                ClientId = client.Id,
+                Client = client,
+                Appointment = newAppointment
+            })
+            .ToList();
+
+        newAppointment.Coaches = coaches
+            .Select(coach => new CoachAppointment
+            {
+                CoachId = coach.Id,
+                Coach = coach,
+                Appointment = newAppointment
+            })
+            .ToList();
 
         return newAppointment;
     }

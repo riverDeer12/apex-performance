@@ -12,6 +12,7 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Serilog;
 using Stripe;
 
@@ -62,6 +63,11 @@ builder.Services.AddHangfire(cfg =>
     cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
+        .UseSerializerSettings(new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            PreserveReferencesHandling = PreserveReferencesHandling.None
+        })
         .UseSqlServerStorage(
             builder.Configuration.GetConnectionString("DefaultConnection"),
             new SqlServerStorageOptions
