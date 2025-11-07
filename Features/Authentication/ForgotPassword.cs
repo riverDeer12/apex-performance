@@ -4,6 +4,7 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FastEndpoints.Security;
+using Hangfire;
 using MailKit.Net.Smtp;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
@@ -48,7 +49,7 @@ public class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, ForgotPass
             await SendAsync(new ForgotPasswordResponse(), cancellation: cancellationToken);
             return;
         }
-        
+
         var token = JwtBearer.CreateToken(
             options: o =>
             {
@@ -58,8 +59,16 @@ public class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, ForgotPass
                     ("sub", user.Id.ToString()));
             });
 
-        _emailService.SendForgotPasswordEmail(user, token);
+        BackgroundJob.Enqueue(() => SendForgotPasswordEmail(user.Id, token));
 
         await SendAsync(new ForgotPasswordResponse(), cancellation: cancellationToken);
+    }
+
+    public async Task SendForgotPasswordEmail(Guid userId, string token)
+    {
+        var user = await _context.Users
+            .SingleAsync(x => x.Id == userId);
+
+        _emailService.SendForgotPasswordEmail(user, token);
     }
 }

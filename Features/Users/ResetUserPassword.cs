@@ -4,6 +4,7 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Users;
@@ -20,15 +21,13 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly ApexPerformanceContext _context;
-    private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
 
     public ResetUserPasswordEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext context,
-        IConfiguration configuration, IEmailService emailService)
+        IEmailService emailService)
     {
         _currentUserService = currentUserService;
         _context = context;
-        _configuration = configuration;
         _emailService = emailService;
     }
 
@@ -55,9 +54,16 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        _emailService.SendResetPasswordEmail(user);
+        BackgroundJob.Enqueue(() => SendResetPasswordEmail(user.Id));
 
-        await SendAsync(new(user.Id), cancellation: cancellationToken);
+        await SendAsync(new ResetUserPasswordResponse(user.Id), cancellation: cancellationToken);
+    }
+
+    public async Task SendResetPasswordEmail(Guid userId)
+    {
+        var user = await _context.Users.SingleAsync(x => x.Id == userId);
+
+        _emailService.SendResetPasswordEmail(user);
     }
 }
 
