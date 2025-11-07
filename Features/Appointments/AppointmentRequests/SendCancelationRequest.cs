@@ -5,6 +5,7 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.AppointmentRequests;
@@ -63,7 +64,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
 
         if (appointmentRequestType is null)
             ThrowError(ErrorMessages.NotFound);
-        
+
         var appointmentRequestStatus =
             await _context.AppointmentRequestStatuses.FirstOrDefaultAsync(x =>
                 x.Name == nameof(BusinessStatuses.Pending), cancellationToken: cancellationToken);
@@ -91,9 +92,24 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
         if (result == 0)
             ThrowError(ErrorMessages.SavingError);
 
-        _emailService.SendCancelationRequest(client, appointment);
+        BackgroundJob.Enqueue(() => SendCancelationEmail(client.Id, appointment.Id));
 
         await SendAsync(new StatusResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
+    }
+
+    public async Task SendCancelationEmail(Guid clientId, Guid appointmentId)
+    {
+        var client = await _context.Clients.SingleAsync(x => x.Id == clientId);
+
+        var appointment = await _context
+            .Appointments
+            .Include(x => x.Coaches)
+            .ThenInclude(x => x.Coach)
+            .Include(x => x.Clients)
+            .ThenInclude(x => x.Client)
+            .SingleAsync(x => x.Id == appointmentId);
+
+        _emailService.SendCancelationRequest(client, appointment);
     }
 }
