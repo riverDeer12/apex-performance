@@ -5,17 +5,18 @@ using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments;
 
-public class CancelAppointmentEndpoint: EndpointWithoutRequest<StatusResponse>
+public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
 
-    public CancelAppointmentEndpoint(ApexPerformanceContext context, IClientService clientService, 
+    public CancelAppointmentEndpoint(ApexPerformanceContext context, IClientService clientService,
         IEmailService emailService)
     {
         _context = context;
@@ -42,7 +43,7 @@ public class CancelAppointmentEndpoint: EndpointWithoutRequest<StatusResponse>
 
         if (appointment is null)
             ThrowError(ErrorMessages.NotFound);
-        
+
         var appointmentStatus = await _context.AppointmentStatuses
             .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Canceled),
                 cancellationToken: cancellationToken);
@@ -61,12 +62,27 @@ public class CancelAppointmentEndpoint: EndpointWithoutRequest<StatusResponse>
 
         var appointmentClients = appointment.Clients.Select(x => x.Client).ToList();
 
-        _emailService.SendAppointmentStatus(appointmentClients, appointment, appointment.TimeSlot);
-        
         await _clientService.AddClientsCredits(appointmentClients, 1, cancellationToken);
+
+        var appointmentClientsIds = appointmentClients.Select(x => x.Id).ToList();
+
+        BackgroundJob.Enqueue(() =>
+            SendAppointmentStatusEmail(appointmentClientsIds, appointment.Id));
 
         await SendAsync(
             new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
+    }
+
+    public async Task SendAppointmentStatusEmail(List<Guid> appointmentClientsIds, Guid appointmentId)
+    {
+        var appointmentClients = _context.Clients.Where(x => appointmentClientsIds.Contains(x.Id)).ToList();
+
+        var appointment = await _context.Appointments
+            .Include(appointment => appointment.TimeSlot)
+            .Include(appointment => appointment.AppointmentStatus)
+            .SingleAsync(x => x.Id == appointmentId);
+
+        _emailService.SendAppointmentStatus(appointmentClients, appointment, appointment.TimeSlot);
     }
 }

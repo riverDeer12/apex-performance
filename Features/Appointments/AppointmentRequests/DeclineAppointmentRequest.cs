@@ -13,7 +13,7 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
     {
         _context = context;
     }
-
+    
     public override void Configure()
     {
         Get("api/appointment-requests/decline/{id}");
