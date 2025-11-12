@@ -1,0 +1,19 @@
+meta {
+  name: CreateBoxNowAuthorizationSession
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://api-stage.boxnow.hr/api/v1/auth-sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "grant_type": "client_credentials",
+    "client_id": "63ec16b5-ade2-4cc2-8bd4-4ea130bc3650",
+    "client_secret": "c5ee0a138541f0a755ba6e3ae71a120cca16e7a00b6c6d3bb34fabaf57d18eaf"
+  }
+}

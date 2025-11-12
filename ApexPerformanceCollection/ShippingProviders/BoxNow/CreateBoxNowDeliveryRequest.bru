@@ -1,0 +1,45 @@
+meta {
+  name: CreateBoxNowDeliveryRequest
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://api-stage.boxnow.hr/api/v1/delivery-requests
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiMTQ2MzAiLCJyb2xlIjoicGFydG5lciJ9LCJpYXQiOjE3NjI5NTI0NzEsImV4cCI6MTc2Mjk1NjA3MX0.mpy3rLojBrG_R01WhUndy2aJxr11VcskgLLJk4HyseY
+}
+
+body:json {
+  {
+    "orderNumber": "12345",
+    "invoiceValue": "25.50",
+    "paymentMode": "prepaid",
+    "amountToBeCollected": "0.00",
+    "allowReturn": true,
+    "origin": {
+      "contactNumber": "+385 91 1234 1234",
+      "contactEmail": "partner.example@boxnow.hr",
+      "contactName": "Hrvoje Horvat",
+      "locationId": "8422"
+    },
+    "destination": {
+      "contactNumber": "+385 91 123 123",
+      "contactEmail": "customer.example@boxnow.hr",
+      "contactName": "Ivan Ivanic",
+      "locationId": "8422"
+    },
+    "items": [
+      {
+        "id": "123456",
+        "name": "Smartphone",
+        "value": "3.45",
+        "weight": 0
+      }
+    ]
+  }
+}
