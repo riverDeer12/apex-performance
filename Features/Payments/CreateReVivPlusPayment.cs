@@ -58,6 +58,10 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             BillingAddressCollection = "required",
             CustomerCreation = "always",
             Mode = "payment",
+            PhoneNumberCollection = new SessionPhoneNumberCollectionOptions
+            {
+                Enabled = true
+            },
             Metadata = new Dictionary<string, string?>
             {
                 { "BoxNowLockerId", request.BoxNowLockerId },
