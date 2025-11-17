@@ -1,118 +1,194 @@
+using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using ApexPerformance.API.Features.Payments;
+using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
 using FastEndpoints;
+using Hangfire;
+using Stripe;
+using Stripe.Checkout;
+using LineItem = ApexPerformance.API.Features.Payments.LineItem;
 
 namespace ApexPerformance.API.Features.ShippingProviders.BoxNow;
 
-public record BoxNowAuthorizationResponse(
-    [property: JsonPropertyName("access_token")]
-    string AccessToken,
-    [property: JsonPropertyName("token_type")]
-    string TokenType,
-    [property: JsonPropertyName("expires_in")]
-    int ExpiresIn
-);
-
-public record BoxNowDeliveryRequest(
-    string OrderNumber,
-    string InvoiceValue,
-    string PaymentMode,
-    string AmountToBeCollected,
-    bool AllowReturn,
-    Origin Origin,
-    Destination Destination,
-    List<Item> Items
-);
-
-public record Origin(
-    string ContactNumber,
-    string ContactEmail,
-    string ContactName,
-    string LocationId
-);
-
-public record Destination(
-    string ContactNumber,
-    string ContactEmail,
-    string ContactName,
-    string LocationId
-);
-
-public record Item(
-    string Id,
-    string Name,
-    string Value,
-    double Weight
-);
-
-public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<string>
+public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliveryRequestResponse>
 {
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
-    public CreateReVivPlusOrderEndpoint(IConfiguration configuration)
+    public CreateReVivPlusOrderEndpoint(IConfiguration configuration, IEmailService emailService)
     {
         _configuration = configuration;
+        _emailService = emailService;
     }
 
     public override void Configure()
     {
-        Post("api/shipping-providers/box-now/reviv-plus/create-order");
+        Post("api/shipping-providers/box-now/reviv-plus/create-order/{sessionId}");
         AllowAnonymous();
         Options(x => x.WithTags("ShippingProviders"));
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
+        var sessionId = Route<string>("sessionId", isRequired: true);
+
         var authorizationSession = await GetBoxNowAuthorizationSession(cancellationToken);
 
-        var url = _configuration["BoxNow:ReVivPlus:ApiUrl"] + "/api/v1/delivery-requests";
+        var checkoutData = await GetCheckoutSessionData(sessionId, cancellationToken);
+
+        checkoutData.PaymentIntentMetadata.TryGetValue("BoxNowLockerId", out var locationId);
+
+        var checkoutItems = checkoutData.LineItems.Select(
+            x => new Item(Guid.NewGuid().ToString(), x.Description, x.AmountTotal!, 0,
+                1)
+        ).ToList();
 
         // JSON body
         var requestBody = new BoxNowDeliveryRequest(
-            OrderNumber: "12345",
-            InvoiceValue: "25.50",
+            OrderNumber: sessionId,
+            InvoiceValue: checkoutData.AmountTotal!,
             PaymentMode: "prepaid",
             AmountToBeCollected: "0.00",
             AllowReturn: true,
             Origin: new Origin(
-                "+385 91 1234 1234",
-                "partner.example@boxnow.hr",
-                "Hrvoje Horvat", 
-                "origin-location"),
+                _configuration["BoxNow:ReVivPlus:ContactNumber"]!,
+                _configuration["BoxNow:ReVivPlus:ContactEmail"]!,
+                _configuration["BoxNow:ReVivPlus:ContactName"]!,
+                _configuration["BoxNow:ReVivPlus:WarehouseId"]!),
             Destination: new Destination(
-                "+385 91 123 123", 
-                "customer.example@boxnow.hr", 
-                "Ivan Ivanic",
-                "destination-location"),
-            Items: new List<Item>
-            {
-                new Item("1", "Smartphone", "3.45", 0)
-            }
+                checkoutData.CustomerPhone,
+                checkoutData.CustomerEmail,
+                checkoutData.CustomerName,
+                "8063"),
+            Items: checkoutItems
         );
 
-        // Serialize it to JSON
-        var json = JsonSerializer.Serialize(requestBody);
+        var json = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
 
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         using var client = new HttpClient();
-        // Add Authorization header
+
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", authorizationSession.AccessToken);
 
-        // Send POST request
+        var url = _configuration["BoxNow:ReVivPlus:ApiUrl"] + "/api/v1/delivery-requests";
+
         var response = await client.PostAsync(url, content, cancellationToken);
 
-        var result = await response.Content.ReadAsStringAsync(cancellationToken);
+        response.EnsureSuccessStatusCode();
 
-        if (!response.IsSuccessStatusCode)
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var options = new JsonSerializerOptions
         {
-            Console.WriteLine($"Error: {response.StatusCode}");
-        }
+            PropertyNameCaseInsensitive = true
+        };
 
-        await SendAsync(result, cancellation: cancellationToken);
+        var deliveryResponse = JsonSerializer.Deserialize<BoxNowDeliveryRequestResponse>(responseContent, options) ??
+                               throw new InvalidOperationException("BoxNow Delivery Details Were Not Provided.");
+
+        BackgroundJob.Enqueue(() =>
+            SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken, 
+                cancellationToken));
+
+        await SendAsync(deliveryResponse, cancellation: cancellationToken);
+    }
+
+    public async Task SendPdfLabel(string parcelNumber, string accessToken, CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient();
+        
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var url = _configuration["BoxNow:ReVivPlus:ApiUrl"] + "/api/v1/parcels/" + parcelNumber + "/label.pdf";
+
+        var response = await client.GetAsync(url, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        var pdfLabelStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        if (pdfLabelStream.CanSeek)
+            pdfLabelStream.Position = 0;
+
+        _emailService.SendBoxNowPdfLabel(_configuration["BoxNow:ReVivPlus:ContactEmail"]!, parcelNumber,
+            pdfLabelStream);
+    }
+
+    private async Task<GetCheckoutSessionResponse> GetCheckoutSessionData(string sessionId,
+        CancellationToken cancellationToken)
+    {
+        var sessionService = new SessionService();
+
+        var session = await sessionService.GetAsync(sessionId, new SessionGetOptions
+            {
+                Expand = new List<string>
+                {
+                    "payment_intent",
+                    "total_details.breakdown",
+                    "customer",
+                    "shipping_cost.shipping_rate"
+                },
+            },
+            requestOptions: new RequestOptions
+            {
+                ApiKey = _configuration["Stripe:ReVivPlus:SecretKey"]
+            },
+            cancellationToken: cancellationToken);
+
+        var lineItemService = new SessionLineItemService();
+
+        var lineItems = await lineItemService.ListAsync(sessionId, new SessionLineItemListOptions
+            {
+                Limit = 100,
+                Expand = new List<string> { "data.price.product" }
+            },
+            requestOptions: new RequestOptions
+            {
+                ApiKey = _configuration["Stripe:ReVivPlus:SecretKey"]
+            },
+            cancellationToken: cancellationToken);
+
+        var items = lineItems.Data.Select(li => new LineItem
+        (
+            (li.Description ?? li.Price?.Nickname ?? li.Price?.Product?.ToString())!,
+            li.Quantity ?? 0,
+            li.Currency,
+            $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00}",
+            $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00} €",
+            $"{(li.AmountSubtotal) / 100m:0.00} €",
+            $"{(li.AmountTotal) / 100m:0.00} €"
+        )).ToList();
+
+        return new GetCheckoutSessionResponse
+        (
+            session.Id,
+            session.Status,
+            session.PaymentStatus,
+            session.Currency,
+            $"{(session.AmountTotal ?? 0) / 100m:0.00} €",
+            $"{(session.AmountSubtotal ?? 0) / 100m:0.00} €",
+            $"{(session.AmountTotal ?? 0) / 100m:0.00} €",
+            $"{(session.TotalDetails?.AmountTax ?? 0) / 100m:0.00} €",
+            $"{(session.TotalDetails?.AmountDiscount ?? 0) / 100m:0.00} €",
+            $"{(session.ShippingCost?.AmountSubtotal ?? 0) / 100m:0.00} €",
+            session.ShippingCost?.ShippingRate?.DisplayName!,
+            session.CustomerDetails?.Email!,
+            session.CustomerDetails?.Name!,
+            session.CustomerDetails?.Phone!,
+            session.PaymentIntent.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
+            session.PaymentIntent?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
+            session.Customer?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
+            items
+        );
     }
 
     /// <summary>

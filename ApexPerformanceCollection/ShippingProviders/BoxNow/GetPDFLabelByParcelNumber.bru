@@ -1,0 +1,15 @@
+meta {
+  name: GetPDFLabelByParcelNumber
+  type: http
+  seq: 4
+}
+
+get {
+  url: https://api-stage.boxnow.hr/api/v1/parcels/8297791378/label.pdf
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiMTQ2MzAiLCJyb2xlIjoicGFydG5lciJ9LCJpYXQiOjE3NjMwNDgxNzEsImV4cCI6MTc2MzA1MTc3MX0.nzXhyxzzezRFuxpumKOa2T88S2MpaQVPojGxjTGlCYc
+}

@@ -104,4 +104,14 @@ public interface IEmailService
     /// <param name="joiningClient">New client that is joining selected appointment</param>
     void SendJoinedAppointmentEmail(Appointment appointment, List<Client> appointmentClients, 
         Client joiningClient);
+
+    
+    /// <summary>
+    /// Send email with pdf label for
+    /// labeling for BoxNow Delivery.
+    /// </summary>
+    /// <param name="contactEmail">Contact Email.</param>
+    /// <param name="parcelNumber">Number of BoxNow Parcel.</param>
+    /// <param name="pdfLabelStream">PDF Stream that will be sent as attachment.</param>
+    void SendBoxNowPdfLabel(string contactEmail, string parcelNumber, Stream pdfLabelStream);
 }

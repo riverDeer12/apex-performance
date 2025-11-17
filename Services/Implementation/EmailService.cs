@@ -2,8 +2,8 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services.Interfaces;
-using MailKit.Net.Smtp;
 using MimeKit;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace ApexPerformance.API.Services.Implementation;
 
@@ -36,8 +36,9 @@ public class EmailService : IEmailService
 
             var html = File.ReadAllText(templatePath);
 
-            var statusColor = appointment.AppointmentStatus.Name == BusinessStatuses.Approved 
-                ? "#2edc59" : "#f36464";
+            var statusColor = appointment.AppointmentStatus.Name == BusinessStatuses.Approved
+                ? "#2edc59"
+                : "#f36464";
 
             html = html.Replace("{{ClientFullName}}", client.FullName);
 
@@ -319,7 +320,8 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
-    public void SendJoinedAppointmentEmail(Appointment appointment, List<Client> appointmentClients, Client joiningClient)
+    public void SendJoinedAppointmentEmail(Appointment appointment, List<Client> appointmentClients,
+        Client joiningClient)
     {
         foreach (var client in appointmentClients)
         {
@@ -338,15 +340,42 @@ public class EmailService : IEmailService
             var html = File.ReadAllText(templatePath);
 
             html = html.Replace("{{ClientFullName}}", client.FullName);
-            
+
             html = html.Replace("{{JoiningClientFullName}}", joiningClient.FullName);
 
             html = html.Replace("{{AppointmentTime}}", appointment.TimeSlot.Name);
 
             message.Body = new TextPart("html") { Text = html };
-            
+
             ConnectToMailServer(message);
         }
+    }
+
+    public void SendBoxNowPdfLabel(string contactEmail, string parcelNumber, Stream pdfLabelStream)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress("ReViv Plus",
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(contactEmail, contactEmail));
+
+        message.Subject = "BoxNow PDF naljepnica za narudžbu: " + parcelNumber;
+
+        var builder = new BodyBuilder
+        {
+            TextBody = "BoxNow PDF naljepnica je u privitku."
+        };
+
+        builder.Attachments.Add(
+            fileName: parcelNumber + "_label.pdf",
+            stream: pdfLabelStream,
+            contentType: new ContentType("application", "pdf")
+        );
+        
+        message.Body = builder.ToMessageBody();
+
+        ConnectToMailServer(message);
     }
 
     private void ConnectToMailServer(MimeMessage message)
