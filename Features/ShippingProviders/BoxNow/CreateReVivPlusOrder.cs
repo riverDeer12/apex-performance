@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Text;
@@ -13,7 +14,7 @@ using LineItem = ApexPerformance.API.Features.Payments.LineItem;
 
 namespace ApexPerformance.API.Features.ShippingProviders.BoxNow;
 
-public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliveryRequestResponse>
+public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSessionResponse>
 {
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
@@ -26,7 +27,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliver
 
     public override void Configure()
     {
-        Post("api/shipping-providers/box-now/reviv-plus/create-order/{sessionId}");
+        Get("api/shipping-providers/box-now/reviv-plus/create-order/{sessionId}");
         AllowAnonymous();
         Options(x => x.WithTags("ShippingProviders"));
     }
@@ -42,14 +43,14 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliver
         checkoutData.PaymentIntentMetadata.TryGetValue("BoxNowLockerId", out var locationId);
 
         var checkoutItems = checkoutData.LineItems.Select(
-            x => new Item(Guid.NewGuid().ToString(), x.Description, x.AmountTotal!, 0,
+            x => new Item(Guid.NewGuid().ToString(), x.Description, x.Amount!, 0,
                 1)
         ).ToList();
 
         // JSON body
         var requestBody = new BoxNowDeliveryRequest(
             OrderNumber: sessionId,
-            InvoiceValue: checkoutData.AmountTotal!,
+            InvoiceValue: checkoutData.Amount!,
             PaymentMode: "prepaid",
             AmountToBeCollected: "0.00",
             AllowReturn: true,
@@ -98,7 +99,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliver
             SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken, 
                 cancellationToken));
 
-        await SendAsync(deliveryResponse, cancellation: cancellationToken);
+        await SendAsync(checkoutData, cancellation: cancellationToken);
     }
 
     public async Task SendPdfLabel(string parcelNumber, string accessToken, CancellationToken cancellationToken)
@@ -162,7 +163,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliver
             (li.Description ?? li.Price?.Nickname ?? li.Price?.Product?.ToString())!,
             li.Quantity ?? 0,
             li.Currency,
-            $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00}",
+            $"{((li.AmountTotal) / 100m).ToString("0.00", CultureInfo.InvariantCulture)}",
             $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00} €",
             $"{(li.AmountSubtotal) / 100m:0.00} €",
             $"{(li.AmountTotal) / 100m:0.00} €"
@@ -174,7 +175,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<BoxNowDeliver
             session.Status,
             session.PaymentStatus,
             session.Currency,
-            $"{(session.AmountTotal ?? 0) / 100m:0.00} €",
+            $"{((session.AmountTotal ?? 0) / 100m).ToString("0.00", CultureInfo.InvariantCulture)}",
             $"{(session.AmountSubtotal ?? 0) / 100m:0.00} €",
             $"{(session.AmountTotal ?? 0) / 100m:0.00} €",
             $"{(session.TotalDetails?.AmountTax ?? 0) / 100m:0.00} €",
