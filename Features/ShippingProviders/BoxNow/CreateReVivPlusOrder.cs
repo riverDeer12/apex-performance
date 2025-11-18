@@ -63,7 +63,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
                 checkoutData.CustomerPhone,
                 checkoutData.CustomerEmail,
                 checkoutData.CustomerName,
-                "8063"),
+                locationId),
             Items: checkoutItems
         );
 
