@@ -77,6 +77,7 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
                     { "BoxNowLockerPostalCode", request.BoxNowLockerPostalCode }
                 }
             },
+            AllowPromotionCodes = true,
             SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
             CancelUrl = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
         };
