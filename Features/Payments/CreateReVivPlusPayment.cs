@@ -47,7 +47,8 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             lineItems.Add(new SessionLineItemOptions
             {
                 Price = priceId,
-                Quantity = item.Quantity
+                Quantity = item.Quantity,
+                TaxRates = new List<string> { _configuration["Stripe:ReVivPlus:TaxRateId"] } 
             });
         }
 
