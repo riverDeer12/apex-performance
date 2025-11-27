@@ -18,11 +18,14 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
 {
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
+    private readonly IHostEnvironment _environment;
 
-    public CreateReVivPlusOrderEndpoint(IConfiguration configuration, IEmailService emailService)
+    public CreateReVivPlusOrderEndpoint(IConfiguration configuration, IEmailService emailService,
+        IHostEnvironment environment)
     {
         _configuration = configuration;
         _emailService = emailService;
+        _environment = environment;
     }
 
     public override void Configure()
@@ -41,6 +44,8 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
         var checkoutData = await GetCheckoutSessionData(sessionId, cancellationToken);
 
         checkoutData.PaymentIntentMetadata.TryGetValue("BoxNowLockerId", out var locationId);
+
+        if (_environment.IsDevelopment()) locationId = _configuration["BoxNow:ReVivPlus:BoxNowLockerId"]!;
 
         var checkoutItems = checkoutData.LineItems.Select(
             x => new Item(Guid.NewGuid().ToString(), x.Description, x.Amount!, 0,
@@ -86,7 +91,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            ThrowError(errorContent);
+            throw new BadHttpRequestException(errorContent);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -100,7 +105,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
                                throw new InvalidOperationException("BoxNow Delivery Details Were Not Provided.");
 
         BackgroundJob.Enqueue(() =>
-            SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken, 
+            SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken,
                 cancellationToken));
 
         await SendAsync(checkoutData, cancellation: cancellationToken);
@@ -109,7 +114,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
     public async Task SendPdfLabel(string parcelNumber, string accessToken, CancellationToken cancellationToken)
     {
         using var client = new HttpClient();
-        
+
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
 
