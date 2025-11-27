@@ -83,7 +83,11 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
 
         var response = await client.PostAsync(url, content, cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            ThrowError(errorContent);
+        }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -113,7 +117,11 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
 
         var response = await client.GetAsync(url, cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            ThrowError(errorContent);
+        }
 
         var pdfLabelStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
