@@ -91,7 +91,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new BadHttpRequestException(errorContent);
+            throw new BadHttpRequestException(errorContent + "Checkout Data => " + requestBody);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
