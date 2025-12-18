@@ -8,6 +8,7 @@ using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
 using FastEndpoints;
 using Hangfire;
+using PhoneNumbers;
 using Stripe;
 using Stripe.Checkout;
 using LineItem = ApexPerformance.API.Features.Payments.LineItem;
@@ -51,6 +52,12 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
             x => new Item(Guid.NewGuid().ToString(), x.Description, x.Amount!, 0,
                 1)
         ).ToList();
+        
+        var parsed = PhoneNumberUtil.GetInstance()
+            .Parse(checkoutData.CustomerPhone, "HR");
+
+        var normalizedCustomerPhone = PhoneNumberUtil.GetInstance()
+            .Format(parsed, PhoneNumberFormat.E164);
 
         // JSON body
         var requestBody = new BoxNowDeliveryRequest(
@@ -65,7 +72,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
                 _configuration["BoxNow:ReVivPlus:ContactName"]!,
                 _configuration["BoxNow:ReVivPlus:WarehouseId"]!),
             Destination: new Destination(
-                checkoutData.CustomerPhone,
+                normalizedCustomerPhone,
                 checkoutData.CustomerEmail,
                 checkoutData.CustomerName,
                 locationId),
