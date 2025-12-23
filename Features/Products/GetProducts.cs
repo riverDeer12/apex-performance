@@ -28,7 +28,7 @@ public class GetProductsEndpoint : EndpointWithoutRequest<List<ProductDto>>
 
         if (products.Count is 0)
         {
-            await SendNoContentAsync(cancellation: cancellationToken);
+            await SendAsync([], cancellation: cancellationToken);
             return;
         }
 

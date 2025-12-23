@@ -73,6 +73,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
     {
         return await _context.BodyMeasurements
             .Include(x => x.Client)
+            .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -88,6 +89,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
         var bodyMeasurements = await _context.BodyMeasurements
             .Where(x => x.ClientId == client.Id)
             .Include(bodyMeasurement => bodyMeasurement.Client)
+            .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
 
         return bodyMeasurements;
@@ -110,6 +112,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
         var bodyMeasurements = await _context.BodyMeasurements
             .Where(x => clientIds.Contains(x.ClientId))
             .Include(bodyMeasurement => bodyMeasurement.Client)
+            .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
 
         return bodyMeasurements;

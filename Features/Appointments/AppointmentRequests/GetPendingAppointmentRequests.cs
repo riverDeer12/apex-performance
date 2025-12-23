@@ -39,7 +39,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
         if (appointmentRequests.Count is 0)
         {
-            await SendNoContentAsync(cancellation: cancellationToken);
+            await SendAsync([],cancellation: cancellationToken);
             return;
         }
 

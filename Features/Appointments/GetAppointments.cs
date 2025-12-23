@@ -31,7 +31,10 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
 
         if (appointments.Count is 0)
         {
-            await SendNoContentAsync(cancellation: cancellationToken);
+            await SendAsync(
+                new AppointmentsStatusDto([], [], []),
+                cancellation: cancellationToken
+            );
             return;
         }
 
