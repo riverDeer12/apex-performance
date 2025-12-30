@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Features.BodyMeasurements;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
@@ -37,14 +38,27 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
         }
 
         await SendAsync(clients.Select(x =>
-                    new ClientDataDto(x.Id, x.FirstName, x.LastName,
-                        x.Credits, x.Phone, x.Email, x.CreatedAt,
-                        x.UpdatedAt, x.FullName,
-                        x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
-                                coach.Coach.LastName, coach.Coach.FullName))
-                            .ToList()))
-                .ToList(),
-            cancellation: cancellationToken);
+            new ClientDataDto(x.Id, x.FirstName, x.LastName,
+                x.Credits, x.Phone, x.Email, x.CreatedAt,
+                x.UpdatedAt, x.FullName,
+                x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
+                        coach.Coach.LastName, coach.Coach.FullName))
+                    .ToList(),
+                x.BodyMeasurements
+                    .Select(bodyMeasurement =>
+                        new BodyMeasurementDto(
+                            bodyMeasurement.Id,
+                            bodyMeasurement.Height,
+                            bodyMeasurement.Weight,
+                            bodyMeasurement.Shoulders,
+                            bodyMeasurement.Chest,
+                            bodyMeasurement.UpperArm,
+                            bodyMeasurement.Waist,
+                            bodyMeasurement.Thigh,
+                            bodyMeasurement.Calves,
+                            bodyMeasurement.Glutes,
+                            bodyMeasurement.CreatedAt
+                        )).ToList())).ToList(), cancellation: cancellationToken);
     }
 
     private async Task<List<Client>> GetClientsForUser(CancellationToken cancellationToken)
@@ -64,6 +78,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
         return await _context.Clients
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
+            .Include(x => x.BodyMeasurements)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -84,6 +99,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .Where(x => coachClientsIds.Contains(x.Id))
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
+            .Include(x => x.BodyMeasurements)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }

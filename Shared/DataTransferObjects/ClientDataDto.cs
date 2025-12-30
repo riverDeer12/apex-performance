@@ -10,4 +10,5 @@ public record ClientDataDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     string FullName,
-    List<PersonDataDto> Coaches);
+    List<PersonDataDto> Coaches,
+    List<BodyMeasurementDto> BodyMeasurements);
