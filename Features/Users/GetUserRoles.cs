@@ -34,7 +34,7 @@ public sealed class GetUserRolesEndpoint : EndpointWithoutRequest<List<GetUserRo
                 cancellationToken: cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         await SendAsync(user.Roles.Select(x =>
                 new GetUserRoleResponse(

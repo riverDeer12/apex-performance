@@ -36,14 +36,14 @@ public sealed class AddPermissionsToRoleEndpoint : Endpoint<AddPermissionsToRole
             cancellationToken: cancellationToken);
 
         if (role is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var permissions = _context.Permissions
             .Where(x => request.Permissions.Contains(x.Id))
             .ToList();
 
         if (request.Permissions.Count != permissions.Count)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var newRolePermissions =
             permissions
@@ -62,6 +62,6 @@ public sealed class AddPermissionsToRoleValidator : Validator<AddPermissionsToRo
 {
     public AddPermissionsToRoleValidator()
     {
-        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

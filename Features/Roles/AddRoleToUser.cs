@@ -31,12 +31,12 @@ public sealed class AddRoleToUserEndpoint : Endpoint<AddRoleToUserRequest, AddRo
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var role = await _context.Roles.FirstOrDefaultAsync(x => x.Id == request.RoleId, cancellationToken);
 
         if (role is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var userRole = new UserRole
         {
@@ -49,7 +49,7 @@ public sealed class AddRoleToUserEndpoint : Endpoint<AddRoleToUserRequest, AddRo
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new AddRoleToUserResponse(role.Id, user.Id),
             cancellation: cancellationToken);

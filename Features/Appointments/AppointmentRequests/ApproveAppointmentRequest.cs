@@ -35,7 +35,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
                 cancellationToken: cancellationToken);
 
         if (appointmentRequest is null)
-            ThrowError(nameof(appointmentRequest) + ErrorMessages.NotFound);
+            ThrowError(nameof(appointmentRequest) + ErrorCodes.NotFound);
 
         var requestStatus = appointmentRequest.AppointmentRequestStatus;
 
@@ -44,10 +44,10 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
                 x.Name == nameof(BusinessStatuses.Approved), cancellationToken: cancellationToken);
 
         if (approvedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         if (requestStatus.Name == approvedStatus.Name)
-            ThrowError(ErrorMessages.AlreadyChanged);
+            ThrowError(ErrorCodes.AlreadyChanged);
 
         appointmentRequest.AppointmentRequestStatus = approvedStatus;
 
@@ -56,7 +56,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         var appointment = await _context.Appointments.Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
@@ -64,7 +64,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
                 cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentClients = appointment.Clients.Select(x => x.Client).ToList();
 
@@ -87,7 +87,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _clientService.AddClientsCredits(clients, 1, cancellationToken);
     }

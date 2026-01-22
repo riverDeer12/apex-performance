@@ -35,14 +35,14 @@ public class ProgressAppointmentEndpoint : EndpointWithoutRequest<ProgressAppoin
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
             .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.InProgress),
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         appointment.AppointmentStatus = appointmentStatus;
 
@@ -51,7 +51,7 @@ public class ProgressAppointmentEndpoint : EndpointWithoutRequest<ProgressAppoin
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
             new ProgressAppointmentResponse(appointment.Id, true),

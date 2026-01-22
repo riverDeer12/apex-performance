@@ -4,6 +4,7 @@ using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using FluentValidation;
 using JetBrains.Annotations;
@@ -22,17 +23,13 @@ public record CreateAppointmentRequest(
     List<Guid> Coaches
 );
 
-public record CreateAppointmentResponse(
-    Guid Id
-);
-
 public record AppointmentClientDto(
     Guid Id,
     string FirstName,
     string LastName
 );
 
-public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, CreateAppointmentResponse>
+public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IAppointmentService _appointmentService;
@@ -96,7 +93,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _appointmentService.UpdateClients(clients, appointment, cancellationToken);
 
@@ -108,7 +105,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Crea
         SendNotificationEmails(coaches, clients, appointment, timeSlot);
 
         await SendAsync(
-            new CreateAppointmentResponse(appointment.Id),
+            new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
     }
 
@@ -168,7 +165,7 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
     public CreateAppointmentValidator()
     {
         RuleFor(x => x.Type)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -176,10 +173,10 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
                 
                 return db.AppointmentTypes.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
         
         RuleFor(x => x.TimeSlot)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -187,12 +184,12 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
                 
                 return db.TimeSlots.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
         
         RuleFor(x => x.Clients)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .Must(list => list.Distinct().Count() == list.Count)
-            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .WithMessage(ErrorCodes.DuplicatesNotAllowed)
             .MustAsync(async (clientIds, cancellationToken) =>
             {
                 var db = Resolve<ApexPerformanceContext>();
@@ -202,12 +199,12 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
 
                 return numberOfClients == clientIds.Count;
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
         
         RuleFor(x => x.Coaches)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .Must(list => list.Distinct().Count() == list.Count)
-            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .WithMessage(ErrorCodes.DuplicatesNotAllowed)
             .MustAsync(async (coachIds, cancellationToken) =>
             {
                 var db = Resolve<ApexPerformanceContext>();
@@ -217,6 +214,6 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
 
                 return numberOfCoaches == coachIds.Count;
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
     }
 }

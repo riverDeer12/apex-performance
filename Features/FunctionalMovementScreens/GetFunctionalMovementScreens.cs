@@ -96,7 +96,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClientsIds = await _context.CoachClients
             .Where(x => x.CoachId == coach.Id)
@@ -118,7 +118,7 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         return await _context.FunctionalMovementScreens
             .Where(x => x.ClientId == client.Id)

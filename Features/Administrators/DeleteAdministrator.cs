@@ -32,7 +32,7 @@ public sealed class DeleteAdministratorEndpoint : EndpointWithoutRequest<DeleteA
                 .FirstOrDefaultAsync(x => x.Id == administratorId, cancellationToken: cancellationToken);
 
         if (administrator is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         administrator.Delete();
 
@@ -41,7 +41,7 @@ public sealed class DeleteAdministratorEndpoint : EndpointWithoutRequest<DeleteA
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new DeleteAdministratorResponse(administrator.Id), cancellation: cancellationToken);
     }

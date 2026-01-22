@@ -33,7 +33,7 @@ public class DeleteRecurringAppointmentEndpoint : EndpointWithoutRequest<DeleteR
                     cancellationToken: cancellationToken);
 
         if (recurringAppointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         recurringAppointment.Delete();
 
@@ -42,7 +42,7 @@ public class DeleteRecurringAppointmentEndpoint : EndpointWithoutRequest<DeleteR
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new DeleteRecurringAppointmentResponse(recurringAppointment.Id),
             cancellation: cancellationToken);

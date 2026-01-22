@@ -32,7 +32,7 @@ public class DeleteRoleEndpoint : EndpointWithoutRequest<DeleteRoleResponse>
                 .FirstOrDefaultAsync(x => x.Id == roleId, cancellationToken: cancellationToken);
 
         if (role is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         role.Delete();
 
@@ -41,7 +41,7 @@ public class DeleteRoleEndpoint : EndpointWithoutRequest<DeleteRoleResponse>
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new DeleteRoleResponse(role.Id, role.Name), cancellation: cancellationToken);
     }

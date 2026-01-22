@@ -38,14 +38,14 @@ public sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest, UpdateUserR
             cancellationToken: cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         user.Email = request.Email;
 
         var usernameChanged = user.UserName != request.Username;
         
         if (usernameChanged && await _userService.UsernameExists(request.Username, cancellationToken))
-            ThrowError(ValidationMessages.UsernameAlreadyExists);
+            ThrowError(ErrorCodes.UsernameAlreadyExists);
         
         user.UserName = request.Username;
 
@@ -65,7 +65,7 @@ public sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest, UpdateUserR
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new(user.Id, user.UserName), cancellation: cancellationToken);
     }
@@ -75,8 +75,8 @@ public sealed class UpdateUserValidator : Validator<UpdateUserRequest>
 {
     public UpdateUserValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Roles).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Username).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Roles).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

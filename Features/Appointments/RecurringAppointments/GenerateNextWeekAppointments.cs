@@ -44,7 +44,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
                     cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachRecurringAppointments =
             await _context.RecurringAppointments
@@ -67,7 +67,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
                 cancellationToken: cancellationToken);
 
         if (approvedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var recurringClients = coachRecurringAppointments
             .SelectMany(x => x.Clients.Select(y => y.Client))
@@ -103,7 +103,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _clientService.RemoveClientsCredits(removeCreditClients, 1, cancellationToken);
 

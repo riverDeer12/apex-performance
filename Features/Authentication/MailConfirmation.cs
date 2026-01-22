@@ -46,7 +46,7 @@ public class MailConfirmationEndpoint : EndpointWithoutRequest<MailConfirmationR
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new MailConfirmationResponse(user.Id, false),
             cancellation: cancellationToken);

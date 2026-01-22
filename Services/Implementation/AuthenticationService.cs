@@ -31,7 +31,8 @@ public class AuthenticationService : IAuthenticationService
                 o.ExpireAt = DateTime.UtcNow.AddDays(rememberMe ? 30 : 1);
                 o.User.Roles.AddRange(roles);
                 o.User.Permissions.AddRange(permissions);
-                o.User.Claims.Add(("name", user.UserName),
+                o.User.Claims.Add(
+                    ("name", user.UserName),
                     ("sub", user.Id.ToString()));
             });
         return jwtToken;

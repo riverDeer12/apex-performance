@@ -32,7 +32,7 @@ public class DeleteCoachEndpoint : EndpointWithoutRequest<DeleteCoachResponse>
                 .FirstOrDefaultAsync(x => x.Id == coaches, cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         coach.Delete();
 
@@ -41,7 +41,7 @@ public class DeleteCoachEndpoint : EndpointWithoutRequest<DeleteCoachResponse>
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new DeleteCoachResponse(coach.Id, coach.FirstName, coach.LastName),
             cancellation: cancellationToken);

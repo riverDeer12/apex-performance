@@ -80,7 +80,7 @@ public class JoinAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _clientService.RemoveClientsCredits([appointmentRequest.Client], 1, cancellationToken);
         

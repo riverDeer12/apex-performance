@@ -84,7 +84,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
                 cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var bodyMeasurements = await _context.BodyMeasurements
             .Where(x => x.ClientId == client.Id)
@@ -101,7 +101,7 @@ public class GetBodyMeasurementsEndpoint : EndpointWithoutRequest<List<GetBodyMe
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var clientIds = await _context.CoachClients.Where(x => x.CoachId == coach.Id)
             .Select(x => x.ClientId)

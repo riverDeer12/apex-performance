@@ -40,10 +40,10 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
             .FirstOrDefaultAsync(x => x.UserName == request.Username, cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.UserNotFound);
 
         if (!user.IsValidPassword(request.Password))
-            ThrowError(ValidationMessages.WrongUserNameOrPassword);
+            ThrowError(ErrorCodes.WrongUserNameOrPassword);
 
         var jwtToken = await _authenticationService.GenerateJwtToken(request.RememberMe, user);
 

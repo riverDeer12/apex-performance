@@ -30,7 +30,7 @@ public class ChangeProductActivityEndpoint : EndpointWithoutRequest<int>
                 .FirstOrDefaultAsync(x => x.Id == productId, cancellationToken: cancellationToken);
 
         if (product is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         product.IsActive = !product.IsActive;
         
@@ -39,7 +39,7 @@ public class ChangeProductActivityEndpoint : EndpointWithoutRequest<int>
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
 
         await SendAsync(StatusCodes.Status200OK, cancellation: cancellationToken);
     }

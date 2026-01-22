@@ -89,7 +89,7 @@ public class GetRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<Recu
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClientIds = await _context.CoachClients
             .Where(x => x.CoachId == coach.Id)
@@ -113,7 +113,7 @@ public class GetRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<Recu
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         return await _context.RecurringAppointments
             .Where(recurringAppointment => recurringAppointment.Clients

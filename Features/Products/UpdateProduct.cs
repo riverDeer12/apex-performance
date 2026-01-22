@@ -35,7 +35,7 @@ public class UpdateProductEndpoint : Endpoint<UpdateProductRequest, UpdateProduc
                 .FirstOrDefaultAsync(x => x.Id == productId, cancellationToken: cancellationToken);
 
         if (product is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         product.Name = request.Name;
         product.Description = request.Description;
@@ -46,7 +46,7 @@ public class UpdateProductEndpoint : Endpoint<UpdateProductRequest, UpdateProduc
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
 
         await SendAsync(new UpdateProductResponse(product.Id), cancellation: cancellationToken);
     }
@@ -56,8 +56,8 @@ public sealed class UpdateProductRequestValidator : Validator<UpdateProductReque
 {
     public UpdateProductRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Price).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Price).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

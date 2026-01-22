@@ -73,7 +73,7 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         if (request.Coaches.Count == 0)
         {
@@ -108,9 +108,9 @@ public sealed class CreateClientValidator : Validator<CreateClientRequest>
 {
     public CreateClientValidator()
     {
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

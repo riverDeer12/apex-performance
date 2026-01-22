@@ -28,7 +28,7 @@ public class GetRecurringAvailableTimeSlotsEndpoint : EndpointWithoutRequest<Lis
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachTimeSlots = await _context.CoachTimeSlots
             .Where(x => x.CoachId == coach.Id && x.IsActive)

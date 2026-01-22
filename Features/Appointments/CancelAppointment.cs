@@ -42,14 +42,14 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentStatus = await _context.AppointmentStatuses
             .FirstOrDefaultAsync(x => x.Name == nameof(BusinessStatuses.Canceled),
                 cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         appointment.AppointmentStatus = appointmentStatus;
 
@@ -58,7 +58,7 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         var appointmentClients = appointment.Clients.Select(x => x.Client).ToList();
 

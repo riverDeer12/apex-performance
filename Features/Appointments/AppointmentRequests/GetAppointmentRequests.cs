@@ -55,7 +55,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             var relatedAppointment = appointments.FirstOrDefault(x => x.Id == appointmentRequest.AppointmentId);
 
             if (relatedAppointment is null)
-                ThrowError(ErrorMessages.NotFound);
+                ThrowError(ErrorCodes.NotFound);
             
             var timeSlot = new CatalogDataDto(relatedAppointment.TimeSlot.Id, relatedAppointment.TimeSlot.Name,
                 relatedAppointment.TimeSlot.Description);
@@ -138,7 +138,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClients = await _context.CoachClients.Where(x => x.CoachId == coach.Id)
             .Select(x => x.ClientId)
@@ -169,7 +169,7 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentRequests = await _context.AppointmentRequests
             .Where(x => x.ClientId == client.Id)

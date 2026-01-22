@@ -30,13 +30,13 @@ public class GetClientCoachesEndpoint : EndpointWithoutRequest<List<PersonDataDt
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var clientCoaches = _context.CoachClients.Where(x => x.ClientId == client.Id)
             .Include(coachClient => coachClient.Coach).ToList();
 
         if (clientCoaches.Count is 0)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         await SendAsync(
             clientCoaches.Select(x =>

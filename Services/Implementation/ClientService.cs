@@ -30,7 +30,7 @@ public class ClientService : IClientService
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
     }
 
     public async Task RemoveClientsCredits(List<Client> clients, int amount, CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ public class ClientService : IClientService
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
     }
 
     public async Task<List<Client>> GetClientsByAppointmentId(Guid appointmentId, CancellationToken cancellationToken)

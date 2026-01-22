@@ -37,10 +37,10 @@ public class ChangeUsernameEndpoint : Endpoint<ChangeUsernameRequest, ChangeUser
             cancellationToken: cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         if (await _userService.UsernameExists(request.Username, cancellationToken))
-            ThrowError(ValidationMessages.UsernameAlreadyExists);
+            ThrowError(ErrorCodes.UsernameAlreadyExists);
 
         user.UserName = request.Username;
 
@@ -49,7 +49,7 @@ public class ChangeUsernameEndpoint : Endpoint<ChangeUsernameRequest, ChangeUser
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new ChangeUsernameResponse(user.Id), cancellation: cancellationToken);
     }
@@ -59,6 +59,6 @@ public sealed class ChangeUsernameValidator : Validator<ChangeUsernameRequest>
 {
     public ChangeUsernameValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Username).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

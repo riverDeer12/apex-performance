@@ -77,7 +77,7 @@ public sealed class CreatePaymentRequestValidator : Validator<CreatePaymentReque
 {
     public CreatePaymentRequestValidator()
     {
-        RuleFor(x => x.Customer).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Items).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Customer).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Items).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

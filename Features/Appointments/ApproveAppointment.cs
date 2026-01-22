@@ -50,7 +50,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         appointment.AppointmentStatus = await SetNewAppointmentStatus(appointment, cancellationToken);
 
@@ -59,7 +59,7 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         var clients = appointment.Clients.Select(x => x.Client).ToList();
 
@@ -80,14 +80,14 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
                 cancellationToken: cancellationToken);
 
         if (approvedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var declinedStatus = await _context.AppointmentStatuses
             .FirstOrDefaultAsync(x => x.Name == BusinessStatuses.Declined,
                 cancellationToken: cancellationToken);
 
         if (declinedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var freeTimeSlot = await _appointmentService.CheckFreeSlot(appointment.StartTime,
             appointment.TimeSlot, cancellationToken);

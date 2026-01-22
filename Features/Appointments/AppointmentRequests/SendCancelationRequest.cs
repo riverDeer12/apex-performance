@@ -38,7 +38,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentId = Route<Guid>("id", isRequired: true);
 
@@ -53,24 +53,24 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
                 cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         if (appointment.AppointmentStatus.Name != BusinessStatuses.Approved)
-            ThrowError(ErrorMessages.NotApproved);
+            ThrowError(ErrorCodes.NotApproved);
 
         var appointmentRequestType =
             await _context.AppointmentRequestTypes.FirstOrDefaultAsync(x =>
                 x.Name == nameof(BusinessActions.CancelationRequest), cancellationToken: cancellationToken);
 
         if (appointmentRequestType is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentRequestStatus =
             await _context.AppointmentRequestStatuses.FirstOrDefaultAsync(x =>
                 x.Name == nameof(BusinessStatuses.Pending), cancellationToken: cancellationToken);
 
         if (appointmentRequestStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentRequest = new AppointmentRequest
         {
@@ -90,7 +90,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         BackgroundJob.Enqueue(() => SendCancelationEmail(client.Id, appointment.Id));
 

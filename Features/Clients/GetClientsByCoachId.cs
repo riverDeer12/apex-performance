@@ -30,7 +30,7 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDat
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClients = await _context.CoachClients
             .Where(x => x.CoachId == coachId)

@@ -60,7 +60,7 @@ public class SendJoinRequestEndpoint: Endpoint<SendJoinRequest, StatusResponse>
                 x.Name == nameof(BusinessStatuses.Pending), cancellationToken: cancellationToken);
 
         if (appointmentRequestStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         var appointmentRequest = new AppointmentRequest
         {
@@ -80,7 +80,7 @@ public class SendJoinRequestEndpoint: Endpoint<SendJoinRequest, StatusResponse>
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         _emailService.SendJoinRequest(client, appointment);
 

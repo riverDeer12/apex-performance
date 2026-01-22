@@ -40,13 +40,13 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == _currentUserService.UserId,
             cancellationToken: cancellationToken);
         
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var userResponse = new PersonDataDto(user.Id, user.UserName, user.Email, user.UserName);
 

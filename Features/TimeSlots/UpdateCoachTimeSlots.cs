@@ -35,7 +35,7 @@ public class UpdateCoachTimeSlotsEndpoint : Endpoint<UpdateCoachTimeSlotsRequest
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var timeSlots = await _context.TimeSlots
             .Where(x => request.TimeSlots.Contains(x.Id))
@@ -58,7 +58,7 @@ public sealed class UpdateCoachTimeSlotsRequestValidator : Validator<UpdateCoach
     public UpdateCoachTimeSlotsRequestValidator()
     {
         RuleFor(x => x.Coach)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -66,8 +66,8 @@ public sealed class UpdateCoachTimeSlotsRequestValidator : Validator<UpdateCoach
 
                 return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
 
-        RuleFor(x => x.TimeSlots).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.TimeSlots).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

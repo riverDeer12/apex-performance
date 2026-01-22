@@ -48,7 +48,7 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
                 .FirstOrDefaultAsync(x => x.Id == coachId, cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         coach.FirstName = request.FirstName;
         coach.LastName = request.LastName;
@@ -60,7 +60,7 @@ public class UpdateCoachEndpoint : Endpoint<UpdateCoachRequest, UpdateCoachRespo
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _coachService.UpdateCoachClients(coach, request.Clients, cancellationToken);
 
@@ -73,9 +73,9 @@ public sealed class UpdateCoachValidator : Validator<UpdateCoachRequest>
 {
     public UpdateCoachValidator()
     {
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

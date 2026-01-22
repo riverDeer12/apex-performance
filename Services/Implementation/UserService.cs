@@ -18,10 +18,10 @@ public class UserService : IUserService
         CancellationToken cancellationToken)
     {
         if (await UsernameExists(username, cancellationToken))
-            throw new Exception(ValidationMessages.UsernameAlreadyExists);
+            throw new Exception(ErrorCodes.UsernameAlreadyExists);
 
         if (await EmailExists(username, cancellationToken))
-            throw new Exception(ValidationMessages.EmailAlreadyExists);
+            throw new Exception(ErrorCodes.EmailAlreadyExists);
 
         var user = User.Init(username, password, email);
 
@@ -43,7 +43,7 @@ public class UserService : IUserService
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
 
         return user;
     }

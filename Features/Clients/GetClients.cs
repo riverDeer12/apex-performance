@@ -79,6 +79,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
             .Include(x => x.BodyMeasurements)
+            .OrderBy(x => x.Credits)
+            .ThenBy(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -88,7 +90,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError("Coach is not found", StatusCodes.Status400BadRequest);
 
         var coachClientsIds = await _context.CoachClients
             .Where(x => x.CoachId == coach.Id)
@@ -100,6 +102,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
             .Include(x => x.BodyMeasurements)
+            .OrderBy(x => x.Credits)
+            .ThenBy(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 }

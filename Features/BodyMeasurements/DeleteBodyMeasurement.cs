@@ -35,7 +35,7 @@ public class DeleteBodyMeasurementEndpoint : EndpointWithoutRequest<DeleteBodyMe
                 .FirstOrDefaultAsync(x => x.Id == bodyMeasurementId, cancellationToken: cancellationToken);
 
         if (bodyMeasurement is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         bodyMeasurement.Delete();
 
@@ -44,7 +44,7 @@ public class DeleteBodyMeasurementEndpoint : EndpointWithoutRequest<DeleteBodyMe
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
             new DeleteBodyMeasurementResponse(bodyMeasurement.Id),

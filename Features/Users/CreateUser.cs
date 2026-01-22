@@ -46,7 +46,7 @@ public sealed class CreateUserEndpoint : Endpoint<CreateUserRequest, CreateUserR
         var userRolesResult = await _context.SaveChangesAsync(cancellationToken);
 
         if (userRolesResult == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new CreateUserResponse(userAccount.Id, userAccount.UserName), cancellation: cancellationToken);
     }
@@ -56,9 +56,9 @@ public sealed class CreateUserValidator : Validator<CreateUserRequest>
 {
     public CreateUserValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Password).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Roles).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Username).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Password).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Roles).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

@@ -33,7 +33,7 @@ public class GetClientReportEndpoint : EndpointWithoutRequest<GetClientReportRes
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         await SendAsync(new GetClientReportResponse(client.Credits), cancellation: cancellationToken);
     }

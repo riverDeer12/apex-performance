@@ -43,7 +43,7 @@ public class UpdateFunctionalMovementScreenEndpoint : Endpoint<UpdateFunctionalM
                 cancellationToken: cancellationToken);
 
         if (functionalMovementScreen is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         var client = await _context.Clients
             .SingleAsync(x => x.Id == request.Client, cancellationToken: cancellationToken);
@@ -63,7 +63,7 @@ public class UpdateFunctionalMovementScreenEndpoint : Endpoint<UpdateFunctionalM
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(StatusCodes.Status200OK, cancellation: cancellationToken);
     }
@@ -75,21 +75,21 @@ public sealed class UpdateFunctionalMovementScreenValidator
     public UpdateFunctionalMovementScreenValidator()
     {
         RuleFor(x => x.Client)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
                 var db = Resolve<ApexPerformanceContext>();
                 return db.Clients.AnyAsync(client => client.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
 
-        RuleFor(x => x.DeepSquat).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.HurdleStep).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.InLineLunge).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.ActiveStraightLegRaise).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.TrunkStabilityPushUp).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.RotaryStability).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.ShoulderMobility).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.DeepSquat).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.HurdleStep).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.InLineLunge).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.ActiveStraightLegRaise).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.TrunkStabilityPushUp).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.RotaryStability).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.ShoulderMobility).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

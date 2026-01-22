@@ -16,11 +16,17 @@ public record UpdateClientRequest(
     string Email,
     string Phone,
     int Credits,
-    List<Guid> Coaches
+    List<Guid>? Coaches
 );
 
 public record UpdateClientResponse(
-    Guid Id);
+    Guid Id,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Phone,
+    int Credits
+);
 
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
 {
@@ -28,7 +34,8 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
     private readonly IEmailService _emailService;
     private readonly IClientService _clientService;
 
-    public UpdateClientEndpoint(ApexPerformanceContext context, IClientService clientService, IEmailService emailService)
+    public UpdateClientEndpoint(ApexPerformanceContext context, IClientService clientService,
+        IEmailService emailService)
     {
         _context = context;
         _clientService = clientService;
@@ -51,7 +58,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
                 .FirstOrDefaultAsync(x => x.Id == clientId, cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         client.FirstName = request.FirstName;
         client.LastName = request.LastName;
@@ -64,11 +71,13 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
-        
-        if (request.Coaches.Count == 0)
+            ThrowError(ErrorCodes.SavingError);
+
+        if (request.Coaches is null)
         {
-            await SendAsync(new(client.Id), cancellation: cancellationToken);
+            await SendAsync(
+                new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits),
+                cancellation: cancellationToken);
             return;
         }
 
@@ -76,13 +85,14 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         BackgroundJob.Enqueue(() => SendAlertEmails(client.Id));
 
-        await SendAsync(new(client.Id), cancellation: cancellationToken);
+        await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits),
+            cancellation: cancellationToken);
     }
 
     public async Task SendAlertEmails(Guid clientId)
     {
         var client = await _context.Clients.SingleAsync(x => x.Id == clientId);
-        
+
         switch (client.Credits)
         {
             case 0:
@@ -99,10 +109,9 @@ public sealed class UpdateClientValidator : Validator<UpdateClientRequest>
 {
     public UpdateClientValidator()
     {
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Phone).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Coaches).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

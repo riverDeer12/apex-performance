@@ -35,7 +35,7 @@ public class UpdateAdministratorEndpoint : Endpoint<UpdateAdministratorRequest, 
                 .FirstOrDefaultAsync(x => x.Id == administratorId, cancellationToken: cancellationToken);
 
         if (administrator is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         administrator.FirstName = request.FirstName;
         administrator.LastName = request.LastName;
@@ -45,7 +45,7 @@ public class UpdateAdministratorEndpoint : Endpoint<UpdateAdministratorRequest, 
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new(administrator.Id), cancellation: cancellationToken);
     }
@@ -55,7 +55,7 @@ public sealed class UpdateAdministratorValidator : Validator<UpdateAdministrator
 {
     public UpdateAdministratorValidator()
     {
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

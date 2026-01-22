@@ -34,7 +34,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
         var administratorExists = _context.Administrators.Any(x => x.UserId == user.Id);
 
         if (administratorExists)
-            ThrowError(ErrorMessages.AlreadyExists);
+            ThrowError(ErrorCodes.AlreadyExists);
 
         var newAdministrator = new Administrator
         {
@@ -49,7 +49,7 @@ public sealed class CreateAdministratorEndpoint : Endpoint<CreateAdministratorRe
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new CreateAdministratorResponse(newAdministrator.Id),
             cancellation: cancellationToken);
@@ -61,7 +61,7 @@ public sealed class CreateAdministratorValidator : Validator<CreateAdministrator
     public CreateAdministratorValidator()
     {
         RuleFor(x => x.User)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -69,9 +69,9 @@ public sealed class CreateAdministratorValidator : Validator<CreateAdministrator
                 
                 return db.Users.AnyAsync(user => user.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
 
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

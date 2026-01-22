@@ -43,7 +43,7 @@ public class
                     cancellationToken: cancellationToken);
 
         if (recurringAppointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coach = await _context.Coaches.SingleAsync(x => x.Id == request.Coach,
             cancellationToken: cancellationToken);
@@ -62,7 +62,7 @@ public class
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await _recurringAppointmentService.UpdateClients(clients, recurringAppointment, cancellationToken);
 
@@ -77,9 +77,9 @@ public sealed class UpdateRecurringAppointmentValidator
     public UpdateRecurringAppointmentValidator()
     {
         RuleFor(x => x.Clients)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .Must(list => list.Distinct().Count() == list.Count)
-            .WithMessage(ValidationMessages.DuplicatesNotAllowed)
+            .WithMessage(ErrorCodes.DuplicatesNotAllowed)
             .MustAsync(async (clientIds, cancellationToken) =>
             {
                 var db = Resolve<ApexPerformanceContext>();
@@ -89,20 +89,20 @@ public sealed class UpdateRecurringAppointmentValidator
 
                 return numberOfClients == clientIds.Count;
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
 
         RuleFor(x => x.Coach)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
                 var db = Resolve<ApexPerformanceContext>();
                 return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
 
         RuleFor(x => x.Type)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -110,6 +110,6 @@ public sealed class UpdateRecurringAppointmentValidator
                 return db.AppointmentTypes.AnyAsync(appointmentType => appointmentType.Id == id,
                     cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
     }
 }

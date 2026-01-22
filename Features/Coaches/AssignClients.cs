@@ -42,14 +42,14 @@ public class AssignClientsEndpoint : Endpoint<AssignClientsRequest, List<AssignC
                 .FirstOrDefaultAsync(x => x.Id == coachId, cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var clients = await _context.Clients
             .Where(x => request.Clients.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (clients.Count == 0)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClients = clients
             .Select(client => new CoachClient
@@ -65,7 +65,7 @@ public class AssignClientsEndpoint : Endpoint<AssignClientsRequest, List<AssignC
         var relationsResult = await _context.SaveChangesAsync(cancellationToken);
 
         if (relationsResult == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(coachClients.Select(x
                 => new AssignClientsResponse(x.ClientId, x.Client.FirstName, x.Client.LastName)).ToList(),
@@ -77,6 +77,6 @@ public sealed class AssignClientsValidator : Validator<AssignClientsRequest>
 {
     public AssignClientsValidator()
     {
-        RuleFor(x => x.Clients).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Clients).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

@@ -31,7 +31,7 @@ public class DeleteUserEndpoint : EndpointWithoutRequest<DeleteUserResponse>
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken: cancellationToken);
 
         if (user == null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         user.Delete();
 
@@ -40,7 +40,7 @@ public class DeleteUserEndpoint : EndpointWithoutRequest<DeleteUserResponse>
         var result = await _context.SaveChangesAsync(cancellationToken);
         
         if(result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new DeleteUserResponse(user.Id, user.UserName), cancellation: cancellationToken);
     }

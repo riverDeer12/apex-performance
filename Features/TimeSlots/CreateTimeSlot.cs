@@ -34,7 +34,7 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var startTime = TimeOnly.Parse(request.StartTime);
 
@@ -51,7 +51,7 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
                 _context.CoachTimeSlots.Any(x => x.TimeSlotId == existingTimeSlot.Id &&
                                                  x.CoachId == coach.Id);
             if (coachHasExistingTimeSlot)
-                ThrowError(ValidationMessages.NotValid);
+                ThrowError(ErrorCodes.NotValid);
 
             await CreateCoachTimeSlot(coach, existingTimeSlot, cancellationToken);
 
@@ -71,7 +71,7 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
             var result = await _context.SaveChangesAsync(cancellationToken);
 
             if (result == 0)
-                throw new Exception(ErrorMessages.SavingError);
+                throw new Exception(ErrorCodes.SavingError);
 
             await CreateCoachTimeSlot(coach, newTimeSlot, cancellationToken);
 
@@ -94,7 +94,7 @@ public class CreateTimeSlotEndpoint : Endpoint<CreateTimeSlotRequest, CreateTime
         var coachTimeSlotResult = await _context.SaveChangesAsync(cancellationToken);
 
         if (coachTimeSlotResult == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
     }
 }
 
@@ -103,7 +103,7 @@ public sealed class CreateTimeSlotValidator : Validator<CreateTimeSlotRequest>
     public CreateTimeSlotValidator()
     {
         RuleFor(x => x.Coach)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -111,10 +111,10 @@ public sealed class CreateTimeSlotValidator : Validator<CreateTimeSlotRequest>
                 
                 return db.Coaches.AnyAsync(coach => coach.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);   
+            .WithMessage(ErrorCodes.NotFound);   
         
-        RuleFor(x => x.Day).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.StartTime).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.EndTime).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Day).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.StartTime).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.EndTime).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

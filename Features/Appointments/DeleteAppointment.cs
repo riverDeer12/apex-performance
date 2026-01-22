@@ -41,7 +41,7 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         appointment.Delete();
 
@@ -50,7 +50,7 @@ public class DeleteAppointmentEndpoint : EndpointWithoutRequest<DeleteAppointmen
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         var clients = await _clientService.GetClientsByAppointmentId(appointmentId, cancellationToken);
             

@@ -87,7 +87,7 @@ public class ApexPerformanceContext : DbContext
                 case EntityState.Deleted:
                     break;
                 default:
-                    throw new Exception(ErrorMessages.SavingError);
+                    throw new Exception(ErrorCodes.SavingError);
             }
 
             entity.UpdatedAt = DateTimeOffset.UtcNow;

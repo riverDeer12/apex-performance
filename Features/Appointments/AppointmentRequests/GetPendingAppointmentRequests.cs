@@ -61,7 +61,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 .FirstOrDefault(x => x.Id == appointmentRequest.ClientId);
 
             if (requestSender is null)
-                ThrowError(ErrorMessages.NotFound);
+                ThrowError(ErrorCodes.NotFound);
 
             var requestSenderResponse =
                 new PersonDataDto(requestSender.Id, requestSender.FirstName,
@@ -71,7 +71,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 .FirstOrDefault(x => x.Id == appointmentRequest.AppointmentId);
 
             if (relatedAppointment is null)
-                ThrowError(ErrorMessages.NotFound);
+                ThrowError(ErrorCodes.NotFound);
 
             var timeSlot = new CatalogDataDto(relatedAppointment.TimeSlot.Id, relatedAppointment.TimeSlot.Name,
                 relatedAppointment.TimeSlot.Description);
@@ -152,7 +152,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachClientIds = await _context.CoachClients
             .Where(x => x.CoachId == coach.Id)
@@ -189,7 +189,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         return await _context.AppointmentRequests
             .Where(x => x.AppointmentRequestStatus.Name == BusinessStatuses.Pending &&

@@ -40,7 +40,7 @@ public class UpdateAppointmentStatusEndpoint : Endpoint<UpdateAppointmentStatusR
                 .FirstOrDefaultAsync(x => x.Id == appointmentStatusId, cancellationToken: cancellationToken);
 
         if (appointmentStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         appointmentStatus.Name = request.Name;
         appointmentStatus.Description = request.Description;
@@ -50,7 +50,7 @@ public class UpdateAppointmentStatusEndpoint : Endpoint<UpdateAppointmentStatusR
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
             new UpdateAppointmentStatusResponse(appointmentStatus.Id),
@@ -62,7 +62,7 @@ public sealed class UpdateAppointmentStatusValidator : Validator<UpdateAppointme
 {
     public UpdateAppointmentStatusValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

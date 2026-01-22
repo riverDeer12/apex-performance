@@ -43,7 +43,7 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
             .FirstOrDefaultAsync(x => x.Id == _currentUserService.UserId, cancellationToken);
 
         if (user is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         user.Password = Database.Entities.User.HashPassword(request.NewPassword);
 
@@ -52,7 +52,7 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         BackgroundJob.Enqueue(() => SendResetPasswordEmail(user.Id));
 
@@ -71,6 +71,6 @@ public sealed class ResetPasswordValidator : Validator<ResetUserPasswordRequest>
 {
     public ResetPasswordValidator()
     {
-        RuleFor(x => x.NewPassword).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.NewPassword).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

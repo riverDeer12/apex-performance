@@ -46,7 +46,7 @@ public class CreateProductEndpoint : Endpoint<CreateProductRequest, CreateProduc
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
 
         // Ensure uploads folder exists
         var uploadsRoot = Path.Combine(AppContext.BaseDirectory, "Uploads", "Products", 
@@ -94,7 +94,7 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductReque
 {
     public CreateProductRequestValidator()
     {
-        RuleFor(x => x.Photos).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Photos).NotEmpty().WithMessage(ErrorCodes.Required);
 
         RuleForEach(x => x.Photos!).ChildRules(file =>
         {
@@ -104,8 +104,8 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductReque
                 .WithMessage("Max size is 1MB.");
         });
 
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Price).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Price).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

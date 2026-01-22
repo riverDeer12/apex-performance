@@ -44,7 +44,7 @@ public class CreateAppointmentTypeEndpoint : Endpoint<CreateAppointmentTypeReque
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
             new CreateAppointmentTypeResponse(appointmentType.Id),
@@ -56,6 +56,6 @@ public sealed class CreateAppointmentTypeValidator : Validator<CreateAppointment
 {
     public CreateAppointmentTypeValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

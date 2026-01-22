@@ -31,7 +31,7 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
                 cancellationToken: cancellationToken);
 
         if (appointmentRequest is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         var requestStatus = appointmentRequest.AppointmentRequestStatus;
 
@@ -40,10 +40,10 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
                 x.Name == nameof(BusinessStatuses.Declined), cancellationToken: cancellationToken);
 
         if (declinedStatus is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         if (requestStatus.Name == declinedStatus.Name)
-            ThrowError(ErrorMessages.AlreadyChanged);
+            ThrowError(ErrorCodes.AlreadyChanged);
 
         appointmentRequest.AppointmentRequestStatus = declinedStatus;
 
@@ -52,7 +52,7 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
         
         await SendAsync(new DeclineAppointmentResponse(appointmentRequest.Id, true), 
             cancellation: cancellationToken);

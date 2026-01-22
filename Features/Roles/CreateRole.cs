@@ -42,7 +42,7 @@ public sealed class CreateRoleEndpoint : Endpoint<CreateRoleRequest, CreateRoleR
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         var rolePermissions = request.Permissions.Select(permissionId => new RolePermission
         {
@@ -66,7 +66,7 @@ public sealed class CreateRoleEndpoint : Endpoint<CreateRoleRequest, CreateRoleR
         var relationsResult = await _context.SaveChangesAsync(cancellationToken);
 
         if (relationsResult == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new CreateRoleResponse(newRole.Id, newRole.Name, newRole.Description),
             cancellation: cancellationToken);
@@ -77,7 +77,7 @@ public sealed class CreateRoleValidator : Validator<CreateRoleRequest>
 {
     public CreateRoleValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

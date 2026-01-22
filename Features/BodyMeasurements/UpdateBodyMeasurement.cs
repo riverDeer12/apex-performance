@@ -47,14 +47,14 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
             cancellationToken: cancellationToken);
         
         if (bodyMeasurement is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var client =
             await _context.Clients.FirstOrDefaultAsync(x => x.Id == request.Client,
                 cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         bodyMeasurement.Height = request.Height;
         bodyMeasurement.Weight = request.Weight;
@@ -72,7 +72,7 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
             new UpdateBodyMeasurementResponse(
@@ -87,7 +87,7 @@ public sealed class UpdateBodyMeasurementValidator : Validator<UpdateBodyMeasure
     public UpdateBodyMeasurementValidator()
     {
         RuleFor(x => x.Client)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
@@ -95,15 +95,15 @@ public sealed class UpdateBodyMeasurementValidator : Validator<UpdateBodyMeasure
                 
                 return db.Clients.AnyAsync(client => client.Id == id, cancellationToken);
             })
-            .WithMessage(ErrorMessages.NotFound);
+            .WithMessage(ErrorCodes.NotFound);
         
-        RuleFor(x => x.Height).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Weight).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Chest).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.UpperArm).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Waist).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Thigh).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Calves).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Height).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Weight).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Chest).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.UpperArm).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Waist).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Thigh).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Calves).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

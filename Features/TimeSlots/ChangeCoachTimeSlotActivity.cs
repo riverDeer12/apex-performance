@@ -34,27 +34,27 @@ public class ChangeCoachTimeSlotActivityEndpoint : EndpointWithoutRequest<Change
                 cancellationToken: cancellationToken);
 
         if (timeSlot is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coach = await _context.Coaches.FirstOrDefaultAsync(x => x.Id == coachId,
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var coachTimeSlot =
             await _context.CoachTimeSlots.FirstOrDefaultAsync(x => x.TimeSlotId == timeSlot.Id && x.CoachId == coach.Id,
                 cancellationToken: cancellationToken);
         
         if(coachTimeSlot is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         coachTimeSlot.IsActive = !coachTimeSlot.IsActive;
         
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
-            throw new Exception(ErrorMessages.SavingError);
+            throw new Exception(ErrorCodes.SavingError);
 
         await SendAsync(new ChangeCoachTimeSlotActivityResponse(timeSlot.Id), cancellation: cancellationToken);
     }

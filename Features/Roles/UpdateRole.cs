@@ -40,7 +40,7 @@ public class UpdateRoleEndpoint : Endpoint<UpdateRoleRequest, UpdateRoleResponse
                 .FirstOrDefaultAsync(x => x.Id == roleId, cancellationToken: cancellationToken);
 
         if (role is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         role.Name = request.Name;
         role.Description = request.Description;
@@ -71,7 +71,7 @@ public class UpdateRoleEndpoint : Endpoint<UpdateRoleRequest, UpdateRoleResponse
         var result = await _context.SaveChangesAsync(cancellationToken: cancellationToken);
 
         if (result == 0)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new UpdateRoleResponse(role.Id, role.Name, role.Description), cancellation: cancellationToken);
     }
@@ -81,8 +81,8 @@ public sealed class UpdateRoleValidator : Validator<UpdateRoleRequest>
 {
     public UpdateRoleValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Description).NotEmpty().WithMessage(ValidationMessages.Required);
-        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Permissions).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

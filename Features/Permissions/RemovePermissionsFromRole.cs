@@ -35,14 +35,14 @@ public sealed class
             cancellationToken: cancellationToken);
 
         if (role is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var permissions = _context.Permissions
             .Where(x => request.PermissionIds.Contains(x.Id))
             .ToList();
 
         if (request.PermissionIds.Count != permissions.Count)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var rolePolicies = _context.RolePermissions
             .Where(x => x.RoleId == roleId && request.PermissionIds.Contains(x.PermissionId)).ToList();
@@ -52,7 +52,7 @@ public sealed class
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result != rolePolicies.Count)
-            ThrowError(ErrorMessages.SavingError);
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(rolePolicies
             .Select(x => new RemovePoliciesFromRoleResponse(x.PermissionId))
@@ -64,6 +64,6 @@ public sealed class RemovePermissionFromRoleValidator : Validator<RemovePermissi
 {
     public RemovePermissionFromRoleValidator()
     {
-        RuleFor(x => x.PermissionIds).NotEmpty().WithMessage(ValidationMessages.Required);
+        RuleFor(x => x.PermissionIds).NotEmpty().WithMessage(ErrorCodes.Required);
     }
 }

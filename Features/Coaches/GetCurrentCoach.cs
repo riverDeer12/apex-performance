@@ -30,7 +30,7 @@ public class GetCurrentCoachEndpoint: EndpointWithoutRequest<PersonDataDto>
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
         
         await SendAsync(new PersonDataDto(
             coach.Id,

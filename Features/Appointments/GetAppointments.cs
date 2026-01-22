@@ -126,7 +126,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             cancellationToken: cancellationToken);
 
         if (coach is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentRelations = await _context.CoachAppointments
             .Where(x => x.CoachId == coach.Id)
@@ -156,7 +156,7 @@ public class GetAppointmentsEndpoint : EndpointWithoutRequest<AppointmentsStatus
             cancellationToken: cancellationToken);
 
         if (client is null)
-            ThrowError(ErrorMessages.NotFound);
+            ThrowError(ErrorCodes.NotFound);
 
         var appointmentRelations = await _context.ClientAppointments
             .Where(x => x.ClientId == client.Id)
