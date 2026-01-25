@@ -94,7 +94,7 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
             cancellation: cancellationToken);
     }
 
-    private async Task SendCredentialsEmail(Guid clientId, string password, string jwtToken)
+    public async Task SendCredentialsEmail(Guid clientId, string password, string jwtToken)
     {
         var client = await _context.Clients
             .Include(userType => userType.User)
