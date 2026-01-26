@@ -35,6 +35,10 @@ public class ApexPerformanceContext : DbContext
     public DbSet<CoachTimeSlot> CoachTimeSlots { get; set; }
     public DbSet<FunctionalMovementScreen> FunctionalMovementScreens { get; set; }
     
+    public DbSet<Ingredient> Ingredients { get; set; }
+    
+    public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
+    
     public DbSet<Payment> Payments { get; set; }
     
     public DbSet<PaymentProduct> PaymentProducts { get; set; }
@@ -46,6 +50,9 @@ public class ApexPerformanceContext : DbContext
     public DbSet<Product> Products { get; set; }
     
     public DbSet<ProductImage> ProductImages { get; set; }
+    
+    public DbSet<Recipe> Recipes { get; set; }
+    public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<RecurringAppointment> RecurringAppointments { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
