@@ -83,22 +83,24 @@ public class GetRecipesEndpoint : EndpointWithoutRequest<List<GetRecipeResponse>
 
     private async Task<List<Recipe>> GetAllRecipes(CancellationToken cancellationToken)
     {
-        var recipes = await _context.Recipes
-            .Include(x => x.Ingredients)
+        return await _context.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+            .Include(r => r.Ingredients)
             .ThenInclude(recipeIngredient => recipeIngredient.MeasurementUnit)
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        return recipes.Count is 0 ? [] : recipes;
+            .ToListAsync(cancellationToken);
     }
 
     private async Task<List<Recipe>> GetClientRecipes(CancellationToken cancellationToken)
     {
-        var recipes = await _context.Recipes
-            .Include(x => x.Ingredients)
+        return await _context.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+            .Include(r => r.Ingredients)
             .ThenInclude(recipeIngredient => recipeIngredient.MeasurementUnit)
             .Where(x => x.CreatedBy == _currentUserService.UserId)
-            .ToListAsync(cancellationToken: cancellationToken);
-
-        return recipes.Count is 0 ? [] : recipes;
+            .ToListAsync(cancellationToken);
     }
 }
