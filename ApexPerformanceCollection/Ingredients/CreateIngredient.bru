@@ -1,22 +1,22 @@
 meta {
-  name: CreateMeasurementUnit
+  name: CreateIngredient
   type: http
   seq: 2
 }
 
 post {
-  url: {{domain}}/api/measurement-units
+  url: {{domain}}/api/ingredients
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "symbol": "l",
+    "calories": 348,
     "name": {
       "translations":{
-        "HR": "litre",
-        "EN": "liters"
+        "HR": "Bijelo brašno",
+        "EN": "White Flour"
       }
     }
   }
