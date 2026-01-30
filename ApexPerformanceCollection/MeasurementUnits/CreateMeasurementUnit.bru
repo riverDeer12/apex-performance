@@ -1,0 +1,23 @@
+meta {
+  name: CreateMeasurementUnit
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{domain}}/api/measurement-units
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "symbol": "g",
+    "name": {
+      "translations":{
+        "HR": "gram",
+        "EN": "gramm"
+      }
+    }
+  }
+}

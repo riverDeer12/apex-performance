@@ -7,9 +7,10 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Ingredients;
 
 public record GetIngredientResponse(
+    Guid Id,
     LocalizedProperty Name,
     decimal Calories,
-    GetMeasurementUnitResponse? MeasurementUnit
+    GetMeasurementUnitResponse? MeasurementUnit = null
 );
 
 public class GetIngredientsEndpoint : EndpointWithoutRequest<List<GetIngredientResponse>>
@@ -41,6 +42,7 @@ public class GetIngredientsEndpoint : EndpointWithoutRequest<List<GetIngredientR
         await SendAsync(
             ingredients.Select(ingredient =>
                 new GetIngredientResponse(
+                    ingredient.Id,
                     new LocalizedProperty(ingredient.Name),
                     ingredient.Calories,
                     null

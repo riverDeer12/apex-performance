@@ -71,9 +71,11 @@ public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeRespo
             recipe.Ingredients
                 .Select(recipeIngredient =>
                     new GetIngredientResponse(
+                        recipeIngredient.Ingredient.Id,
                         new LocalizedProperty(recipeIngredient.Ingredient.Name),
                         recipeIngredient.Ingredient.Calories,
                         new GetMeasurementUnitResponse(
+                            recipeIngredient.MeasurementUnit.Id,
                             new LocalizedProperty(recipeIngredient.MeasurementUnit?.Name),
                             recipeIngredient.MeasurementUnit.Symbol)
                     )

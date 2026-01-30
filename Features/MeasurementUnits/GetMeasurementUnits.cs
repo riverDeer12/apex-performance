@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.MeasurementUnits;
 
 public record GetMeasurementUnitResponse(
+    Guid Id,
     LocalizedProperty Name,
     string Symbol
 );
@@ -14,12 +15,10 @@ public record GetMeasurementUnitResponse(
 public class GetMeasurementUnitsEndpoint : EndpointWithoutRequest<List<GetMeasurementUnitResponse>>
 {
     private readonly ApexPerformanceContext _context;
-    private readonly ICurrentUserService _currentUserService;
 
-    public GetMeasurementUnitsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public GetMeasurementUnitsEndpoint(ApexPerformanceContext context)
     {
         _context = context;
-        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -41,8 +40,8 @@ public class GetMeasurementUnitsEndpoint : EndpointWithoutRequest<List<GetMeasur
 
         await SendAsync(
             measurementUnits.Select(measurementUnit =>
-                    new GetMeasurementUnitResponse(new LocalizedProperty(measurementUnit.Name), 
-                        measurementUnit.Symbol)).ToList(),
+                new GetMeasurementUnitResponse(measurementUnit.Id, new LocalizedProperty(measurementUnit.Name),
+                    measurementUnit.Symbol)).ToList(),
             cancellation: cancellationToken);
     }
 }

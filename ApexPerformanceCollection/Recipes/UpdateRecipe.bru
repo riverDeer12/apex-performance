@@ -1,0 +1,11 @@
+meta {
+  name: UpdateRecipe
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{domain}}/recipes/---recipeId---
+  body: json
+  auth: inherit
+}

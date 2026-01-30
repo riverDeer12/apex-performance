@@ -4,8 +4,8 @@ namespace ApexPerformance.API.Shared.Localization;
 
 public class LocalizedProperty
 {
-    public Dictionary<Language, string> Translations;
-
+    public Dictionary<Language, string> Translations { get; set; } = new();
+    
     public string[] TranslatedTo => Translations?.Keys?.Select(_ => _.ToString()).ToArray() ?? Array.Empty<string>();
     public string[] NotTranslatedTo => Enum.GetNames(typeof(Language)).Where(_ => !TranslatedTo.Contains(_)).ToArray();
 
@@ -15,7 +15,6 @@ public class LocalizedProperty
 
     public LocalizedProperty(string persistedJson)
     {
-        // NOTE-IZ: If persisted data can not be deserialized, we want to return empty dictionary.
         try
         {
             Translations = JsonConvert.DeserializeObject<Dictionary<Language, string>>(persistedJson) ??
