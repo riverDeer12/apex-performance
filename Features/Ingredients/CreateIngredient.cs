@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 
@@ -14,10 +15,12 @@ public record CreateIngredientRequest(
 public class CreateIngredientEndpoint : Endpoint<CreateIngredientRequest, GetIngredientResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IIngredientService _ingredientService;
 
-    public CreateIngredientEndpoint(ApexPerformanceContext context)
+    public CreateIngredientEndpoint(ApexPerformanceContext context, IIngredientService ingredientService)
     {
         _context = context;
+        _ingredientService = ingredientService;
     }
 
     public override void Configure()
@@ -28,6 +31,9 @@ public class CreateIngredientEndpoint : Endpoint<CreateIngredientRequest, GetIng
 
     public override async Task HandleAsync(CreateIngredientRequest request, CancellationToken cancellationToken)
     {
+        if (_ingredientService.IngredientExists(request.Name))
+            ThrowError(ErrorCodes.DuplicatesNotAllowed);
+
         var ingredient = new Ingredient
         {
             Name = request.Name.ToJsonString(),

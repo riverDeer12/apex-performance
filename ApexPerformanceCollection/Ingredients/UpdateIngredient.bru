@@ -5,7 +5,19 @@ meta {
 }
 
 put {
-  url: {{domain}}/api/ingredients/--id--
+  url: {{domain}}/api/ingredients/4cb23567-103b-4be8-93ea-08de61b5f2d6
   body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "calories": 25,
+    "name": {
+      "translations":{
+        "HR": "Tikvice",
+        "EN": "Zucchinni"
+      }
+    }
+  }
 }

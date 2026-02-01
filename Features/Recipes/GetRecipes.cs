@@ -61,7 +61,8 @@ public class GetRecipesEndpoint : EndpointWithoutRequest<List<GetRecipeResponse>
                                 new GetMeasurementUnitResponse(
                                     recipeIngredient.MeasurementUnit.Id,
                                     new LocalizedProperty(recipeIngredient.MeasurementUnit.Name),
-                                    recipeIngredient.MeasurementUnit.Symbol)
+                                    recipeIngredient.MeasurementUnit.Symbol),
+                                recipeIngredient.Quantity
                             )
                         )
                         .ToList()

@@ -10,7 +10,8 @@ public record GetIngredientResponse(
     Guid Id,
     LocalizedProperty Name,
     decimal Calories,
-    GetMeasurementUnitResponse? MeasurementUnit = null
+    GetMeasurementUnitResponse? MeasurementUnit = null,
+    decimal? Quantity = null
 );
 
 public class GetIngredientsEndpoint : EndpointWithoutRequest<List<GetIngredientResponse>>

@@ -4,6 +4,7 @@ using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Features.Ingredients;
 using ApexPerformance.API.Features.MeasurementUnits;
 using ApexPerformance.API.Services;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -20,18 +21,20 @@ public record CreateRecipeRequest(
 );
 
 public record RecipeIngredientRequest(
-    Guid MeasurementUnitId,
-    Guid IngredientId,
+    Guid MeasurementUnit,
+    Guid Ingredient,
     decimal Quantity
 );
 
 public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IRecipeService _recipeService;
 
-    public CreateRecipeEndpoint(ApexPerformanceContext context)
+    public CreateRecipeEndpoint(ApexPerformanceContext context, IRecipeService recipeService)
     {
         _context = context;
+        _recipeService = recipeService;
     }
 
     public override void Configure()
@@ -42,6 +45,9 @@ public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeRespo
 
     public override async Task HandleAsync(CreateRecipeRequest request, CancellationToken cancellationToken)
     {
+        if(_recipeService.RecipeExists(request.Name))
+            ThrowError(ErrorCodes.DuplicatesNotAllowed);
+        
         var recipe = new Recipe
         {
             Name = request.Name.ToJsonString(),
@@ -50,8 +56,8 @@ public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeRespo
             CookingMinutes = request.CookingMinutes,
             Ingredients = request.Ingredients.Select(x => new RecipeIngredient
             {
-                IngredientId = x.IngredientId,
-                MeasurementUnitId = x.MeasurementUnitId,
+                IngredientId = x.Ingredient,
+                MeasurementUnitId = x.MeasurementUnit,
                 Quantity = x.Quantity
             }).ToList()
         };
@@ -62,13 +68,23 @@ public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeRespo
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+        
+        var recipeResponse = await _context.Recipes
+            .Include(recipe => recipe.Ingredients)
+            .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+            .Include(recipe => recipe.Ingredients)
+            .ThenInclude(recipeIngredient => recipeIngredient.MeasurementUnit)
+            .FirstOrDefaultAsync(x => x.Id == recipe.Id, cancellationToken: cancellationToken);
+        
+        if(recipeResponse is null)
+            ThrowError(ErrorCodes.NotFound);
 
         await SendAsync(new GetRecipeResponse(
-            new LocalizedProperty(recipe.Name),
-            new LocalizedProperty(recipe.Content),
-            recipe.PreparationMinutes,
-            recipe.CookingMinutes,
-            recipe.Ingredients
+            new LocalizedProperty(recipeResponse.Name),
+            new LocalizedProperty(recipeResponse.Content),
+            recipeResponse.PreparationMinutes,
+            recipeResponse.CookingMinutes,
+            recipeResponse.Ingredients
                 .Select(recipeIngredient =>
                     new GetIngredientResponse(
                         recipeIngredient.Ingredient.Id,
@@ -77,7 +93,8 @@ public class CreateRecipeEndpoint : Endpoint<CreateRecipeRequest, GetRecipeRespo
                         new GetMeasurementUnitResponse(
                             recipeIngredient.MeasurementUnit.Id,
                             new LocalizedProperty(recipeIngredient.MeasurementUnit?.Name),
-                            recipeIngredient.MeasurementUnit.Symbol)
+                            recipeIngredient.MeasurementUnit.Symbol),
+                        recipeIngredient.Quantity
                     )
                 )
                 .ToList()
@@ -106,23 +123,15 @@ public sealed class CreateRecipeValidator : Validator<CreateRecipeRequest>
                 var db = Resolve<ApexPerformanceContext>();
 
                 var ingredientIds = recipeIngredients
-                    .Select(x => x.IngredientId).ToList();
-
-                var measurementUnitIds = recipeIngredients.Select(x => x.MeasurementUnitId).ToList();
-
+                    .Select(x => x.Ingredient).ToList();
+                
                 var numberOfIngredients = await db.Ingredients
                     .Where(ingredient => ingredientIds.Contains(ingredient.Id))
                     .CountAsync(cancellationToken);
 
-                var numberOfMeasurementUnits = await db.MeasurementUnits
-                    .Where(measurementUnit => measurementUnitIds.Contains(measurementUnit.Id))
-                    .CountAsync(cancellationToken);
-
                 var validIngredients = numberOfIngredients == ingredientIds.Count;
-
-                var validMeasurementUnits = numberOfMeasurementUnits == measurementUnitIds.Count;
-
-                return validMeasurementUnits && validIngredients;
+                
+                return validIngredients;
             })
             .WithMessage(ErrorCodes.NotFound);
     }

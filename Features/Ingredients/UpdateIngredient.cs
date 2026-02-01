@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Features.Ingredients;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ public record UpdateIngredientRequest(
 public class UpdateIngredientEndpoint : Endpoint<UpdateIngredientRequest, GetIngredientResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IIngredientService _ingredientService;
 
-    public UpdateIngredientEndpoint(ApexPerformanceContext context)
+    public UpdateIngredientEndpoint(ApexPerformanceContext context, IIngredientService ingredientService)
     {
         _context = context;
+        _ingredientService = ingredientService;
     }
 
     public override void Configure()
@@ -35,10 +38,13 @@ public class UpdateIngredientEndpoint : Endpoint<UpdateIngredientRequest, GetIng
 
         if (ingredient is null)
             ThrowError(ErrorCodes.NotFound);
-        
+
+        if (_ingredientService.IngredientExists(request.Name, ingredientId))
+            ThrowError(ErrorCodes.DuplicatesNotAllowed);
+
         ingredient.Name = request.Name.ToJsonString();
         ingredient.Calories = request.Calories;
-        
+
         _context.Ingredients.Update(ingredient);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
