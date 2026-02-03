@@ -114,7 +114,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
         BackgroundJob.Enqueue(() =>
             SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken,
                 cancellationToken));
-
+        
         await SendAsync(checkoutData, cancellation: cancellationToken);
     }
 

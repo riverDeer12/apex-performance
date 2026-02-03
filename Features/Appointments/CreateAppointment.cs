@@ -7,6 +7,7 @@ using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using FluentValidation;
+using Hangfire;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -101,12 +102,26 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         if (appointment.AppointmentStatus.Name == BusinessStatuses.Approved)
             await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
-
-        SendNotificationEmails(coaches, clients, appointment, timeSlot);
-
+        
+        BackgroundJob.Enqueue(() =>
+            SendNotificationEmails(coaches, clients, appointment, timeSlot));
+        
         await SendAsync(
             new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
+    }
+    
+    public void SendNotificationEmails(List<Coach> coaches, List<Client> clients, Appointment appointment,
+        TimeSlot timeSlot)
+    {
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
+        {
+            _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
+        }
+        else
+        {
+            _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
+        }
     }
 
     private async Task<bool> CheckValidity(DateTimeOffset requestStartTime, TimeSlot timeSlot,
@@ -123,19 +138,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
             return false;
 
         return true;
-    }
-
-    private void SendNotificationEmails(List<Coach> coaches, List<Client> clients, Appointment appointment,
-        TimeSlot timeSlot)
-    {
-        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
-        {
-            _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
-        }
-        else
-        {
-            _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
-        }
     }
 
     private async Task<AppointmentStatus> GetAppointmentStatus(CancellationToken cancellationToken)
