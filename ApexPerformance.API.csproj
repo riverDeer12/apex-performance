@@ -54,4 +54,8 @@
     <Compile Remove="Database\Migrations\20250828165828_RemovedCoachManyToMany00.Designer.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Workouts\WorkoutTypes\" />
+  </ItemGroup>
+
 </Project>

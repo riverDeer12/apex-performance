@@ -63,6 +63,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<Workout> Workouts { get; set; }
     
     public DbSet<WorkoutType> WorkoutTypes { get; set; }
+    
+    public DbSet<WorkoutWorkoutType> WorkoutWorkoutTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

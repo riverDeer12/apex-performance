@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -11,7 +12,8 @@ public record CreateWorkoutRequest(
     LocalizedProperty Name,
     LocalizedProperty Description,
     string ThumbnailUrl,
-    string VideoUrl
+    string VideoUrl,
+    List<Guid> WorkoutTypes
     );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -37,8 +39,10 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
             Description = request.Description.ToJsonString(),
             ThumbnailUrl = request.ThumbnailUrl,
             VideoUrl = request.VideoUrl,
-            WorkoutType = null,
-            WorkoutTypeId = default
+            WorkoutTypes = request.WorkoutTypes.Select(x => new WorkoutWorkoutType
+            {
+                WorkoutTypeId = x
+            }).ToList()
         };
 
         _context.Workouts.Add(workout);
@@ -50,7 +54,10 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
         
         await SendAsync(new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
-                workout.VideoUrl), cancellation: cancellationToken);
+                workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
+                    new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
+                        workoutTypeRelation.WorkoutType.Description)).ToList()),
+            cancellation: cancellationToken);
     }
 }
 

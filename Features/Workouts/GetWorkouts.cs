@@ -1,4 +1,5 @@
 ﻿using ApexPerformance.API.Database;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,8 @@ public record GetWorkoutResponse(
     LocalizedProperty Name,
     LocalizedProperty Description,
     string ThumbnailUrl,
-    string VideoUrl
+    string VideoUrl,
+    List<CatalogDataDto> WorkoutTypes
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -31,7 +33,8 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var workouts = await _context.Workouts
-            .Include(workout => workout.WorkoutType)
+            .Include(workout => workout.WorkoutTypes)
+            .ThenInclude(workoutWorkoutType => workoutWorkoutType.WorkoutType)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (workouts.Count is 0)
@@ -43,6 +46,9 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
         await SendAsync(
             workouts.Select(workout => new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
-                workout.VideoUrl)).ToList(), cancellation: cancellationToken);
+                workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
+                    new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
+                        workoutTypeRelation.WorkoutType.Description)).ToList())).ToList(),
+            cancellation: cancellationToken);
     }
 }

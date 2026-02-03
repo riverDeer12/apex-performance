@@ -15,11 +15,6 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
         
         builder.HasQueryFilter(x => !x.IsDeleted);
         
-        builder
-            .HasOne(a => a.WorkoutType)
-            .WithMany(b => b.Workouts)
-            .HasForeignKey(b => b.WorkoutTypeId);
-        
         builder.ToTable("Workouts", c => c.IsTemporal());    
     }
 }

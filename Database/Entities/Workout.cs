@@ -9,6 +9,6 @@ public class Workout : BaseEntity
     public string Description { get; set; }
     public string ThumbnailUrl { get; set; }
     public string VideoUrl { get; set; }
-    public required WorkoutType WorkoutType { get; set; }
-    public Guid WorkoutTypeId { get; set; }
+    public ICollection<WorkoutWorkoutType> WorkoutTypes { get; set; } = null!;
+    
 }

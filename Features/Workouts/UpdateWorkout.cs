@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Shared.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -12,8 +13,9 @@ public record UpdateWorkoutRequest(
     LocalizedProperty Name,
     LocalizedProperty Description,
     string ThumbnailUrl,
-    string VideoUrl
-    );
+    string VideoUrl,
+    List<Guid> WorkoutTypes
+);
 
 public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutResponse>
 {
@@ -36,6 +38,8 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
 
         var workout =
             await _context.Workouts
+                .Include(workout => workout.WorkoutTypes)
+                .ThenInclude(workoutWorkoutType => workoutWorkoutType.WorkoutType)
                 .FirstOrDefaultAsync(x => x.Id == workoutId, cancellationToken: cancellationToken);
 
         if (workout is null)
@@ -45,6 +49,16 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         workout.Description = request.Description.ToJsonString();
         workout.ThumbnailUrl = request.ThumbnailUrl;
         workout.VideoUrl = request.VideoUrl;
+        
+        workout.WorkoutTypes.Clear();
+
+        foreach (var x in request.WorkoutTypes)
+        {
+            workout.WorkoutTypes.Add(new WorkoutWorkoutType
+            {
+                WorkoutTypeId = x
+            });
+        }
 
         _context.Workouts.Update(workout);
         
@@ -55,7 +69,10 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         
         await SendAsync(new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
-                workout.VideoUrl), cancellation: cancellationToken);
+                workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
+                    new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
+                        workoutTypeRelation.WorkoutType.Description)).ToList()),
+            cancellation: cancellationToken);
     }
 }
 
