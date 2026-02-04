@@ -6,6 +6,7 @@ using System.Text.Json;
 using ApexPerformance.API.Features.Payments;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
+using ApexPerformance.API.Shared.Validations;
 using FastEndpoints;
 using Hangfire;
 using PhoneNumbers;
@@ -117,6 +118,9 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
         
         await SendAsync(checkoutData, cancellation: cancellationToken);
     }
+    
+    public void SendFiscalizationReminder(Session checkoutSession) => 
+        _emailService.SendFiscalizationReminderEmail(_configuration["BoxNow:ReVivPlus:ContactEmail"]!, checkoutSession);
 
     public async Task SendPdfLabel(string parcelNumber, string accessToken, CancellationToken cancellationToken)
     {
@@ -189,7 +193,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
             $"{(li.AmountTotal) / 100m:0.00} €"
         )).ToList();
 
-        return new GetCheckoutSessionResponse
+        var checkoutResponse = new GetCheckoutSessionResponse
         (
             session.Id,
             session.Status,
@@ -210,6 +214,13 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
             session.Customer?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
             items
         );
+        
+        var euBillingAddress = PaymentValidations.IsOutsideEu(session);
+
+        if (!euBillingAddress) BackgroundJob.Enqueue(() => 
+            SendFiscalizationReminder(session));
+
+        return checkoutResponse;
     }
 
     /// <summary>

@@ -1,5 +1,7 @@
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
+using ApexPerformance.API.Features.Payments;
+using Stripe.Checkout;
 
 namespace ApexPerformance.API.Services.Interfaces;
 
@@ -114,4 +116,12 @@ public interface IEmailService
     /// <param name="parcelNumber">Number of BoxNow Parcel.</param>
     /// <param name="pdfLabelStream">PDF Stream that will be sent as attachment.</param>
     void SendBoxNowPdfLabel(string contactEmail, string parcelNumber, Stream pdfLabelStream);
+
+    /// <summary>
+    /// Send email for fiscalization reminder.
+    /// For users that selected billing address outside EU.
+    /// </summary>
+    /// <param name="contactEmail"></param>
+    /// <param name="checkoutSession"></param>
+    void SendFiscalizationReminderEmail(string contactEmail, Session checkoutSession);
 }

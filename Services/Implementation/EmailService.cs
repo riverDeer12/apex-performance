@@ -1,8 +1,10 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
+using ApexPerformance.API.Features.Payments;
 using ApexPerformance.API.Services.Interfaces;
 using MimeKit;
+using Stripe.Checkout;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace ApexPerformance.API.Services.Implementation;
@@ -374,6 +376,55 @@ public class EmailService : IEmailService
         );
         
         message.Body = builder.ToMessageBody();
+
+        ConnectToMailServer(message);
+    }
+
+    public void SendFiscalizationReminderEmail(string contactEmail, Session checkoutSession)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress("ReViv Plus",
+            _configuration["MailConfiguration::FromAddress"]));
+
+        message.To.Add(new MailboxAddress(contactEmail, contactEmail));
+
+        message.Subject = "Potrebna ručna fiskalizacija za transakciju: " + checkoutSession.Id;
+
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates",
+            "FiscalizationReminderEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{ClientFullName}}", checkoutSession.CustomerDetails.Name);
+        html = html.Replace("{{CheckoutSessionId}}", checkoutSession.Id);
+        html = html.Replace("{{OrderDate}}", checkoutSession.Created.ToString("dd.MM.yyyy"));
+        html = html.Replace("{{TotalAmount}}", (checkoutSession.AmountTotal / 100m).ToString());
+        html = html.Replace("{{Currency}}", checkoutSession.Currency.ToUpper());
+        html = html.Replace("{{PaymentStatus}}", checkoutSession.PaymentStatus);
+        html = html.Replace("{{PaymentMethod}}", checkoutSession.PaymentMethodCollection);
+        
+        var address = checkoutSession.CustomerDetails?.Address;
+        
+        html = html.Replace("{{BillingName}}",
+            checkoutSession.CustomerDetails?.Name ?? string.Empty);
+
+        html = html.Replace("{{BillingLine1}}",
+            address?.Line1 ?? string.Empty);
+
+        html = html.Replace("{{BillingLine2}}",
+            address?.Line2 ?? string.Empty);
+
+        html = html.Replace("{{BillingPostalCode}}",
+            address?.PostalCode ?? string.Empty);
+
+        html = html.Replace("{{BillingCity}}",
+            address?.City ?? string.Empty);
+
+        html = html.Replace("{{BillingCountry}}",
+            address?.Country ?? string.Empty);
+        
+        message.Body = new TextPart("html") { Text = html };
 
         ConnectToMailServer(message);
     }
