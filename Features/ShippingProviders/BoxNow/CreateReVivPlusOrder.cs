@@ -215,9 +215,9 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
             items
         );
         
-        var euBillingAddress = PaymentValidations.IsOutsideEu(session);
+        var isBillingOutsideEu = PaymentValidations.IsOutsideEu(session);
 
-        if (!euBillingAddress) BackgroundJob.Enqueue(() => 
+        if (isBillingOutsideEu) BackgroundJob.Enqueue(() => 
             SendFiscalizationReminder(session));
 
         return checkoutResponse;
