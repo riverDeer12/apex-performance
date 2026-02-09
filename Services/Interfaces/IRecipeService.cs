@@ -1,4 +1,4 @@
-﻿using ApexPerformance.API.Shared.Localization;
+﻿using ApexPerformance.API.Utilities.Localization;
 
 namespace ApexPerformance.API.Services.Interfaces;
 

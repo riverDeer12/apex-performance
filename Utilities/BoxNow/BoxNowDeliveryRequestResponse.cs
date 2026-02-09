@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
+namespace ApexPerformance.API.Utilities.BoxNow;
 
 public record BoxNowDeliveryRequestResponse(
     [property: JsonPropertyName("id")] string Id,

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ApexPerformance.API.Shared.Localization;
+namespace ApexPerformance.API.Utilities.Localization;
 
 public class LocalizedProperty
 {

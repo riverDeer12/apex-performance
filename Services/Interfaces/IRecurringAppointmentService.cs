@@ -1,6 +1,6 @@
 using ApexPerformance.API.Database.Entities;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Interfaces;
 
 public interface IRecurringAppointmentService
 {

@@ -2,7 +2,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 
 namespace ApexPerformance.API.Features.Ingredients;

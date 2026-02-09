@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
+namespace ApexPerformance.API.Utilities.BoxNow;
 
 public record BoxNowDeliveryRequest(
     string OrderNumber,

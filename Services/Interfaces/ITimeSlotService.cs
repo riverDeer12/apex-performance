@@ -1,7 +1,7 @@
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Interfaces;
 
 public interface ITimeSlotService
 {

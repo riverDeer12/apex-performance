@@ -1,7 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 

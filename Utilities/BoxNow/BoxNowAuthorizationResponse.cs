@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ApexPerformance.API.Shared.DataTransferObjects.BoxNow;
+namespace ApexPerformance.API.Utilities.BoxNow;
 
 public record BoxNowAuthorizationResponse(
     [property: JsonPropertyName("access_token")]

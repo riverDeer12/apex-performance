@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.Extensions;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;

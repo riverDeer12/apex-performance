@@ -1,10 +1,11 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
-using ApexPerformance.API.Features.Ingredients;
 using ApexPerformance.API.Services.Interfaces;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
+
+namespace ApexPerformance.API.Features.Ingredients;
 
 public record UpdateIngredientRequest(
     LocalizedProperty Name,

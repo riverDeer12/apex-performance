@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Services;
+namespace ApexPerformance.API.Services.Interfaces;
 
 public interface ICurrentUserService
 {

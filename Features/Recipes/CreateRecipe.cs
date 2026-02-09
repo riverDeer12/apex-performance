@@ -5,7 +5,7 @@ using ApexPerformance.API.Features.Ingredients;
 using ApexPerformance.API.Features.MeasurementUnits;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

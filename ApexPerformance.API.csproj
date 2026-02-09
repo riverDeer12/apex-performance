@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="EFCore.BulkExtensions" Version="8.0.0" />
     <PackageReference Include="FastEndpoints" Version="5.32.0" />
     <PackageReference Include="FastEndpoints.Security" Version="5.32.0" />

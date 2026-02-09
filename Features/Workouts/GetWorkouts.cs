@@ -1,6 +1,6 @@
 ﻿using ApexPerformance.API.Database;
 using ApexPerformance.API.Shared.DataTransferObjects;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,6 +1,6 @@
 ﻿using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
-using ApexPerformance.API.Shared.Localization;
+using ApexPerformance.API.Utilities.Localization;
 
 namespace ApexPerformance.API.Services.Implementation;
 

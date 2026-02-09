@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints.Security;
 using Microsoft.EntityFrameworkCore;
 
