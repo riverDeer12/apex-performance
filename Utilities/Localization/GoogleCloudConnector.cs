@@ -14,7 +14,8 @@ public static class GoogleCloudConnector
     /// <param name="sourceLanguage"></param>
     /// <param name="targetLanguage"></param>
     /// <returns></returns>
-    public static async Task<TranslateTextResponse> TranslateText(string translateServiceUrl, string textToTranslate,
+    public static async Task<TranslateTextResponse> TranslateText(string translateServiceUrl, 
+        string textToTranslate,
         string sourceLanguage,
         string targetLanguage)
     {

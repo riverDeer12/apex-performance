@@ -4,6 +4,7 @@ using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities;
+using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,16 +17,19 @@ public record ImportWorkoutsRequest(
 public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IConfiguration _configuration;
 
-    public ImportWorkouts(ApexPerformanceContext context)
+    public ImportWorkouts(ApexPerformanceContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     public override void Configure()
     {
-        Get("api/workouts/import");
+        Post("api/workouts/import");
         Options(x => x.WithTags("Workouts"));
+        AllowFileUploads();
     }
 
     public override async Task HandleAsync(ImportWorkoutsRequest request, CancellationToken cancellationToken)
@@ -49,7 +53,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
             ThrowError(ErrorCodes.NotValid + " " + ex.Message);
         }
 
-        rows = RemoveWorkoutDuplicates(rows); 
+        rows = RemoveWorkoutDuplicates(rows);
 
         await CheckExcelWorkoutTypes(rows, cancellationToken);
 
@@ -59,10 +63,18 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 
         foreach (var excelRow in rows)
         {
+            var workoutName = await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, excelRow.Name);
+
+            var workoutDescription = await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, excelRow.Description);
+
             var newWorkout = new Workout
             {
-                Name = excelRow.Name,
-                Description = excelRow.Description,
+                Name = workoutName,
+                Description = workoutDescription,
                 ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(excelRow.VideoUrl),
                 VideoUrl = excelRow.VideoUrl,
                 WorkoutTypes = excelRow.WorkoutTypes.Select(x => new WorkoutWorkoutType
@@ -70,7 +82,16 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
                     WorkoutTypeId = new Guid(x)
                 }).ToList()
             };
+            
+            newWorkouts.Add(newWorkout);
         }
+        
+        _context.Workouts.AddRange(newWorkouts);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(new StatusResponse
         (
@@ -125,10 +146,18 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 
         foreach (var workoutType in workoutTypes)
         {
+            var workoutTypeName = await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, workoutType);
+
+            var workoutTypeDescription = await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, workoutType);
+            
             var newWorkoutType = new WorkoutType
             {
-                Name = workoutType,
-                Description = workoutType
+                Name = workoutTypeName,
+                Description = workoutTypeDescription
             };
 
             newWorkoutTypes.Add(newWorkoutType);
@@ -176,7 +205,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
                 excelRow.WorkoutTypes[i] = relatedWorkoutType.Id.ToString();
             }
         }
-        
+
         return rows;
     }
 
