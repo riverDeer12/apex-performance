@@ -25,6 +25,13 @@ public class LocalizedProperty
             Translations = new Dictionary<Language, string>();
         }
     }
+    
+    public string? Get(Language language)
+    {
+        return Translations.TryGetValue(language, out var value)
+            ? value
+            : null;
+    }
 
     public string ToJsonString() => Translations == null || Translations.Count == 0
         ? null
@@ -48,6 +55,8 @@ public class LocalizedProperty
             .Where(x => x != sourceLanguage.ToString()).ToList();
 
         var localizedProperty = new LocalizedProperty();
+        
+        localizedProperty.Translations.Add(sourceLanguage, textForTranslation);
 
         foreach (var translationLanguage in translationLanguages)
         {

@@ -82,10 +82,10 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
                     WorkoutTypeId = new Guid(x)
                 }).ToList()
             };
-            
+
             newWorkouts.Add(newWorkout);
         }
-        
+
         _context.Workouts.AddRange(newWorkouts);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
@@ -123,12 +123,15 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
             }
         }
 
-        var workoutsTypesNames = _context.WorkoutTypes
-            .Select(x => x.Name.ToLower())
-            .ToHashSet();
+        var workoutsNames = _context.WorkoutTypes
+            .Select(x => new LocalizedProperty(x.Name))
+            .ToList();
+
+        var croatianWorkoutsTypesNames = workoutsNames
+            .Select(x => x.Get(Language.HR)).ToList();
 
         workoutTypes = workoutTypes
-            .Where(x => !workoutsTypesNames
+            .Where(x => !croatianWorkoutsTypesNames
                 .Contains(x.ToLower()))
             .ToList();
 
@@ -153,7 +156,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
             var workoutTypeDescription = await LocalizedProperty.PopulateMissingLanguages(
                 _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
                 Language.HR, workoutType);
-            
+
             var newWorkoutType = new WorkoutType
             {
                 Name = workoutTypeName,
@@ -162,6 +165,8 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 
             newWorkoutTypes.Add(newWorkoutType);
         }
+
+        if (newWorkoutTypes.Count is 0) return;
 
         _context.WorkoutTypes.AddRange(newWorkoutTypes);
 
@@ -182,13 +187,16 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
     /// <returns></returns>
     private async Task<List<ExcelRow>> SetWorkoutTypes(List<ExcelRow> rows)
     {
-        var workoutTypes = await _context.WorkoutTypes
+        var workoutTypes = (await _context.WorkoutTypes
+                .AsNoTracking()
+                .Select(x => new { x.Id, x.Name })
+                .ToListAsync())
             .Select(x => new
             {
                 x.Id,
-                x.Name
+                NameHr = new LocalizedProperty(x.Name).Get(Language.HR)
             })
-            .ToListAsync();
+            .ToList();
 
         foreach (var excelRow in rows)
         {
@@ -197,7 +205,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
                 var excelWorkoutType = excelRow.WorkoutTypes[i];
 
                 var relatedWorkoutType = workoutTypes.FirstOrDefault(x =>
-                    x.Name.Equals(excelWorkoutType, StringComparison.OrdinalIgnoreCase));
+                    x.NameHr.Equals(excelWorkoutType, StringComparison.OrdinalIgnoreCase));
 
                 if (relatedWorkoutType is null)
                     continue;
@@ -219,11 +227,14 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
     private List<ExcelRow> RemoveWorkoutDuplicates(List<ExcelRow> rows)
     {
         var workoutsNames = _context.Workouts
-            .Select(x => x.Name.ToLower())
-            .ToHashSet();
+            .Select(x => new LocalizedProperty(x.Name))
+            .ToList();
+
+        var croatianWorkoutsNames = workoutsNames
+            .Select(x => x.Get(Language.HR)).ToList();
 
         rows = rows
-            .Where(r => !workoutsNames.Contains(r.Name.ToLower()))
+            .Where(r => !croatianWorkoutsNames.Contains(r.Name.ToLower()))
             .ToList();
 
         return rows;
