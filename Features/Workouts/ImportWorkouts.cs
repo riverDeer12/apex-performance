@@ -59,10 +59,54 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 
         rows = await SetWorkoutTypes(rows);
 
+        var newWorkouts = await ProcessNewWorkouts(rows);
+
+        if (newWorkouts.Count is 0)
+        {
+            await SendAsync(new StatusResponse
+            (
+                Guid.NewGuid(),
+                true
+            ), cancellation: cancellationToken);
+            return;
+        }
+
+        _context.Workouts.AddRange(newWorkouts);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorCodes.SavingError);
+
+        await SendAsync(new StatusResponse
+        (
+            Guid.NewGuid(),
+            true
+        ), cancellation: cancellationToken);
+    }
+
+    private async Task<List<Workout>> ProcessNewWorkouts(List<ExcelRow> rows)
+    {
         var newWorkouts = new List<Workout>();
+        
+        var existingWorkouts = (await _context.Workouts
+                .AsNoTracking()
+                .Select(x => new { x.Id, x.Name })
+                .ToListAsync())
+            .Select(x => new
+            {
+                x.Id,
+                NameHr = new LocalizedProperty(x.Name).Get(Language.HR)
+            })
+            .ToList();
 
         foreach (var excelRow in rows)
         {
+            var relatedWorkout = existingWorkouts.FirstOrDefault(x =>
+                x.NameHr.Equals(excelRow.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (relatedWorkout != null) continue;
+            
             var workoutName = await LocalizedProperty.PopulateMissingLanguages(
                 _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
                 Language.HR, excelRow.Name);
@@ -86,18 +130,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
             newWorkouts.Add(newWorkout);
         }
 
-        _context.Workouts.AddRange(newWorkouts);
-
-        var result = await _context.SaveChangesAsync(cancellationToken);
-
-        if (result == 0)
-            ThrowError(ErrorCodes.SavingError);
-
-        await SendAsync(new StatusResponse
-        (
-            Guid.NewGuid(),
-            true
-        ), cancellation: cancellationToken);
+        return newWorkouts;
     }
 
     /// <summary>
