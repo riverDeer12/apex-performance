@@ -6,6 +6,10 @@ meta {
 
 post {
   url: {{domain}}/api/workouts/import
-  body: none
+  body: multipartForm
   auth: inherit
+}
+
+body:multipart-form {
+  File: @file(C:\Users\Milan\Downloads\apex_workouts_data.xlsx)
 }
