@@ -1,4 +1,6 @@
-﻿public sealed record ClientLastCreditIncreaseDto
+﻿namespace ApexPerformance.API.Shared.DataTransferObjects.Clients;
+
+public sealed record ClientLastCreditIncreaseDto
 {
     public Guid ClientId { get; init; }
     public DateTime LastCreditIncreaseDate { get; init; }

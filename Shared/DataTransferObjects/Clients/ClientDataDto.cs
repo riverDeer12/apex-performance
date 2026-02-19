@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Shared.DataTransferObjects;
+namespace ApexPerformance.API.Shared.DataTransferObjects.Clients;
 
 public record ClientDataDto(
     Guid Id,
