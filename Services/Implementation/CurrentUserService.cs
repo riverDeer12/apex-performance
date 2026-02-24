@@ -24,8 +24,12 @@ public class CurrentUserService : ICurrentUserService
 
     public bool LoggedUserHasRole(string requiredRole)
     {
-        var roleValues = _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
-
-        return roleValues?.Contains(requiredRole) ?? false;
+        var roleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
+        
+        if (string.IsNullOrWhiteSpace(roleClaim)) return false;
+        
+        var roles = roleClaim.Split([',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries);
+        
+        return roles.Contains(requiredRole, StringComparer.OrdinalIgnoreCase);
     }
 }

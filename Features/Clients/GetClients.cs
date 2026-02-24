@@ -4,6 +4,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Shared.DataTransferObjects.Clients;
 using FastEndpoints;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
