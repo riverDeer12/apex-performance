@@ -15,6 +15,10 @@
     <PublishIISAssets>false</PublishIISAssets>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="EFCore.BulkExtensions" Version="8.0.0" />
