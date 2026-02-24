@@ -3,3 +3,4 @@
 /obj/
 /Logs/
 appsettings*.json
+/ApexPerformance.Tests/obj
