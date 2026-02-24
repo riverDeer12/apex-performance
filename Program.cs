@@ -118,3 +118,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 });
 
 app.Run();
+
+public partial class Program
+{
+}

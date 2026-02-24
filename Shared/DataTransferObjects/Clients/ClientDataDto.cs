@@ -1,4 +1,4 @@
-namespace ApexPerformance.API.Shared.DataTransferObjects;
+namespace ApexPerformance.API.Shared.DataTransferObjects.Clients;
 
 public record ClientDataDto(
     Guid Id,
@@ -9,6 +9,7 @@ public record ClientDataDto(
     string Email,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
+    DateTime? LastCreditsIncrease,
     string FullName,
     List<PersonDataDto> Coaches,
     List<BodyMeasurementDto> BodyMeasurements);

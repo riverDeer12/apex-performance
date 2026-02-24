@@ -1,9 +1,12 @@
+using System.Text.Json;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Shared.DataTransferObjects.Clients;
 using FastEndpoints;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Clients;
@@ -36,10 +39,15 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             return;
         }
 
+        var lastCreditIncreaseList = await GetLastClientCreditIncreases(clients.Select(x => x.Id).ToList());
+
         await SendAsync(clients.Select(x =>
             new ClientDataDto(x.Id, x.FirstName, x.LastName,
                 x.Credits, x.Phone, x.Email, x.CreatedAt,
-                x.UpdatedAt, x.FullName,
+                x.UpdatedAt,
+                lastCreditIncreaseList
+                    .FirstOrDefault(creditIncrease => creditIncrease.ClientId == x.Id)?.LastCreditIncreaseDate,
+                x.FullName,
                 x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
                         coach.Coach.LastName, coach.Coach.FullName))
                     .ToList(),
@@ -104,5 +112,43 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .OrderBy(x => x.Credits)
             .ThenBy(x => x.UpdatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    private async Task<List<ClientLastCreditIncreaseDto>> GetLastClientCreditIncreases(List<Guid> clientIds)
+    {
+        var idsJson = JsonSerializer.Serialize(clientIds); // List<Guid>
+
+        var param = new SqlParameter("@idsJson", idsJson);
+
+        return await _context.Set<ClientLastCreditIncreaseDto>()
+            .FromSqlRaw(@"
+                WITH ids AS (
+                    SELECT CAST([value] AS uniqueidentifier) AS Id
+                    FROM OPENJSON(@idsJson)
+                ),
+                history AS (
+                    SELECT c.Id,
+                           c.Credits,
+                           c.PeriodStart,
+                           LAG(c.Credits) OVER (PARTITION BY c.Id ORDER BY c.PeriodStart) AS PrevCredits
+                    FROM dbo.Clients FOR SYSTEM_TIME ALL AS c
+                    JOIN ids ON ids.Id = c.Id
+                ),
+                increases AS (
+                    SELECT *,
+                           ROW_NUMBER() OVER (PARTITION BY Id ORDER BY PeriodStart DESC) AS rn
+                    FROM history
+                    WHERE PrevCredits IS NOT NULL
+                      AND Credits > PrevCredits
+                )
+                SELECT
+                    Id AS ClientId,
+                    PeriodStart AS LastCreditIncreaseDate,
+                    Credits AS NewCredits,
+                    PrevCredits
+                FROM increases
+                WHERE rn = 1
+            ", param)
+            .ToListAsync();
     }
 }
