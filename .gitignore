@@ -4,3 +4,4 @@
 /Logs/
 appsettings*.json
 /ApexPerformance.Tests/obj
+/ApexPerformance.Tests/bin
