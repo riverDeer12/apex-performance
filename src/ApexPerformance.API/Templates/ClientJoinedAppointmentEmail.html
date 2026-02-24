@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Joined Your Appointment</title>
+    <style>
+        body {
+            background-color: #11111142;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.7);
+        }
+
+        .header {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            max-width: 100px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .content h2 {
+            color: #0074D9;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .credentials {
+            background-color: #222;
+            border: 1px solid #0074D9;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .credentials p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .credentials span {
+            font-weight: bold;
+            color: #0074D9;
+            display: inline-block;
+            width: 90px;
+        }
+
+        .footer {
+            background-color: #000;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            padding: 15px;
+        }
+
+        /* ---- DARK MODE OVERRIDES (keep header white) ---- */
+        /* Apple Mail / iOS Mail toggles: re-assert white header */
+        @media (prefers-color-scheme: dark) {
+            .header-lock { background:#ffffff !important; }
+            .header-lock * { color:#000000 !important; }
+            .header-lock img { mix-blend-mode:normal !important; }
+        }
+        /* Outlook.com / OWA adds data-ogsc in dark mode */
+        [data-ogsc] .header-lock { background:#ffffff !important; }
+        [data-ogsc] .header-lock * { color:#000000 !important; }
+
+        /* Gmail mobile dark mode needs higher specificity; body gets "gmail-body" */
+        u + .gmail-body .header-lock { background:#ffffff !important; }
+        u + .gmail-body .header-lock * { color:#000000 !important; }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           class="header-lock"
+           bgcolor="#ffffff"
+           style="background:#ffffff;">
+        <tr>
+            <td align="center" style="padding:20px;background:#ffffff;">
+                <!--[if mso]>
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                             href="#" arcsize="0%" stroke="f" fillcolor="#ffffff"
+                             style="width:600pt;height:auto;">
+                    <w:anchorlock/>
+                    <center style="width:100%;height:100%;">
+                <![endif]-->
+                <img src="https://apex-performance.fit/assets/images/logo_light_theme.png" width="100" alt="Company Logo"
+                     style="display:block;max-width:100px;height:auto;border:0;outline:0;text-decoration:none;">
+                <!--[if mso]></center></v:roundrect><![endif]-->
+            </td>
+        </tr>
+    </table>
+    <div class="content">
+        <h2>Hello, {{ClientFullName}}</h2>
+        
+        <p>{{JoiningClientFullName}} has joined your appointment.</p>
+        
+        <p>Please find appointment details below:</p>
+
+        <div class="credentials">
+            <p>{{AppointmentTime}}</p>
+        </div>
+        
+    </div>
+    <div class="footer">
+        &copy; Apex Performance. All rights reserved.
+    </div>
+</div>
+</body>
+</html>
