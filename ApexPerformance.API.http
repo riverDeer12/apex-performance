@@ -1,6 +1,0 @@
-@ApexPerformance.API_HostAddress = http://localhost:5074
-
-GET {{ApexPerformance.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
