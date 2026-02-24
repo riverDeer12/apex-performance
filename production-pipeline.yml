@@ -12,7 +12,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   projectFile: 'src/ApexPerformance.API/ApexPerformance.API.csproj'
-  startupProject: '.'
+  startupProject: 'src/ApexPerformance.API/ApexPerformance.API.csproj'
   outputSql: '$(Build.ArtifactStagingDirectory)\migrations.sql'
 
 steps:
