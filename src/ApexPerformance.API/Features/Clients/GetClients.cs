@@ -46,7 +46,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                 x.Credits, x.Phone, x.Email, x.CreatedAt,
                 x.UpdatedAt,
                 lastCreditIncreaseList
-                    .FirstOrDefault(creditIncrease => creditIncrease.ClientId == x.Id)?.LastCreditIncreaseDate,
+                    .FirstOrDefault(creditIncrease => creditIncrease.ClientId == x.Id)?.LastCreditsIncreaseDate,
                 x.FullName,
                 x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
                         coach.Coach.LastName, coach.Coach.FullName))
@@ -143,7 +143,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                 )
                 SELECT
                     Id AS ClientId,
-                    PeriodStart AS LastCreditIncreaseDate,
+                    CAST(PeriodStart AS datetimeoffset) AS LastCreditsIncreaseDate,
                     Credits AS NewCredits,
                     PrevCredits
                 FROM increases
@@ -152,3 +152,4 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .ToListAsync();
     }
 }
+
