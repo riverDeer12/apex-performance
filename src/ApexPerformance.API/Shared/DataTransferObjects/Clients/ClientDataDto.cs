@@ -9,7 +9,7 @@ public record ClientDataDto(
     string Email,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    DateTime? LastCreditsIncrease,
+    DateTimeOffset? LastCreditsIncrease,
     string FullName,
     List<PersonDataDto> Coaches,
     List<BodyMeasurementDto> BodyMeasurements);

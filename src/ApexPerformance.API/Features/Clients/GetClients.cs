@@ -53,7 +53,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                     .ToList(),
                 x.BodyMeasurements
                     .Select(bodyMeasurement =>
-                        new BodyMeasurementDto(
+                        new BodyMeasurementDto( 
                             bodyMeasurement.Id,
                             bodyMeasurement.Height,
                             bodyMeasurement.Weight,
