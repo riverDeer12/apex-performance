@@ -115,6 +115,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
     {
         var appointment =
             await _context.Appointments
+                .Include(appointment => appointment.AppointmentStatus)
                 .SingleAsync(x => x.Id == appointmentId,
                     cancellationToken: cancellationToken);
         

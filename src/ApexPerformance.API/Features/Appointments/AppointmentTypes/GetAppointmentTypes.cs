@@ -1,4 +1,3 @@
-using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
