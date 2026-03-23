@@ -143,7 +143,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                 )
                 SELECT
                     Id AS ClientId,
-                    PeriodStart AS LastCreditIncreaseDate,
+                    PeriodStart AS LastCreditsIncreaseDate,
                     Credits AS NewCredits,
                     PrevCredits
                 FROM increases
