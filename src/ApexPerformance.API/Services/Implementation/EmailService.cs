@@ -38,9 +38,13 @@ public class EmailService : IEmailService
 
             var html = File.ReadAllText(templatePath);
 
-            var statusColor = appointment.AppointmentStatus.Name == BusinessStatuses.Approved
-                ? "#2edc59"
-                : "#f36464";
+            var statusColor = appointment.AppointmentStatus.Name switch
+            {
+                BusinessStatuses.Approved => "#2edc59",
+                BusinessStatuses.Pending => "#ffc107",
+                BusinessStatuses.InProgress => "#ffc107",
+                _ => "#f36464"
+            };
 
             html = html.Replace("{{ClientFullName}}", client.FullName);
 
