@@ -101,15 +101,15 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         if (appointment.AppointmentStatus.Name == BusinessStatuses.Approved)
             await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
-        
+
         BackgroundJob.Enqueue(() =>
             SendNotificationEmails(request.Coaches, request.Clients, appointment.Id, timeSlot.Id, cancellationToken));
-        
+
         await SendAsync(
             new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
     }
-    
+
     public async Task SendNotificationEmails(List<Guid> coachesIds, List<Guid> clientsIds, Guid appointmentId,
         Guid timeSlotId, CancellationToken cancellationToken)
     {
@@ -118,28 +118,23 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
                 .Include(appointment => appointment.AppointmentStatus)
                 .SingleAsync(x => x.Id == appointmentId,
                     cancellationToken: cancellationToken);
-        
+
         var clients = await _context.Clients
             .Where(x => clientsIds.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
-        
+
         var coaches = await _context.Coaches
             .Where(x => coachesIds.Contains(x.Id))
             .ToListAsync(cancellationToken: cancellationToken);
-        
+
         var timeSlot =
             await _context.TimeSlots
                 .SingleAsync(x => x.Id == timeSlotId,
                     cancellationToken: cancellationToken);
+
+        _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
         
-        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
-        {
-            _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
-        }
-        else
-        {
-            _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
-        }
+        _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
     }
 
     private async Task<bool> CheckValidity(DateTimeOffset requestStartTime, TimeSlot timeSlot,
@@ -151,7 +146,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         if (today == requestedDay && _currentUserService.LoggedUserHasRole(UserRoles.Client))
             return false;
-        
+
         if (!await _appointmentService.CheckFreeSlot(requestStartTime, timeSlot, cancellationToken))
             return false;
 
@@ -190,22 +185,22 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
                 =>
             {
                 var db = Resolve<ApexPerformanceContext>();
-                
+
                 return db.AppointmentTypes.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
             })
             .WithMessage(ErrorCodes.NotFound);
-        
+
         RuleFor(x => x.TimeSlot)
             .NotEmpty().WithMessage(ErrorCodes.Required)
             .MustAsync((id, cancellationToken)
                 =>
             {
                 var db = Resolve<ApexPerformanceContext>();
-                
+
                 return db.TimeSlots.AnyAsync(appointmentType => appointmentType.Id == id, cancellationToken);
             })
             .WithMessage(ErrorCodes.NotFound);
-        
+
         RuleFor(x => x.Clients)
             .NotEmpty().WithMessage(ErrorCodes.Required)
             .Must(list => list.Distinct().Count() == list.Count)
@@ -220,7 +215,7 @@ public sealed class CreateAppointmentValidator : Validator<CreateAppointmentRequ
                 return numberOfClients == clientIds.Count;
             })
             .WithMessage(ErrorCodes.NotFound);
-        
+
         RuleFor(x => x.Coaches)
             .NotEmpty().WithMessage(ErrorCodes.Required)
             .Must(list => list.Distinct().Count() == list.Count)
