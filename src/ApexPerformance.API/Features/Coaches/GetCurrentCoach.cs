@@ -37,7 +37,8 @@ public class GetCurrentCoachEndpoint: EndpointWithoutRequest<PersonDataDto>
             coach.Id,
             coach.FirstName,
             coach.LastName,
-            coach.FullName
+            coach.FullName,
+            Email: coach.Email
         ), cancellation: cancellationToken);
     }
 }
