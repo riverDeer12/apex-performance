@@ -54,7 +54,6 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
 
         var options = new SessionCreateOptions
         {
-            PaymentMethodTypes = new List<string> { "card" },
             LineItems = lineItems,
             BillingAddressCollection = "required",
             CustomerCreation = "always",
