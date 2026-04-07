@@ -2,6 +2,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using FluentValidation;
 using Hangfire;
@@ -13,11 +14,7 @@ public record ResetUserPasswordRequest(
     string NewPassword
 );
 
-public record ResetUserPasswordResponse(
-    Guid UserId
-);
-
-public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, ResetUserPasswordResponse>
+public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, StatusResponse>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly ApexPerformanceContext _context;
@@ -56,7 +53,7 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Rese
 
         BackgroundJob.Enqueue(() => SendResetPasswordEmail(user.Id));
 
-        await SendAsync(new ResetUserPasswordResponse(user.Id), cancellation: cancellationToken);
+        await SendAsync(new StatusResponse(user.Id, true), cancellation: cancellationToken);
     }
 
     public async Task SendResetPasswordEmail(Guid userId)
