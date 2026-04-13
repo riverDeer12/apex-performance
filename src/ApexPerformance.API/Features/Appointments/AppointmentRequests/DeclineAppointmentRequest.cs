@@ -17,7 +17,7 @@ public class DeclineAppointmentRequestEndpoint : EndpointWithoutRequest<DeclineA
     public override void Configure()
     {
         Get("api/appointment-requests/decline/{id}");
-        Roles(UserRoles.SuperAdmin, UserRoles.Administrator);
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("AppointmentRequests"));
     }
 
