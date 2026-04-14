@@ -1,5 +1,6 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
 public record UpdateBodyMeasurementRequest(
-    Guid Client,
     decimal Height,
     decimal Weight,
     decimal Shoulders,
@@ -19,11 +19,7 @@ public record UpdateBodyMeasurementRequest(
     decimal Glutes
 );
 
-public record UpdateBodyMeasurementResponse(
-    Guid Id
-);
-
-public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementRequest, UpdateBodyMeasurementResponse>
+public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementRequest, StatusResponse>
 {
     private readonly ApexPerformanceContext _context;
 
@@ -42,18 +38,11 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
     public override async Task HandleAsync(UpdateBodyMeasurementRequest request, CancellationToken cancellationToken)
     {
         var bodyMeasurementId = Route<Guid>("id", isRequired: true);
-        
-        var bodyMeasurement = await _context.BodyMeasurements.FirstOrDefaultAsync(x => x.Id == bodyMeasurementId,
-            cancellationToken: cancellationToken);
-        
+
+        var bodyMeasurement = await _context.BodyMeasurements
+            .FirstOrDefaultAsync(x => x.Id == bodyMeasurementId, cancellationToken: cancellationToken);
+
         if (bodyMeasurement is null)
-            ThrowError(ErrorCodes.NotFound);
-
-        var client =
-            await _context.Clients.FirstOrDefaultAsync(x => x.Id == request.Client,
-                cancellationToken: cancellationToken);
-
-        if (client is null)
             ThrowError(ErrorCodes.NotFound);
 
         bodyMeasurement.Height = request.Height;
@@ -64,7 +53,6 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
         bodyMeasurement.Waist = request.Waist;
         bodyMeasurement.Thigh = request.Thigh;
         bodyMeasurement.Calves = request.Calves;
-        bodyMeasurement.Client = client;
         bodyMeasurement.Glutes = request.Glutes;
 
         _context.BodyMeasurements.Update(bodyMeasurement);
@@ -75,8 +63,8 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
             ThrowError(ErrorCodes.SavingError);
 
         await SendAsync(
-            new UpdateBodyMeasurementResponse(
-                bodyMeasurement.Id
+            new StatusResponse(
+                bodyMeasurement.Id, true
             ),
             cancellation: cancellationToken);
     }
@@ -86,17 +74,6 @@ public sealed class UpdateBodyMeasurementValidator : Validator<UpdateBodyMeasure
 {
     public UpdateBodyMeasurementValidator()
     {
-        RuleFor(x => x.Client)
-            .NotEmpty().WithMessage(ErrorCodes.Required)
-            .MustAsync((id, cancellationToken)
-                =>
-            {
-                var db = Resolve<ApexPerformanceContext>();
-                
-                return db.Clients.AnyAsync(client => client.Id == id, cancellationToken);
-            })
-            .WithMessage(ErrorCodes.NotFound);
-        
         RuleFor(x => x.Height).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Weight).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ErrorCodes.Required);
