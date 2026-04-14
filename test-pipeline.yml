@@ -58,6 +58,15 @@ steps:
   - script: dotnet publish -c $(buildConfiguration) $(projectFile) -o $(Build.ArtifactStagingDirectory) --no-build
     displayName: 'Publish (dotnet publish -c Test ApexPerformance.API.csproj)'
 
+  - task: ArchiveFiles@2
+    displayName: 'Zip published output'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/drop_api_test.zip'
+      replaceExistingArchive: true
+
   - task: PublishBuildArtifacts@1
     displayName: 'Publish artifact'
     inputs:
