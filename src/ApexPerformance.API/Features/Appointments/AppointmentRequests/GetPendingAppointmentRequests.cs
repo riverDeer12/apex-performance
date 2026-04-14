@@ -14,6 +14,7 @@ public record GetPendingAppointmentRequestResponse(
     string Comment,
     PersonDataDto Sender,
     CatalogDataDto Type,
+    DateTimeOffset CreatedAt,
     AppointmentDataDto Appointment
 );
 
@@ -101,7 +102,7 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
                 clients, coaches, timeSlot);
 
             appointmentRequestsResponse.Add(new GetPendingAppointmentRequestResponse(appointmentRequest.Id,
-                appointmentRequest.Comment, requestSenderResponse, requestType, appointmentResponse));
+                appointmentRequest.Comment, requestSenderResponse, requestType, appointmentRequest.CreatedAt, appointmentResponse));
         }
 
         await SendAsync(appointmentRequestsResponse, cancellation: cancellationToken);
