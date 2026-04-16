@@ -11,7 +11,7 @@ public record CreatePaymentRequest(
     PersonDataDto Customer,
     List<CheckoutItemDto> Items);
 
-public record CreatePaymentResponse(string SessionId);
+public record CreatePaymentResponse(string Url);
 
 public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymentResponse>
 {
@@ -69,7 +69,7 @@ public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymen
             requestOptions: new RequestOptions { ApiKey = _configuration["Stripe:ApexPerformance:SecretKey"] },
             cancellationToken: cancellationToken);
 
-        await SendAsync(new CreatePaymentResponse(session.Id), cancellation: cancellationToken);
+        await SendAsync(new CreatePaymentResponse(session.Url), cancellation: cancellationToken);
     }
 }
 
