@@ -34,6 +34,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<CoachAppointment> CoachAppointments { get; set; }
     public DbSet<CoachClient> CoachClients { get; set; }
     public DbSet<CoachTimeSlot> CoachTimeSlots { get; set; }
+    
+    public DbSet<DeviceToken> DeviceTokens { get; set; }
     public DbSet<FunctionalMovementScreen> FunctionalMovementScreens { get; set; }
     
     public DbSet<Ingredient> Ingredients { get; set; }
