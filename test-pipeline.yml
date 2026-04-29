@@ -44,16 +44,6 @@ steps:
   - script: echo ##vso[task.prependpath]%USERPROFILE%\.dotnet\tools
     displayName: 'Add dotnet-ef to PATH'
 
-  # --- EF Core: generate an idempotent script for safe prod deploys ---
-  - script: >
-      dotnet ef migrations script
-      --project $(projectFile)
-      --startup-project $(startupProject)
-      --configuration $(buildConfiguration)
-      --idempotent
-      --output "$(outputSql)"
-    displayName: 'Generate idempotent EF migration script'
-
   # Publish using your exact command (kept variableized for flexibility)
   - script: dotnet publish -c $(buildConfiguration) $(projectFile) -o $(Build.ArtifactStagingDirectory) --no-build
     displayName: 'Publish (dotnet publish -c Test ApexPerformance.API.csproj)'
