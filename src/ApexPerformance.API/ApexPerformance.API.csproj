@@ -57,7 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="apex-performance-e9a76-firebase-adminsdk-fbsv....json">
+    <None Update="apex-performance-e9a76-firebase-adminsdk-fbsvc-e1b91629ab.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

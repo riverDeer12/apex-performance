@@ -59,7 +59,7 @@ builder.Host.UseSerilog((context, config)
 
 FirebaseApp.Create(new AppOptions
 {
-    Credential = GoogleCredential.FromFile(configuration["Firebase::CredentialsPath"])
+    Credential = GoogleCredential.FromFile(configuration["Firebase:CredentialsPath"])
 });
 
 builder.Services.AddSingleton<IFcmService, FcmService>();
