@@ -15,7 +15,7 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
 
     public override void Configure()
     {
-        Post("api/device-tokens/register");
+        Post("api/fcm-tokens");
     }
 
     public RegisterTokenEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext db)
@@ -24,20 +24,20 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
         _db = db;
     }
 
-    public override async Task HandleAsync(RegisterDeviceTokenRequest req, CancellationToken ct)
+    public override async Task HandleAsync(RegisterDeviceTokenRequest request, CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId;
 
         var existing = await _db.DeviceTokens
-            .FirstOrDefaultAsync(t => t.Token == req.Token, ct);
+            .FirstOrDefaultAsync(t => t.Token == request.Token, cancellationToken);
 
         if (existing is null)
         {
             _db.DeviceTokens.Add(new DeviceToken
             {
                 UserId = userId,
-                Token = req.Token,
-                Platform = req.Platform,
+                Token = request.Token,
+                Platform = request.Platform,
                 CreatedAt = DateTimeOffset.UtcNow,
                 CreatedBy = userId,
                 UpdatedAt = DateTimeOffset.UtcNow,
@@ -51,7 +51,8 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
             existing.UpdatedBy = userId;
         }
 
-        await _db.SaveChangesAsync(ct);
-        await SendOkAsync(ct);
+        await _db.SaveChangesAsync(cancellationToken);
+        
+        await SendOkAsync(cancellationToken);
     }
 }
