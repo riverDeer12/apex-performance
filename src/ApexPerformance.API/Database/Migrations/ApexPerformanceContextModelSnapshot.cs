@@ -717,6 +717,50 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("CoachTimeSlots");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.DeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DeviceTokens", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.FunctionalMovementScreen", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1549,6 +1593,25 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("WorkoutWorkoutTypes");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Shared.DataTransferObjects.Clients.ClientLastCreditIncreaseDto", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("LastCreditsIncreaseDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("NewCredits")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PrevCredits")
+                        .HasColumnType("int");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Administrator", b =>
                 {
                     b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
@@ -1748,6 +1811,17 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Coach");
 
                     b.Navigation("TimeSlot");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.DeviceToken", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.FunctionalMovementScreen", b =>

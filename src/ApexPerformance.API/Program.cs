@@ -8,6 +8,8 @@ using ApexPerformance.API.Services.Implementation;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FastEndpoints.Security;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.SqlServer;
@@ -55,10 +57,17 @@ builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
 
+FirebaseApp.Create(new AppOptions
+{
+    Credential = GoogleCredential.FromFile(configuration["Firebase:CredentialsPath"])
+});
+
+builder.Services.AddSingleton<IFcmService, FcmService>();
 builder.Services.AddSingleton<ProductService>(sp =>
     new ProductService(sp.GetRequiredService<StripeClient>()));
 builder.Services.AddSingleton<PriceService>(sp =>
     new PriceService(sp.GetRequiredService<StripeClient>()));
+
 
 builder.Services.AddHangfire(cfg =>
 {
