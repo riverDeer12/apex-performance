@@ -63,10 +63,14 @@ FirebaseApp.Create(new AppOptions
 });
 
 builder.Services.AddSingleton<IFcmService, FcmService>();
+
 builder.Services.AddSingleton<ProductService>(sp =>
     new ProductService(sp.GetRequiredService<StripeClient>()));
+
 builder.Services.AddSingleton<PriceService>(sp =>
     new PriceService(sp.GetRequiredService<StripeClient>()));
+
+builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 
 builder.Services.AddHangfire(cfg =>
