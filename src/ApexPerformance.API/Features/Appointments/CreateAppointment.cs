@@ -137,6 +137,13 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         var coachUserIds = coaches.Select(x => x.UserId).ToList();
 
+        var clientUserIds = clients.Select(x => x.UserId).ToList();
+
+        var clientDeviceTokens = await _context.DeviceTokens
+            .Where(x => clientUserIds.Contains(x.UserId))
+            .Select(t => t.Token)
+            .ToListAsync(cancellationToken: cancellationToken);
+
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
             .Select(t => t.Token)
@@ -145,10 +152,15 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
             "New Appointment Requested.");
 
+        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
+            "You have appointment update",
+            "Your Appointment has been " + appointment.AppointmentStatus.Name);
+
         _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
 
         _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
     }
+
 
     private async Task<bool> CheckValidity(DateTimeOffset requestStartTime, TimeSlot timeSlot,
         CancellationToken cancellationToken)
