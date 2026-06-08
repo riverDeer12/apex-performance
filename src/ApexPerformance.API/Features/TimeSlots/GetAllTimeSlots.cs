@@ -1,11 +1,10 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Shared.DataTransferObjects.TimeSlots;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.TimeSlots;
-
-public record GetTimeSlotResponse(Guid Id, string Name, string Day, TimeOnly StartTime, TimeOnly EndTime);
 
 public class GetAllTimeSlotsEndpoint : EndpointWithoutRequest<List<GetTimeSlotResponse>>
 {
