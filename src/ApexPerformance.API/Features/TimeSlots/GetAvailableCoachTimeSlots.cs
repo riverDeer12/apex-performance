@@ -1,6 +1,9 @@
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Shared.DataTransferObjects.TimeSlots;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,14 +53,63 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
             return;
         }
 
-        var finalTimeSlots = await _timeSlotService.CheckTimeSlotsAvailability(coachesTimeSlots, request.Day,
-            cancellationToken);
+        var coachTimeSlotsForDay = _timeSlotService.GetCoachTimeSlotsForDay(coachesTimeSlots, request.Day);
+
+        var coachTimeSlotsResponse =
+            await PrepareTimeSlotsResponse(coachTimeSlotsForDay, request.Day, cancellationToken);
+
+        await SendAsync(coachTimeSlotsResponse, cancellation: cancellationToken);
+    }
+
+    private async Task<List<GetTimeSlotResponse>> PrepareTimeSlotsResponse(List<TimeSlot> coachTimeSlotsForDay,
+        DateTime day, CancellationToken cancellationToken)
+    {
+        var coachTimeSlots = new List<GetTimeSlotResponse>();
+
+        var takenTimeSlots = new List<Guid>();
+
+        var takenAppointments = await _context.Appointments
+            .Where(x => coachTimeSlots
+                            .Select(x => x.Id)
+                            .Contains(x.TimeSlotId)
+                        && x.AppointmentStatus.Name == BusinessStatuses.Approved
+                        && x.StartTime.Date == day.Date)
+            .Include(x => x.Clients)
+            .ThenInclude(x => x.Client)
+            .ToListAsync(cancellationToken);
+
+        var hasTakenAppointments = takenAppointments.Count is not 0;
+
+        if (hasTakenAppointments) takenTimeSlots = takenAppointments.Select(x => x.TimeSlotId).ToList();
         
-        await SendAsync(finalTimeSlots.Select(x
-                => new GetTimeSlotResponse(x.Id, $"{x.StartTime} - {x.EndTime}",
-                    Enum.GetName(typeof(DayOfWeek), x.Day)!,
-                    x.StartTime, x.EndTime))
-            .OrderBy(x => x.StartTime)
-            .ToList(), cancellation: cancellationToken);
+        foreach (var coachTimeSlot in coachTimeSlotsForDay)
+        {
+            var timeSlotLabel = $"{coachTimeSlot.StartTime} - {coachTimeSlot.EndTime}";
+
+            timeSlotLabel = hasTakenAppointments ? ModifyTimeSlotLabel(coachTimeSlot, timeSlotLabel) : timeSlotLabel;
+
+            var timeSlotResponse = new GetTimeSlotResponse(coachTimeSlot.Id,
+                timeSlotLabel,
+                Enum.GetName(typeof(DayOfWeek), coachTimeSlot.Day)!,
+                coachTimeSlot.StartTime, coachTimeSlot.EndTime);
+
+            coachTimeSlots.Add(timeSlotResponse);
+        }
+
+        return coachTimeSlots.OrderBy(x => x.StartTime).ToList();
+
+        string ModifyTimeSlotLabel(TimeSlot coachTimeSlot, string timeSlotLabel)
+        {
+            var appointment = takenAppointments.First(x => x.TimeSlotId == coachTimeSlot.Id);
+
+            if (takenTimeSlots.Contains(coachTimeSlot.Id))
+            {
+                var clientNames = appointment.Clients.Select(x => x.Client.FullName).ToList();
+
+                timeSlotLabel += "(" + string.Join(", ", clientNames) + ")";
+            }
+
+            return timeSlotLabel;
+        }
     }
 }
