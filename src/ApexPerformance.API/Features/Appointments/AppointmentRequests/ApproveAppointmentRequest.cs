@@ -98,8 +98,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         };
 
         appointment.Clients.Add(clientAppointment);
-
-
+        
         _context.Appointments.Update(appointment);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
