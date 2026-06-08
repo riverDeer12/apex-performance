@@ -32,6 +32,8 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
 
         var appointmentRequest = await _context.AppointmentRequests
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
+            .Include(appointmentRequest => appointmentRequest.Client)
             .FirstOrDefaultAsync(x => x.Id == appointmentRequestId,
                 cancellationToken: cancellationToken);
 
@@ -59,7 +61,8 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        var appointment = await _context.Appointments.Include(appointment => appointment.Clients)
+        var appointment = await _context.Appointments
+            .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
             .FirstOrDefaultAsync(x => x.Id == appointmentRequest.AppointmentId,
                 cancellationToken: cancellationToken);
@@ -69,10 +72,44 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
 
         var appointmentClients = appointment.Clients.Select(x => x.Client).ToList();
 
-        await ChangeAppointmentStatusToCanceled(appointment, appointmentClients, cancellationToken);
+        switch (appointmentRequest.AppointmentRequestType.Name)
+        {
+            case BusinessActions.JoinRequest:
+                await JoinClientToAppointment(appointment, appointmentRequest.Client, cancellationToken);
+                break;
+            case BusinessActions.CancelationRequest:
+                await ChangeAppointmentStatusToCanceled(appointment, appointmentClients, cancellationToken);
+                break;
+        }
 
         await SendAsync(new ApproveAppointmentResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
+    }
+
+    private async Task JoinClientToAppointment(Appointment appointment, Client client,
+        CancellationToken cancellationToken)
+    {
+        var clientAppointment = new ClientAppointment
+        {
+            ClientId = client.Id,
+            Client = client,
+            AppointmentId = appointment.Id,
+            Appointment = appointment
+        };
+
+        appointment.Clients.Add(clientAppointment);
+
+
+        _context.Appointments.Update(appointment);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorCodes.SavingError);
+        
+        var clients = new List<Client>{client};
+
+        await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
     }
 
     private async Task ChangeAppointmentStatusToCanceled(Appointment appointment, List<Client> clients,

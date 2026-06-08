@@ -1,7 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
-using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects.TimeSlots;
 using FastEndpoints;
@@ -69,7 +69,7 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
         var takenTimeSlots = new List<Guid>();
 
         var takenAppointments = await _context.Appointments
-            .Where(x => coachTimeSlots
+            .Where(x => coachTimeSlotsForDay
                             .Select(x => x.Id)
                             .Contains(x.TimeSlotId)
                         && x.AppointmentStatus.Name == BusinessStatuses.Approved
@@ -78,38 +78,38 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
             .ThenInclude(x => x.Client)
             .ToListAsync(cancellationToken);
 
-        var hasTakenAppointments = takenAppointments.Count is not 0;
-
-        if (hasTakenAppointments) takenTimeSlots = takenAppointments.Select(x => x.TimeSlotId).ToList();
+        if (takenAppointments.Count is not 0) 
+            takenTimeSlots = takenAppointments.Select(x => x.TimeSlotId).ToList();
         
         foreach (var coachTimeSlot in coachTimeSlotsForDay)
         {
             var timeSlotLabel = $"{coachTimeSlot.StartTime} - {coachTimeSlot.EndTime}";
 
-            timeSlotLabel = hasTakenAppointments ? ModifyTimeSlotLabel(coachTimeSlot, timeSlotLabel) : timeSlotLabel;
+            var (label, isTaken) = ModifyTimeSlotLabel(coachTimeSlot, timeSlotLabel, takenTimeSlots, takenAppointments);
 
             var timeSlotResponse = new GetTimeSlotResponse(coachTimeSlot.Id,
-                timeSlotLabel,
+                label,
                 Enum.GetName(typeof(DayOfWeek), coachTimeSlot.Day)!,
-                coachTimeSlot.StartTime, coachTimeSlot.EndTime);
+                coachTimeSlot.StartTime, coachTimeSlot.EndTime,  isTaken);
 
             coachTimeSlots.Add(timeSlotResponse);
         }
 
         return coachTimeSlots.OrderBy(x => x.StartTime).ToList();
+    }
+    
+    private (string Label, bool IsTaken) ModifyTimeSlotLabel(TimeSlot coachTimeSlot, string timeSlotLabel,
+        List<Guid> takenTimeSlots, List<Appointment> takenAppointments)
+    {
+        var appointment = takenAppointments.FirstOrDefault(x => x.TimeSlotId == coachTimeSlot.Id);
 
-        string ModifyTimeSlotLabel(TimeSlot coachTimeSlot, string timeSlotLabel)
-        {
-            var appointment = takenAppointments.First(x => x.TimeSlotId == coachTimeSlot.Id);
+        if (appointment is null || !takenTimeSlots.Contains(coachTimeSlot.Id))
+            return (timeSlotLabel, false);
 
-            if (takenTimeSlots.Contains(coachTimeSlot.Id))
-            {
-                var clientNames = appointment.Clients.Select(x => x.Client.FullName).ToList();
+        var clientNames = appointment.Clients.Select(x => x.Client.FullName).ToList();
+        
+        timeSlotLabel += " (" + string.Join(", ", clientNames) + ")";
 
-                timeSlotLabel += "(" + string.Join(", ", clientNames) + ")";
-            }
-
-            return timeSlotLabel;
-        }
+        return (timeSlotLabel, true);
     }
 }
