@@ -77,8 +77,30 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
                     cancellationToken: cancellationToken);
 
         if (!await CheckValidity(request.StartTime, timeSlot, cancellationToken))
-            ThrowError("Appointment is not valid.");
+        {
+            var existingAppointment = await UpdateExistingAppointment(request, cancellationToken, timeSlot, clients);
 
+            await SendAsync(
+                new StatusResponse(existingAppointment.Id, true),
+                cancellation: cancellationToken);
+            return;
+        }
+
+        var appointment =
+            await CreateNewAppointment(request, cancellationToken, appointmentType, timeSlot, clients, coaches);
+
+        BackgroundJob.Enqueue(() =>
+            SendNotificationEmails(request.Coaches, request.Clients, appointment.Id, timeSlot.Id, cancellationToken));
+
+        await SendAsync(
+            new StatusResponse(appointment.Id, true),
+            cancellation: cancellationToken);
+    }
+
+    private async Task<Appointment> CreateNewAppointment(CreateAppointmentRequest request,
+        CancellationToken cancellationToken,
+        AppointmentType appointmentType, TimeSlot timeSlot, List<Client> clients, List<Coach> coaches)
+    {
         var appointment = new Appointment
         {
             AppointmentType = appointmentType,
@@ -101,13 +123,47 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         if (appointment.AppointmentStatus.Name == BusinessStatuses.Approved)
             await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+        return appointment;
+    }
 
-        BackgroundJob.Enqueue(() =>
-            SendNotificationEmails(request.Coaches, request.Clients, appointment.Id, timeSlot.Id, cancellationToken));
+    private async Task<Appointment> UpdateExistingAppointment(CreateAppointmentRequest request,
+        CancellationToken cancellationToken,
+        TimeSlot timeSlot, List<Client> requestClients)
+    {
+        var existingAppointment = await _context.Appointments
+            .Include(x => x.Clients)
+            .FirstOrDefaultAsync(x =>
+                    x.TimeSlotId == timeSlot.Id &&
+                    x.StartTime.Date == request.StartTime.Date,
+                cancellationToken: cancellationToken);
 
-        await SendAsync(
-            new StatusResponse(appointment.Id, true),
-            cancellation: cancellationToken);
+        if (existingAppointment is null)
+            ThrowError(ErrorCodes.NotFound);
+
+        foreach (var client in requestClients)
+        {
+            var clientAppointment = new ClientAppointment
+            {
+                ClientId = client.Id,
+                Client = client,
+                AppointmentId = existingAppointment.Id,
+                Appointment = existingAppointment
+            };
+
+            existingAppointment.Clients.Add(clientAppointment);
+        }
+
+        _context.Appointments.Update(existingAppointment);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorCodes.SavingError);
+
+        var removeCreditClients = new List<Client>(requestClients);
+
+        await _clientService.RemoveClientsCredits(removeCreditClients, 1, cancellationToken);
+        return existingAppointment;
     }
 
     public async Task SendNotificationEmails(List<Guid> coachesIds, List<Guid> clientsIds, Guid appointmentId,
@@ -133,7 +189,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
                     cancellationToken: cancellationToken);
 
         _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
-        
+
         _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
     }
 
