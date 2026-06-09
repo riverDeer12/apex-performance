@@ -78,38 +78,40 @@ public class GetAvailableCoachTimeSlotsEndpoint : Endpoint<GetAvailableCoachTime
             .ThenInclude(x => x.Client)
             .ToListAsync(cancellationToken);
 
-        if (takenAppointments.Count is not 0) 
+        if (takenAppointments.Count is not 0)
             takenTimeSlots = takenAppointments.Select(x => x.TimeSlotId).ToList();
-        
+
         foreach (var coachTimeSlot in coachTimeSlotsForDay)
         {
             var timeSlotLabel = $"{coachTimeSlot.StartTime} - {coachTimeSlot.EndTime}";
 
-            var (label, isTaken) = ModifyTimeSlotLabel(coachTimeSlot, timeSlotLabel, takenTimeSlots, takenAppointments);
+            var (label, isTaken, appointmentId) =
+                ModifyTimeSlotLabel(coachTimeSlot, timeSlotLabel, takenTimeSlots, takenAppointments);
 
             var timeSlotResponse = new GetTimeSlotResponse(coachTimeSlot.Id,
                 label,
                 Enum.GetName(typeof(DayOfWeek), coachTimeSlot.Day)!,
-                coachTimeSlot.StartTime, coachTimeSlot.EndTime,  isTaken);
+                coachTimeSlot.StartTime, coachTimeSlot.EndTime, isTaken, appointmentId);
 
             coachTimeSlots.Add(timeSlotResponse);
         }
 
         return coachTimeSlots.OrderBy(x => x.StartTime).ToList();
     }
-    
-    private (string Label, bool IsTaken) ModifyTimeSlotLabel(TimeSlot coachTimeSlot, string timeSlotLabel,
+
+    private (string Label, bool IsTaken, Guid? AppointmentId) ModifyTimeSlotLabel(TimeSlot coachTimeSlot,
+        string timeSlotLabel,
         List<Guid> takenTimeSlots, List<Appointment> takenAppointments)
     {
         var appointment = takenAppointments.FirstOrDefault(x => x.TimeSlotId == coachTimeSlot.Id);
 
         if (appointment is null || !takenTimeSlots.Contains(coachTimeSlot.Id))
-            return (timeSlotLabel, false);
+            return (timeSlotLabel, false, null);
 
         var clientNames = appointment.Clients.Select(x => x.Client.FullName).ToList();
-        
+
         timeSlotLabel += " (" + string.Join(", ", clientNames) + ")";
 
-        return (timeSlotLabel, true);
+        return (timeSlotLabel, true, appointment.Id);
     }
 }
