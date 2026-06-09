@@ -155,8 +155,10 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
             existingAppointment.Clients.Add(clientAppointment);
         }
+        
         BackgroundJob.Enqueue(() =>
-            SendNotifications(request.Coaches, request.Clients, appointment.Id, timeSlot.Id, cancellationToken));
+            SendNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id, 
+                cancellationToken));
 
         _context.Appointments.Update(existingAppointment);
 
