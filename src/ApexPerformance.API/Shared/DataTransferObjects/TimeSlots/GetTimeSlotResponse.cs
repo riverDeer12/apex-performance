@@ -6,4 +6,5 @@ public record GetTimeSlotResponse(
     string Day,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    bool IsTaken = false);
+    bool IsTaken = false,
+    Guid? AppointmentId = null);
