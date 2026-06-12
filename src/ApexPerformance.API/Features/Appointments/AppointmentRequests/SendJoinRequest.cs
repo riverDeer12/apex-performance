@@ -4,6 +4,7 @@ using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using FastEndpoints;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Appointments.AppointmentRequests;
@@ -35,7 +36,7 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
         var appointment =
             await _context.Appointments
                 .Include(x => x.Coaches)
-                    .ThenInclude(x => x.Coach)
+                .ThenInclude(x => x.Coach)
                 .FirstOrDefaultAsync(x => x.Id == appointmentId, cancellationToken: cancellationToken);
 
         if (appointment is null)
@@ -81,9 +82,25 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        _emailService.SendJoinRequest(client, appointment);
+        BackgroundJob.Enqueue(() =>
+            SendJoinRequestNotification(_currentUserService.UserId, appointmentId));
 
         await SendAsync(new StatusResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
+    }
+
+    public async Task SendJoinRequestNotification(Guid clientUserId, Guid appointmentId)
+    {
+        var client = await _context.Clients.SingleAsync(x => x.UserId == clientUserId);
+
+        var appointment = await _context
+            .Appointments
+            .Include(x => x.Coaches)
+            .ThenInclude(x => x.Coach)
+            .Include(x => x.Clients)
+            .ThenInclude(x => x.Client)
+            .SingleAsync(x => x.Id == appointmentId);
+
+        _emailService.SendJoinRequest(client, appointment);
     }
 }
