@@ -157,10 +157,10 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         }
         
         BackgroundJob.Enqueue(() =>
-            SendEmailNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
+            SendFcmNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
         
         BackgroundJob.Enqueue(() =>
-            SendFcmNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
+            SendEmailNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
 
         _context.Appointments.Update(existingAppointment);
 
@@ -216,10 +216,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         var coaches = await _context.Coaches
             .Where(x => coachesIds.Contains(x.Id))
             .ToListAsync();
-
-        var timeSlot =
-            await _context.TimeSlots
-                .SingleAsync(x => x.Id == timeSlotId);
 
         var coachUserIds = coaches.Select(x => x.UserId).ToList();
 

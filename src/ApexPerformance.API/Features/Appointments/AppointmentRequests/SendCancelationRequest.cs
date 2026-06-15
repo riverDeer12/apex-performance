@@ -17,13 +17,15 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public SendCancelationRequestEndpoint(ICurrentUserService currentUserService, ApexPerformanceContext context,
-        IEmailService emailService)
+        IEmailService emailService, INotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _context = context;
         _emailService = emailService;
+        _notificationService = notificationService;
     }
 
     public override void Configure()
@@ -92,10 +94,35 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
+        BackgroundJob.Enqueue(() => SendCancelationFcmNotifications(client.Id, appointment.Id));
+        
         BackgroundJob.Enqueue(() => SendCancelationEmail(client.Id, appointment.Id));
 
         await SendAsync(new StatusResponse(appointmentRequest.Id, true),
             cancellation: cancellationToken);
+    }
+    
+    public async Task SendCancelationFcmNotifications(Guid clientId, Guid appointmentId)
+    {
+        var client = await _context.Clients.SingleAsync(x => x.Id == clientId);
+
+        var appointment = await _context
+            .Appointments
+            .Include(x => x.Coaches)
+            .ThenInclude(x => x.Coach)
+            .Include(x => x.Clients)
+            .ThenInclude(x => x.Client)
+            .SingleAsync(x => x.Id == appointmentId);
+        
+        var coachUserIds = appointment.Coaches.Select(x => x.Coach.UserId).ToList();
+
+        var coachDeviceTokens = await _context.DeviceTokens
+            .Where(x => coachUserIds.Contains(x.UserId))
+            .Select(t => t.Token)
+            .ToListAsync();
+
+        _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
+            "You have new cancelation request from " + client.FullName);
     }
 
     public async Task SendCancelationEmail(Guid clientId, Guid appointmentId)
