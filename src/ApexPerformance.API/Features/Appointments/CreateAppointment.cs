@@ -103,7 +103,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
             await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
 
         BackgroundJob.Enqueue(() =>
-            SendNotificationEmails(request.Coaches, request.Clients, appointment.Id, timeSlot.Id, cancellationToken));
+            SendNotificationEmails(request.Coaches, request.Clients, appointment.Id, timeSlot.Id));
 
         await SendAsync(
             new StatusResponse(appointment.Id, true),
@@ -111,26 +111,24 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
     }
 
     public async Task SendNotificationEmails(List<Guid> coachesIds, List<Guid> clientsIds, Guid appointmentId,
-        Guid timeSlotId, CancellationToken cancellationToken)
+        Guid timeSlotId)
     {
         var appointment =
             await _context.Appointments
                 .Include(appointment => appointment.AppointmentStatus)
-                .SingleAsync(x => x.Id == appointmentId,
-                    cancellationToken: cancellationToken);
+                .SingleAsync(x => x.Id == appointmentId);
 
         var clients = await _context.Clients
             .Where(x => clientsIds.Contains(x.Id))
-            .ToListAsync(cancellationToken: cancellationToken);
+            .ToListAsync();
 
         var coaches = await _context.Coaches
             .Where(x => coachesIds.Contains(x.Id))
-            .ToListAsync(cancellationToken: cancellationToken);
+            .ToListAsync();
 
         var timeSlot =
             await _context.TimeSlots
-                .SingleAsync(x => x.Id == timeSlotId,
-                    cancellationToken: cancellationToken);
+                .SingleAsync(x => x.Id == timeSlotId);
 
         _emailService.SendAppointmentRequestEmail(coaches, clients, appointment, timeSlot);
         
