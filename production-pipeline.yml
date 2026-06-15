@@ -40,15 +40,6 @@ steps:
   - script: dotnet publish $(projectFile) -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-restore
     displayName: 'Publish'
 
-  - task: ArchiveFiles@2
-    displayName: 'Zip published output'
-    inputs:
-      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/drop_api_production.zip'
-      replaceExistingArchive: true
-
   - task: PublishBuildArtifacts@1
     displayName: 'Publish artifact'
     inputs:
