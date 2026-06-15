@@ -88,8 +88,6 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             nextWeekAppointments.Add(newAppointment);
 
             removeCreditClients.AddRange(recurring.Clients.Select(x => x.Client).ToList());
-
-            nextWeekAppointments.Add(newAppointment);
         }
 
         if (nextWeekAppointments.Count is 0)

@@ -113,8 +113,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
                                throw new InvalidOperationException("BoxNow Delivery Details Were Not Provided.");
 
         BackgroundJob.Enqueue(() =>
-            SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken,
-                cancellationToken));
+            SendPdfLabel(deliveryResponse.Parcels[0].Id, authorizationSession.AccessToken));
         
         await SendAsync(checkoutData, cancellation: cancellationToken);
     }
@@ -122,7 +121,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
     public void SendFiscalizationReminder(Session checkoutSession) => 
         _emailService.SendFiscalizationReminderEmail(_configuration["BoxNow:ReVivPlus:ContactEmail"]!, checkoutSession);
 
-    public async Task SendPdfLabel(string parcelNumber, string accessToken, CancellationToken cancellationToken)
+    public async Task SendPdfLabel(string parcelNumber, string accessToken)
     {
         using var client = new HttpClient();
 
@@ -131,15 +130,15 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
 
         var url = _configuration["BoxNow:ReVivPlus:ApiUrl"] + "/api/v1/parcels/" + parcelNumber + "/label.pdf";
 
-        var response = await client.GetAsync(url, cancellationToken);
+        var response = await client.GetAsync(url);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            var errorContent = await response.Content.ReadAsStringAsync();
             ThrowError(errorContent);
         }
 
-        var pdfLabelStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var pdfLabelStream = await response.Content.ReadAsStreamAsync();
 
         if (pdfLabelStream.CanSeek)
             pdfLabelStream.Position = 0;
