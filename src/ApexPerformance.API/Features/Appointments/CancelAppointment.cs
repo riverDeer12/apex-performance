@@ -15,13 +15,15 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
     private readonly ApexPerformanceContext _context;
     private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public CancelAppointmentEndpoint(ApexPerformanceContext context, IClientService clientService,
-        IEmailService emailService)
+        IEmailService emailService, INotificationService notificationService)
     {
         _context = context;
         _clientService = clientService;
         _emailService = emailService;
+        _notificationService = notificationService;
     }
 
     public override void Configure()
@@ -65,6 +67,9 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
         await _clientService.AddClientsCredits(appointmentClients, 1, cancellationToken);
 
         var appointmentClientsIds = appointmentClients.Select(x => x.Id).ToList();
+        
+        BackgroundJob.Enqueue(() =>
+            SendAppointmentStatusFcmNotification(appointmentClientsIds, appointment.Id));
 
         BackgroundJob.Enqueue(() =>
             SendAppointmentStatusEmail(appointmentClientsIds, appointment.Id));
@@ -72,6 +77,27 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
         await SendAsync(
             new StatusResponse(appointment.Id, true),
             cancellation: cancellationToken);
+    }
+    
+    public async Task SendAppointmentStatusFcmNotification(List<Guid> appointmentClientsIds, Guid appointmentId)
+    {
+        var appointmentClients = _context.Clients.Where(x => appointmentClientsIds.Contains(x.Id)).ToList();
+
+        var appointment = await _context.Appointments
+            .Include(appointment => appointment.TimeSlot)
+            .Include(appointment => appointment.AppointmentStatus)
+            .SingleAsync(x => x.Id == appointmentId);
+
+        var clientUserIds = appointmentClients.Select(x => x.UserId).ToList();
+
+        var clientDeviceTokens = await _context.DeviceTokens
+            .Where(x => clientUserIds.Contains(x.UserId))
+            .Select(t => t.Token)
+            .ToListAsync();
+        
+        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
+            "You have appointment update",
+            "Your Appointment has been " + appointment.AppointmentStatus.Name);
     }
 
     public async Task SendAppointmentStatusEmail(List<Guid> appointmentClientsIds, Guid appointmentId)
