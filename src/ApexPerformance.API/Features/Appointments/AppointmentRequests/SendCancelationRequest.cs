@@ -102,6 +102,7 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
             cancellation: cancellationToken);
     }
     
+    [AutomaticRetry(Attempts = 0)]
     public async Task SendCancelationFcmNotifications(Guid clientId, Guid appointmentId)
     {
         var client = await _context.Clients.SingleAsync(x => x.Id == clientId);

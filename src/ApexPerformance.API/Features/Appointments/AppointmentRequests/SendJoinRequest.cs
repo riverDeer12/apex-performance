@@ -94,6 +94,7 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
             cancellation: cancellationToken);
     }
     
+    [AutomaticRetry(Attempts = 0)]
     public async Task SendJoinRequestFcmNotification(Guid clientUserId, Guid appointmentId)
     {
         var client = await _context.Clients.SingleAsync(x => x.UserId == clientUserId);
