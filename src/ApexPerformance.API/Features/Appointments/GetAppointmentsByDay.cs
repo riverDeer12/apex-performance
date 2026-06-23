@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Features.TimeSlots;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Shared.DataTransferObjects.TimeSlots;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 

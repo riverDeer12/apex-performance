@@ -88,8 +88,6 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             nextWeekAppointments.Add(newAppointment);
 
             removeCreditClients.AddRange(recurring.Clients.Select(x => x.Client).ToList());
-
-            nextWeekAppointments.Add(newAppointment);
         }
 
         if (nextWeekAppointments.Count is 0)
@@ -110,11 +108,40 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         var emailClients = recurringClients.DistinctBy(x => x.Id).ToList();
 
         var nextWeekAppointmentsIds = nextWeekAppointments.Select(x => x.Id).ToList();
+        
+        BackgroundJob.Enqueue(() =>
+            SendNextWeekFcmNotifications(emailClients.Select(x => x.Id).ToList(), nextWeekAppointmentsIds));
 
         BackgroundJob.Enqueue(() =>
             SendNextWeekNotificationEmails(emailClients.Select(x => x.Id).ToList(), nextWeekAppointmentsIds));
 
         await SendAsync(StatusCodes.Status201Created, cancellation: cancellationToken);
+    }
+    
+    public void SendNextWeekFcmNotifications(List<Guid> emailClientIds,
+        List<Guid> nextWeekAppointmentsIds)
+    {
+        var nextWeekAppointments = _context.Appointments
+            .Where(appointment => nextWeekAppointmentsIds.Contains(appointment.Id))
+            .Include(appointment => appointment.TimeSlot)
+            .Include(appointment => appointment.Coaches)
+            .ThenInclude(appointment => appointment.Coach)
+            .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.Clients)
+            .ToList();
+
+        var emailClients = _context.Clients.Where(x => emailClientIds.Contains(x.Id)).ToList();
+
+        foreach (var emailClient in emailClients)
+        {
+            var emailClientAppointments = nextWeekAppointments
+                .Where(appointment => appointment.Clients.Any(c => c.ClientId == emailClient.Id))
+                .ToList();
+
+            var emailBody = PrepareEmailBody(emailClientAppointments);
+
+            if (!string.IsNullOrEmpty(emailBody))
+                _emailService.SendWeekAppointmentsSchedule(emailClient, emailBody);
+        }
     }
 
     public void SendNextWeekNotificationEmails(List<Guid> emailClientIds,

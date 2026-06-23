@@ -11,7 +11,7 @@ public record CreatePaymentRequest(
     PersonDataDto Customer,
     List<CheckoutItemDto> Items);
 
-public record CreatePaymentResponse(string Url);
+public record CreatePaymentResponse(string SessionId);
 
 public class CreatePaymentEndpoint : Endpoint<CreatePaymentRequest, CreatePaymentResponse>
 {
