@@ -79,6 +79,7 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
             cancellation: cancellationToken);
     }
     
+    [AutomaticRetry(Attempts = 0)]
     public async Task SendAppointmentStatusFcmNotification(List<Guid> appointmentClientsIds, Guid appointmentId)
     {
         var appointmentClients = _context.Clients.Where(x => appointmentClientsIds.Contains(x.Id)).ToList();

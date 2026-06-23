@@ -201,6 +201,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         _emailService.SendAppointmentStatus(clients, appointment, timeSlot);
     }
 
+    [AutomaticRetry(Attempts = 0)]
     public async Task SendFcmNotifications(List<Guid> coachesIds, List<Guid> clientsIds, Guid appointmentId,
         Guid timeSlotId)
     {
