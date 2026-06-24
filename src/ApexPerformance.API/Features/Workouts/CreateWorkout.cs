@@ -14,7 +14,7 @@ public record CreateWorkoutRequest(
     string ThumbnailUrl,
     string VideoUrl,
     List<Guid> WorkoutTypes
-    );
+);
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
 {
@@ -46,12 +46,12 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
         };
 
         _context.Workouts.Add(workout);
-        
+
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
-        
+
         await SendAsync(new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
