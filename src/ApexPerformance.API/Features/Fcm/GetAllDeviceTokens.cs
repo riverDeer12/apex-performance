@@ -7,7 +7,7 @@ namespace ApexPerformance.API.Features.Fcm;
 
 public record DeviceTokenResponse(
     Guid Id,
-    Guid UserId,
+    string Username,
     string Token,
     string Platform,
     DateTimeOffset CreatedAt,
@@ -32,12 +32,13 @@ public class GetAllDeviceTokensEndpoint : EndpointWithoutRequest<List<DeviceToke
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
         var tokens = await _db.DeviceTokens
+            .Include(t => t.User)
             .Where(t => !t.IsDeleted)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
 
         await SendAsync(tokens.Select(t =>
-                new DeviceTokenResponse(t.Id, t.UserId, t.Token, t.Platform, t.CreatedAt, t.UpdatedAt))
+                new DeviceTokenResponse(t.Id, t.User!.UserName, t.Token, t.Platform, t.CreatedAt, t.UpdatedAt))
             .ToList(), cancellation: cancellationToken);
     }
 }

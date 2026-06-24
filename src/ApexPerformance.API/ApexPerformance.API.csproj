@@ -68,10 +68,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Workouts\WorkoutTypes\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <_ContentIncludedByDefault Remove="ApexPerformance.Tests\obj\ApexPerformance.Tests.csproj.nuget.dgspec.json" />
     <_ContentIncludedByDefault Remove="ApexPerformance.Tests\obj\project.assets.json" />
     <_ContentIncludedByDefault Remove="ApexPerformance.Tests\obj\project.packagespec.json" />
