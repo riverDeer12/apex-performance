@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Workouts.WorkoutTypes;
 
 public record UpdateWorkoutTypeRequest(
-    string Name
+    string Name,
+    string Description
 );
 
 public record UpdateWorkoutTypeResponse(
@@ -42,7 +43,7 @@ public class UpdateWorkoutTypeEndpoint : Endpoint<UpdateWorkoutTypeRequest, Upda
             ThrowError(ErrorCodes.NotFound);
 
         workoutType.Name = request.Name;
-        workoutType.Description = request.Name.ToLower();
+        workoutType.Description = request.Description.ToLower();
 
         _context.WorkoutTypes.Update(workoutType);
 

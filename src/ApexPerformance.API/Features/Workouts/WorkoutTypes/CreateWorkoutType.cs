@@ -7,7 +7,8 @@ using FluentValidation;
 namespace ApexPerformance.API.Features.Workouts.WorkoutTypes;
 
 public record CreateWorkoutTypeRequest(
-    string Name
+    string Name,
+    string Description
 );
 
 public record CreateWorkoutTypeResponse(
@@ -35,7 +36,7 @@ public class CreateWorkoutTypeEndpoint : Endpoint<CreateWorkoutTypeRequest, Crea
         var workoutType = new WorkoutType
         {
             Name = request.Name,
-            Description = request.Name.ToLower(),
+            Description = request.Description.ToLower(),
         };
 
         _context.WorkoutTypes.Add(workoutType);
