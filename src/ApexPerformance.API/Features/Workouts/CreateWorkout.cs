@@ -2,6 +2,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -14,15 +15,17 @@ public record CreateWorkoutRequest(
     string ThumbnailUrl,
     string VideoUrl,
     List<Guid> WorkoutTypes
-    );
+);
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IConfiguration _configuration;
 
-    public CreateWorkoutEndpoint(ApexPerformanceContext context)
+    public CreateWorkoutEndpoint(ApexPerformanceContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     public override void Configure()
@@ -35,23 +38,27 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
     {
         var workout = new Workout
         {
-            Name = request.Name.ToJsonString(),
-            Description = request.Description.ToJsonString(),
-            ThumbnailUrl = request.ThumbnailUrl,
+            Name =  await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, request.Name.Get(Language.HR)),
+            Description = await LocalizedProperty.PopulateMissingLanguages(
+                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+                Language.HR, request.Description.Get(Language.HR)),
             VideoUrl = request.VideoUrl,
+            ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl),
             WorkoutTypes = request.WorkoutTypes.Select(x => new WorkoutWorkoutType
             {
                 WorkoutTypeId = x
-            }).ToList()
+            }).ToList(),
         };
 
         _context.Workouts.Add(workout);
-        
+
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
-        
+
         await SendAsync(new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>

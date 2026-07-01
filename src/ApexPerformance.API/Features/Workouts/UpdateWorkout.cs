@@ -2,6 +2,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -20,10 +21,12 @@ public record UpdateWorkoutRequest(
 public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly IConfiguration _configuration;
 
-    public UpdateWorkoutEndpoint(ApexPerformanceContext context)
+    public UpdateWorkoutEndpoint(ApexPerformanceContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     public override void Configure()
@@ -45,9 +48,13 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         if (workout is null)
             ThrowError(ErrorCodes.NotFound);
 
-        workout.Name = request.Name.ToJsonString();
-        workout.Description = request.Description.ToJsonString();
-        workout.ThumbnailUrl = request.ThumbnailUrl;
+        workout.Name = await LocalizedProperty.PopulateMissingLanguages(
+            _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+            Language.HR, request.Name.Get(Language.HR));
+        workout.Description = await LocalizedProperty.PopulateMissingLanguages(
+            _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+            Language.HR, request.Description.Get(Language.HR));
+        workout.ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl);
         workout.VideoUrl = request.VideoUrl;
         
         workout.WorkoutTypes.Clear();
