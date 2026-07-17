@@ -206,7 +206,7 @@ public class CreateReVivPlusOrderEndpoint : EndpointWithoutRequest<GetCheckoutSe
             $"{(session.ShippingCost?.AmountSubtotal ?? 0) / 100m:0.00} €",
             session.ShippingCost?.ShippingRate?.DisplayName!,
             session.CustomerDetails?.Email!,
-            session.CustomerDetails?.Name!,
+            string.IsNullOrWhiteSpace(session.CustomerDetails?.Name) ? "Nepoznato" : session.CustomerDetails.Name,
             session.CustomerDetails?.Phone!,
             session.PaymentIntent.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
             session.PaymentIntent?.Metadata?.ToDictionary(kv => kv.Key, kv => kv.Value),
