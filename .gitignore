@@ -4,3 +4,9 @@
 /Logs/
 /ApexPerformance.Tests/obj
 /ApexPerformance.Tests/bin
+
+# Secrets - never commit these
+src/ApexPerformance.API/appsettings.json
+src/ApexPerformance.API/appsettings.Development.json
+src/ApexPerformance.API/appsettings.Test.json
+src/ApexPerformance.API/*firebase-adminsdk*.json
