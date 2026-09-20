@@ -41,7 +41,7 @@ jobs:
         run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -o ${{ env.PUBLISH_DIR }} --no-restore
 
       - name: Install dotnet-ef (if missing)
-        shell: pwsh
+        shell: powershell
         run: |
           $installed = dotnet tool list -g | Select-String "dotnet-ef"
           if (-not $installed) {
@@ -49,7 +49,7 @@ jobs:
           }
 
       - name: Apply EF Core migrations
-        shell: pwsh
+        shell: powershell
         env:
           MIGRATION_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
@@ -60,7 +60,7 @@ jobs:
             --connection "$env:MIGRATION_CONNECTION_STRING"
 
       - name: Stop app pool
-        shell: pwsh
+        shell: powershell
         run: |
           Import-Module WebAdministration
           Stop-WebAppPool -Name "${{ env.APP_POOL_NAME }}"
@@ -75,7 +75,7 @@ jobs:
           & if %ERRORLEVEL% GEQ 8 (exit /b 1) else (exit /b 0)
 
       - name: Start app pool
-        shell: pwsh
+        shell: powershell
         run: |
           Import-Module WebAdministration
           Start-WebAppPool -Name "${{ env.APP_POOL_NAME }}"
@@ -85,7 +85,7 @@ jobs:
           if ($state -ne "Started") { throw "App pool did not start" }
 
       - name: Health check
-        shell: pwsh
+        shell: powershell
         run: |
           Start-Sleep -Seconds 5
           $response = Invoke-WebRequest -Uri "https://${{ env.SITE_NAME }}/swagger/v1/swagger.json" -UseBasicParsing -TimeoutSec 30
