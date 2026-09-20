@@ -26,8 +26,8 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-                _configuration["MailConfiguration::FromAddress"]));
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+                _configuration["MailConfiguration:FromAddress"]));
 
             message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
@@ -68,8 +68,8 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-                _configuration["MailConfiguration::FromAddress"]));
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+                _configuration["MailConfiguration:FromAddress"]));
 
             message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
 
@@ -100,8 +100,8 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
@@ -124,8 +124,8 @@ public class EmailService : IEmailService
 
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
@@ -148,8 +148,8 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
@@ -179,8 +179,8 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-                _configuration["MailConfiguration::FromAddress"]));
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+                _configuration["MailConfiguration:FromAddress"]));
 
             message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
 
@@ -221,8 +221,8 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-                _configuration["MailConfiguration::FromAddress"]));
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+                _configuration["MailConfiguration:FromAddress"]));
 
             message.To.Add(new MailboxAddress(coach.FullName, coach.Email));
 
@@ -259,8 +259,8 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
@@ -284,8 +284,8 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
@@ -307,8 +307,8 @@ public class EmailService : IEmailService
     {
         var message = new MimeMessage();
 
-        message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-            _configuration["MailConfiguration::FromAddress"]));
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
@@ -333,8 +333,8 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
 
-            message.From.Add(new MailboxAddress(_configuration["MailConfiguration::FromName"],
-                _configuration["MailConfiguration::FromAddress"]));
+            message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+                _configuration["MailConfiguration:FromAddress"]));
 
             message.To.Add(new MailboxAddress(client.FullName, client.Email));
 
@@ -362,7 +362,7 @@ public class EmailService : IEmailService
         var message = new MimeMessage();
 
         message.From.Add(new MailboxAddress("ReViv Plus",
-            _configuration["MailConfiguration::FromAddress"]));
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(contactEmail, contactEmail));
 
@@ -389,7 +389,7 @@ public class EmailService : IEmailService
         var message = new MimeMessage();
 
         message.From.Add(new MailboxAddress("ReViv Plus",
-            _configuration["MailConfiguration::FromAddress"]));
+            _configuration["MailConfiguration:FromAddress"]));
 
         message.To.Add(new MailboxAddress(contactEmail, contactEmail));
 
@@ -439,11 +439,11 @@ public class EmailService : IEmailService
 
         try
         {
-            smtpClient.Connect(_configuration["MailConfiguration::Host"],
-                int.Parse(_configuration["MailConfiguration::Port"]!),
+            smtpClient.Connect(_configuration["MailConfiguration:Host"],
+                int.Parse(_configuration["MailConfiguration:Port"]!),
                 MailKit.Security.SecureSocketOptions.StartTls);
-            smtpClient.Authenticate(_configuration["MailConfiguration::Username"],
-                _configuration["MailConfiguration::Password"]);
+            smtpClient.Authenticate(_configuration["MailConfiguration:Username"],
+                _configuration["MailConfiguration:Password"]);
             smtpClient.Send(message);
             smtpClient.Disconnect(true);
             Console.WriteLine("Email sent successfully!");
