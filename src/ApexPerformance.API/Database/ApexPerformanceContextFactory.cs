@@ -18,8 +18,12 @@ public class ApexPerformanceContextFactory : IDesignTimeDbContextFactory<ApexPer
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
         var baseDir = AppContext.BaseDirectory;
 
+        // Falls back to a placeholder when no local appsettings file is present (e.g. in CI,
+        // where appsettings*.json are gitignored) - `dotnet ef ... --connection` overrides this
+        // after the context is constructed, so the placeholder itself is never used to connect.
         var connectionString = ReadConnectionString(Path.Combine(baseDir, $"appsettings.{environment}.json"))
-            ?? ReadConnectionString(Path.Combine(baseDir, "appsettings.json"));
+            ?? ReadConnectionString(Path.Combine(baseDir, "appsettings.json"))
+            ?? "Server=.;Database=Undefined;Trusted_Connection=True;TrustServerCertificate=True;";
 
         var optionsBuilder = new DbContextOptionsBuilder<ApexPerformanceContext>();
         optionsBuilder.UseSqlServer(connectionString);
