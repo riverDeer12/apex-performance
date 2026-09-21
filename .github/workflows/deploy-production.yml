@@ -68,12 +68,12 @@ jobs:
           Stop-WebAppPool -Name "${{ env.APP_POOL_NAME }}"
           Start-Sleep -Seconds 5
 
-      - name: Sync published files (preserve appsettings, Logs, firebase key)
+      - name: Sync published files (preserve appsettings, web.config, wwwroot, Logs, firebase key)
         shell: cmd
         run: >
           robocopy "${{ env.PUBLISH_DIR }}" "${{ env.DEPLOY_PATH }}" /MIR /R:3 /W:5
-          /XF appsettings.json appsettings.Development.json appsettings.Test.json *firebase-adminsdk*.json
-          /XD Logs
+          /XF appsettings.json appsettings.Development.json appsettings.Test.json *firebase-adminsdk*.json web.config
+          /XD Logs wwwroot ApexPerformanceCollection
           & if %ERRORLEVEL% GEQ 8 (exit /b 1) else (exit /b 0)
 
       - name: Start app pool
