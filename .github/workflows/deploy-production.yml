@@ -90,6 +90,7 @@ jobs:
         shell: powershell
         run: |
           Start-Sleep -Seconds 5
-          $response = Invoke-WebRequest -Uri "https://${{ env.SITE_NAME }}/swagger/v1/swagger.json" -UseBasicParsing -TimeoutSec 30
+          # Swagger is intentionally disabled in Production, so check the SPA fallback route instead
+          $response = Invoke-WebRequest -Uri "https://${{ env.SITE_NAME }}/" -UseBasicParsing -TimeoutSec 30
           if ($response.StatusCode -ne 200) { throw "Health check failed with status $($response.StatusCode)" }
           Write-Host "Health check passed: $($response.StatusCode)"
