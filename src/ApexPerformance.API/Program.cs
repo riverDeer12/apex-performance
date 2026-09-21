@@ -116,9 +116,19 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
     app.UseSwaggerUI();
 }
 
-app.UseStaticFiles();
+var staticFileOptions = new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.CacheControl = ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase)
+            ? "no-cache, no-store, must-revalidate"
+            : "public, max-age=31536000, immutable";
+    }
+};
 
-app.MapFallbackToFile("index.html");
+app.UseStaticFiles(staticFileOptions);
+
+app.MapFallbackToFile("index.html", staticFileOptions);
 
 app.UseSerilogRequestLogging();
 
