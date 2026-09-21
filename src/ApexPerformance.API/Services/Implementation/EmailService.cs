@@ -144,6 +144,32 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendWelcomeEmail(User user, string token)
+    {
+        var setPasswordLink = $"{_configuration["WebAppUrl"]}/authentication/reset-password?token={token}";
+
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
+
+        message.To.Add(new MailboxAddress(user.UserName, user.Email));
+
+        message.Subject = "Welcome to Apex Performance";
+
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "WelcomeEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        html = html.Replace("{{Username}}", user.UserName);
+
+        html = html.Replace("{{SetPasswordLink}}", setPasswordLink);
+
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
+    }
+
     public async void SendCredentialsEmail(User user, string password, string jwtToken)
     {
         var message = new MimeMessage();

@@ -42,6 +42,14 @@ public interface IEmailService
     void SendForgotPasswordEmail(User user, string token);
 
     /// <summary>
+    /// Send a welcome email to a newly self-registered
+    /// user with a link to set their own password.
+    /// </summary>
+    /// <param name="user">User that just registered.</param>
+    /// <param name="token">Value of short-lived JWT token.</param>
+    void SendWelcomeEmail(User user, string token);
+
+    /// <summary>
     /// Send email to user, so it is
     /// notified about changing password.
     /// </summary>
