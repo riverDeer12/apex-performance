@@ -120,9 +120,18 @@ var staticFileOptions = new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        ctx.Context.Response.Headers.CacheControl = ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase)
-            ? "no-cache, no-store, must-revalidate"
-            : "public, max-age=31536000, immutable";
+        var path = ctx.Context.Request.Path.Value ?? string.Empty;
+        // Only root-level bundle files (main-*.js, chunk-*.js, styles-*.css, ...) get
+        // content-hashed names from the Angular build - those can be cached forever.
+        // Files under assets/ or media/ keep their original names across builds, so a
+        // long immutable cache would mask real content updates the same way index.html did.
+        ctx.Context.Response.Headers.CacheControl =
+            ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase)
+                ? "no-cache, no-store, must-revalidate"
+                : path.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
+                    || path.StartsWith("/media/", StringComparison.OrdinalIgnoreCase)
+                    ? "public, max-age=3600, must-revalidate"
+                    : "public, max-age=31536000, immutable";
     }
 };
 
