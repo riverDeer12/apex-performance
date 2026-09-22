@@ -18,15 +18,18 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
     private readonly IAppointmentService _appointmentService;
     private readonly IClientService _clientService;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public GenerateNextWeekAppointmentsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
-        IAppointmentService appointmentService, IEmailService emailService, IClientService clientService)
+        IAppointmentService appointmentService, IEmailService emailService, IClientService clientService,
+        INotificationService notificationService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _appointmentService = appointmentService;
         _emailService = emailService;
         _clientService = clientService;
+        _notificationService = notificationService;
     }
 
     public override void Configure()
@@ -118,29 +121,46 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
         await SendAsync(StatusCodes.Status201Created, cancellation: cancellationToken);
     }
     
-    public void SendNextWeekFcmNotifications(List<Guid> emailClientIds,
+    [AutomaticRetry(Attempts = 0)]
+    public async Task SendNextWeekFcmNotifications(List<Guid> clientIds,
         List<Guid> nextWeekAppointmentsIds)
     {
-        var nextWeekAppointments = _context.Appointments
+        var nextWeekAppointments = await _context.Appointments
             .Where(appointment => nextWeekAppointmentsIds.Contains(appointment.Id))
             .Include(appointment => appointment.TimeSlot)
             .Include(appointment => appointment.Coaches)
             .ThenInclude(appointment => appointment.Coach)
             .Include(appointment => appointment.AppointmentType).Include(appointment => appointment.Clients)
-            .ToList();
+            .ToListAsync();
 
-        var emailClients = _context.Clients.Where(x => emailClientIds.Contains(x.Id)).ToList();
+        var clients = await _context.Clients.Where(x => clientIds.Contains(x.Id)).ToListAsync();
 
-        foreach (var emailClient in emailClients)
+        var clientUserIds = clients.Select(x => x.UserId).ToList();
+
+        var deviceTokens = await _context.DeviceTokens
+            .Where(x => clientUserIds.Contains(x.UserId))
+            .ToListAsync();
+
+        foreach (var client in clients)
         {
-            var emailClientAppointments = nextWeekAppointments
-                .Where(appointment => appointment.Clients.Any(c => c.ClientId == emailClient.Id))
+            var clientAppointments = nextWeekAppointments
+                .Where(appointment => appointment.Clients.Any(c => c.ClientId == client.Id))
                 .ToList();
 
-            var emailBody = PrepareEmailBody(emailClientAppointments);
+            if (clientAppointments.Count is 0) continue;
 
-            if (!string.IsNullOrEmpty(emailBody))
-                _emailService.SendWeekAppointmentsSchedule(emailClient, emailBody);
+            var clientDeviceTokens = deviceTokens
+                .Where(t => t.UserId == client.UserId)
+                .Select(t => t.Token)
+                .ToList();
+
+            if (clientDeviceTokens.Count is 0) continue;
+
+            var notificationBody = PrepareNotificationBody(clientAppointments);
+
+            _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
+                "Your weekly training schedule is ready",
+                notificationBody);
         }
     }
 
@@ -168,6 +188,26 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             if (!string.IsNullOrEmpty(emailBody))
                 _emailService.SendWeekAppointmentsSchedule(emailClient, emailBody);
         }
+    }
+
+    private string PrepareNotificationBody(List<Appointment> clientAppointments)
+    {
+        var lines = new List<string>();
+
+        foreach (var appointment in clientAppointments)
+        {
+            var day = Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day);
+
+            var appointmentTime = $"{appointment.TimeSlot.StartTime} - {appointment.TimeSlot.EndTime}";
+
+            var coach = appointment.Coaches.First().Coach.FullName;
+
+            var type = appointment.AppointmentType.Name;
+
+            lines.Add($"{day}, {appointmentTime} - {type} - {coach}");
+        }
+
+        return string.Join("\n", lines);
     }
 
     private string PrepareEmailBody(List<Appointment> clientAppointments)
