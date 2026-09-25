@@ -1,8 +1,10 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.BodyMeasurements;
@@ -33,10 +35,12 @@ public record BodyMeasurementClientDto(
 public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementRequest, CreateBodyMeasurementResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly INotificationService _notificationService;
 
-    public CreateBodyMeasurementEndpoint(ApexPerformanceContext context)
+    public CreateBodyMeasurementEndpoint(ApexPerformanceContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public override void Configure()
@@ -76,10 +80,26 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
+        BackgroundJob.Enqueue(() => SendBodyMeasurementFcmNotification(client.UserId));
+
         await SendAsync(
             new CreateBodyMeasurementResponse(
                 bodyMeasurement.Id),
             cancellation: cancellationToken);
+    }
+
+    [AutomaticRetry(Attempts = 0)]
+    public async Task SendBodyMeasurementFcmNotification(Guid clientUserId)
+    {
+        var clientDeviceTokens = await _context.DeviceTokens
+            .Where(x => x.UserId == clientUserId)
+            .Select(t => t.Token)
+            .ToListAsync();
+
+        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
+            "New body measurement",
+            "Your coach added a new body measurement.",
+            PushNotificationTypes.Data(PushNotificationTypes.BodyMeasurement));
     }
 }
 

@@ -10,7 +10,7 @@ public interface INotificationService
         string body,
         Dictionary<string, string>? data = null);
 
-    Task<BatchResponse> SendToMultipleDevices(
+    Task<BatchResponse?> SendToMultipleDevices(
         List<string> deviceTokens,
         string title,
         string body,

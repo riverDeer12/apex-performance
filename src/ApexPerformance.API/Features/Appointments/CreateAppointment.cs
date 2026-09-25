@@ -233,11 +233,13 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
             .ToListAsync();
 
         _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "New Appointment Requested.");
+            "New Appointment Requested.",
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
 
         _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
             "You have appointment update",
-            "Your Appointment has been " + appointment.AppointmentStatus.Name);
+            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
     
     private async Task<bool> CheckValidity(DateTimeOffset requestStartTime, TimeSlot timeSlot,

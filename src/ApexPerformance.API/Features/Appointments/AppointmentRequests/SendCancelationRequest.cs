@@ -123,7 +123,8 @@ public class SendCancelationRequestEndpoint : Endpoint<SendCancelationRequest, S
             .ToListAsync();
 
         _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "You have new cancelation request from " + client.FullName);
+            "You have new cancelation request from " + client.FullName,
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentRequest));
     }
 
     public async Task SendCancelationEmail(Guid clientId, Guid appointmentId)

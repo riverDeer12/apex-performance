@@ -115,7 +115,8 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
             .ToListAsync();
 
         _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "You have new join request from " + client.FullName);
+            "You have new join request from " + client.FullName,
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentRequest));
     }
 
     public async Task SendJoinRequestEmailNotification(Guid clientUserId, Guid appointmentId)

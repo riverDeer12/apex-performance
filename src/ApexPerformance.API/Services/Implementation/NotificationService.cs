@@ -34,9 +34,14 @@ public class NotificationService : INotificationService
         return response; // Returns message ID on success
     }
 
-    public async Task<BatchResponse> SendToMultipleDevices(List<string> deviceTokens, string title, string body,
+    public async Task<BatchResponse?> SendToMultipleDevices(List<string> deviceTokens, string title, string body,
         Dictionary<string, string>? data = null)
     {
+        // Firebase throws on an empty token list, which would abort the calling job
+        // and skip any notifications it sends afterwards.
+        if (deviceTokens.Count is 0)
+            return null;
+
         var message = new MulticastMessage()
         {
             Tokens = deviceTokens,

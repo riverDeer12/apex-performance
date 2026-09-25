@@ -98,7 +98,8 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
         
         _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
             "You have appointment update",
-            "Your Appointment has been " + appointment.AppointmentStatus.Name);
+            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
 
     public async Task SendAppointmentStatusEmail(List<Guid> appointmentClientsIds, Guid appointmentId)

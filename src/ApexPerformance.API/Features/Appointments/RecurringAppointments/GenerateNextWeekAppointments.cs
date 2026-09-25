@@ -160,7 +160,8 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
             _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
                 "Your weekly training schedule is ready",
-                notificationBody);
+                notificationBody,
+                PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
         }
     }
 
