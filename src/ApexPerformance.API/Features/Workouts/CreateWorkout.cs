@@ -2,9 +2,11 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Workouts;
 
@@ -33,15 +35,29 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
 
     public override async Task HandleAsync(CreateWorkoutRequest request, CancellationToken cancellationToken)
     {
+        var workoutTypeIds = (request.WorkoutTypes ?? []).Distinct().ToList();
+
+        // Workout types are loaded so the response
+        // can contain their names and unknown ids
+        // are rejected before saving.
+        var workoutTypes = await _context.WorkoutTypes
+            .Where(x => workoutTypeIds.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        if (workoutTypes.Count != workoutTypeIds.Count)
+            ThrowError(ErrorCodes.NotValid);
+
         var workout = new Workout
         {
             Name = request.Name.ToJsonString(),
             Description = request.Description.ToJsonString(),
-            ThumbnailUrl = request.ThumbnailUrl,
-            VideoUrl = request.VideoUrl,
-            WorkoutTypes = request.WorkoutTypes.Select(x => new WorkoutWorkoutType
+            ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl)
+                ? YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl)
+                : request.ThumbnailUrl.Trim(),
+            VideoUrl = request.VideoUrl.Trim(),
+            WorkoutTypes = workoutTypes.Select(x => new WorkoutWorkoutType
             {
-                WorkoutTypeId = x
+                WorkoutType = x
             }).ToList()
         };
 
@@ -66,8 +82,14 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
     public CreateWorkoutValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
+            .When(x => x.Name is not null);
         RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
-        RuleFor(x => x.ThumbnailUrl).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
+            .When(x => x.Description is not null);
         RuleFor(x => x.VideoUrl).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.VideoUrl).Must(x => YoutubeHelper.TryExtractVideoId(x, out _))
+            .WithMessage(ErrorCodes.NotValid)
+            .When(x => !string.IsNullOrWhiteSpace(x.VideoUrl));
     }
 }

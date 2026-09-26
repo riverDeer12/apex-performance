@@ -2,6 +2,7 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
 using FluentValidation;
@@ -45,22 +46,44 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         if (workout is null)
             ThrowError(ErrorCodes.NotFound);
 
+        var workoutTypeIds = (request.WorkoutTypes ?? []).Distinct().ToList();
+
+        var workoutTypes = await _context.WorkoutTypes
+            .Where(x => workoutTypeIds.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        if (workoutTypes.Count != workoutTypeIds.Count)
+            ThrowError(ErrorCodes.NotValid);
+
         workout.Name = request.Name.ToJsonString();
         workout.Description = request.Description.ToJsonString();
-        workout.ThumbnailUrl = request.ThumbnailUrl;
-        workout.VideoUrl = request.VideoUrl;
-        
-        workout.WorkoutTypes.Clear();
+        workout.ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl)
+            ? YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl)
+            : request.ThumbnailUrl.Trim();
+        workout.VideoUrl = request.VideoUrl.Trim();
 
-        foreach (var x in request.WorkoutTypes)
+        // Only relations that changed are removed or added
+        // so unchanged ones are not deleted and re-inserted
+        // with the same composite key.
+        foreach (var relation in workout.WorkoutTypes
+                     .Where(x => !workoutTypeIds.Contains(x.WorkoutTypeId)).ToList())
+        {
+            _context.WorkoutWorkoutTypes.Remove(relation);
+            workout.WorkoutTypes.Remove(relation);
+        }
+
+        foreach (var workoutType in workoutTypes
+                     .Where(x => workout.WorkoutTypes.All(relation => relation.WorkoutTypeId != x.Id)))
         {
             workout.WorkoutTypes.Add(new WorkoutWorkoutType
             {
-                WorkoutTypeId = x
+                WorkoutType = workoutType
             });
         }
 
-        _context.Workouts.Update(workout);
+        // Only the workout itself is marked as modified,
+        // relations are already tracked from the query above.
+        _context.Entry(workout).State = EntityState.Modified;
         
         var result = await _context.SaveChangesAsync(cancellationToken);
 
@@ -81,8 +104,14 @@ public sealed class UpdateWorkoutValidator : Validator<UpdateWorkoutRequest>
     public UpdateWorkoutValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
+            .When(x => x.Name is not null);
         RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
-        RuleFor(x => x.ThumbnailUrl).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Description.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
+            .When(x => x.Description is not null);
         RuleFor(x => x.VideoUrl).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.VideoUrl).Must(x => YoutubeHelper.TryExtractVideoId(x, out _))
+            .WithMessage(ErrorCodes.NotValid)
+            .When(x => !string.IsNullOrWhiteSpace(x.VideoUrl));
     }
 }
