@@ -2,7 +2,6 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
-using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
@@ -14,7 +13,15 @@ public record ImportWorkoutsRequest(
     IFormFile File
 );
 
-public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
+public record ImportWorkoutsResponse(
+    Guid Id,
+    bool Status,
+    int CreatedWorkoutsCount,
+    int SkippedWorkoutsCount,
+    int CreatedWorkoutTypesCount
+);
+
+public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
@@ -34,13 +41,13 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
 
     public override async Task HandleAsync(ImportWorkoutsRequest request, CancellationToken cancellationToken)
     {
-        if (request.File.Length == 0)
-            ThrowError(ErrorCodes.NotFound);
+        if (request.File is null || request.File.Length == 0)
+            ThrowError(ErrorCodes.Required);
 
         if (!request.File.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            ThrowError(ErrorCodes.NotFound);
+            ThrowError(ErrorCodes.NotValid);
 
-        List<ExcelRow> rows = null;
+        List<ExcelRow> rows = null!;
 
         try
         {
@@ -53,223 +60,152 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, StatusResponse>
             ThrowError(ErrorCodes.NotValid + " " + ex.Message);
         }
 
-        rows = RemoveWorkoutDuplicates(rows);
+        ValidateRows(rows);
 
-        await CheckExcelWorkoutTypes(rows, cancellationToken);
+        var existingWorkoutNames = await GetExistingWorkoutNames(cancellationToken);
+        var workoutTypes = await GetExistingWorkoutTypes(cancellationToken);
+        var importedWorkoutNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        rows = await SetWorkoutTypes(rows);
+        var newWorkouts = new List<Workout>();
+        var newWorkoutTypes = new List<WorkoutType>();
+        var skippedWorkoutsCount = 0;
 
-        var newWorkouts = await ProcessNewWorkouts(rows);
-
-        if (newWorkouts.Count is 0)
+        foreach (var excelRow in rows)
         {
-            await SendAsync(new StatusResponse
-            (
-                Guid.NewGuid(),
-                true
-            ), cancellation: cancellationToken);
-            return;
+            // Skip workouts that already exist in db
+            // or are repeated in the same file.
+            if (existingWorkoutNames.Contains(excelRow.Name) || !importedWorkoutNames.Add(excelRow.Name))
+            {
+                skippedWorkoutsCount++;
+                continue;
+            }
+
+            var rowWorkoutTypes = new List<WorkoutType>();
+
+            foreach (var typeName in excelRow.WorkoutTypes)
+            {
+                if (!workoutTypes.TryGetValue(typeName, out var workoutType))
+                {
+                    var translatedTypeName = await Translate(typeName);
+
+                    workoutType = new WorkoutType
+                    {
+                        Name = translatedTypeName,
+                        Description = translatedTypeName
+                    };
+
+                    workoutTypes.Add(typeName, workoutType);
+                    newWorkoutTypes.Add(workoutType);
+                }
+
+                if (!rowWorkoutTypes.Contains(workoutType))
+                    rowWorkoutTypes.Add(workoutType);
+            }
+
+            newWorkouts.Add(new Workout
+            {
+                Name = await Translate(excelRow.Name),
+                Description = await Translate(excelRow.Description),
+                ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(excelRow.VideoUrl),
+                VideoUrl = excelRow.VideoUrl,
+                WorkoutTypes = rowWorkoutTypes.Select(x => new WorkoutWorkoutType
+                {
+                    WorkoutType = x
+                }).ToList()
+            });
         }
 
-        _context.Workouts.AddRange(newWorkouts);
+        if (newWorkouts.Count > 0)
+        {
+            // New workout types and workouts are saved together
+            // so failed import doesn't leave partial data in db.
+            _context.WorkoutTypes.AddRange(newWorkoutTypes);
+            _context.Workouts.AddRange(newWorkouts);
 
-        var result = await _context.SaveChangesAsync(cancellationToken);
+            var result = await _context.SaveChangesAsync(cancellationToken);
 
-        if (result == 0)
-            ThrowError(ErrorCodes.SavingError);
+            if (result == 0)
+                ThrowError(ErrorCodes.SavingError);
+        }
 
-        await SendAsync(new StatusResponse
+        await SendAsync(new ImportWorkoutsResponse
         (
             Guid.NewGuid(),
-            true
+            true,
+            newWorkouts.Count,
+            skippedWorkoutsCount,
+            newWorkoutTypes.Count
         ), cancellation: cancellationToken);
     }
 
-    private async Task<List<Workout>> ProcessNewWorkouts(List<ExcelRow> rows)
-    {
-        var newWorkouts = new List<Workout>();
-        
-        var existingWorkouts = (await _context.Workouts
-                .AsNoTracking()
-                .Select(x => new { x.Id, x.Name })
-                .ToListAsync())
-            .Select(x => new
-            {
-                x.Id,
-                NameHr = new LocalizedProperty(x.Name).Get(Language.HR)
-            })
-            .ToList();
-
-        foreach (var excelRow in rows)
-        {
-            var relatedWorkout = existingWorkouts.FirstOrDefault(x =>
-                x.NameHr.Equals(excelRow.Name, StringComparison.OrdinalIgnoreCase));
-
-            if (relatedWorkout != null) continue;
-            
-            var workoutName = await LocalizedProperty.PopulateMissingLanguages(
-                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
-                Language.HR, excelRow.Name);
-
-            var workoutDescription = await LocalizedProperty.PopulateMissingLanguages(
-                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
-                Language.HR, excelRow.Description);
-
-            var newWorkout = new Workout
-            {
-                Name = workoutName,
-                Description = workoutDescription,
-                ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(excelRow.VideoUrl),
-                VideoUrl = excelRow.VideoUrl,
-                WorkoutTypes = excelRow.WorkoutTypes.Select(x => new WorkoutWorkoutType
-                {
-                    WorkoutTypeId = new Guid(x)
-                }).ToList()
-            };
-
-            newWorkouts.Add(newWorkout);
-        }
-
-        return newWorkouts;
-    }
-
     /// <summary>
-    /// Check workout types that
-    /// were assigned to workouts.
-    /// If there is non-existent one than
-    /// create it and save to db.
+    /// Check that every row has name
+    /// and valid YouTube video URL.
+    /// All invalid rows are returned
+    /// in one response.
     /// </summary>
     /// <param name="rows"></param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    private async Task CheckExcelWorkoutTypes(List<ExcelRow> rows, CancellationToken cancellationToken)
+    private void ValidateRows(List<ExcelRow> rows)
     {
-        var workoutTypes = new List<string>();
-
         foreach (var excelRow in rows)
         {
-            foreach (var type in excelRow.WorkoutTypes)
-            {
-                if (workoutTypes.Contains(type)) continue;
+            if (string.IsNullOrWhiteSpace(excelRow.Name))
+                AddError($"{ErrorCodes.NotValid} Row {excelRow.RowNumber}: Name is required.");
 
-                workoutTypes.Add(type);
-            }
+            if (!YoutubeHelper.TryExtractVideoId(excelRow.VideoUrl, out _))
+                AddError($"{ErrorCodes.NotValid} Row {excelRow.RowNumber}: VideoUrl is not a valid YouTube URL.");
         }
 
-        var workoutsNames = _context.WorkoutTypes
-            .Select(x => new LocalizedProperty(x.Name))
-            .ToList();
-
-        var croatianWorkoutsTypesNames = workoutsNames
-            .Select(x => x.Get(Language.HR)).ToList();
-
-        workoutTypes = workoutTypes
-            .Where(x => !croatianWorkoutsTypesNames
-                .Contains(x.ToLower()))
-            .ToList();
-
-        await SaveNewWorkoutTypes(cancellationToken, workoutTypes);
+        ThrowIfAnyErrors();
     }
 
     /// <summary>
-    /// Save new workout types to db.
+    /// Get croatian names of existing workouts
+    /// for case-insensitive duplicate check.
     /// </summary>
     /// <param name="cancellationToken"></param>
-    /// <param name="workoutTypes"></param>
-    private async Task SaveNewWorkoutTypes(CancellationToken cancellationToken, List<string> workoutTypes)
+    /// <returns></returns>
+    private async Task<HashSet<string>> GetExistingWorkoutNames(CancellationToken cancellationToken)
     {
-        var newWorkoutTypes = new List<WorkoutType>();
+        var workoutNames = await _context.Workouts
+            .AsNoTracking()
+            .Select(x => x.Name)
+            .ToListAsync(cancellationToken);
+
+        return workoutNames
+            .Select(x => new LocalizedProperty(x).Get(Language.HR)?.Trim())
+            .Where(x => !string.IsNullOrEmpty(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+    }
+
+    /// <summary>
+    /// Get existing workout types mapped
+    /// by croatian name (case-insensitive).
+    /// Types are tracked so new workouts
+    /// can reference them directly.
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    private async Task<Dictionary<string, WorkoutType>> GetExistingWorkoutTypes(CancellationToken cancellationToken)
+    {
+        var workoutTypes = await _context.WorkoutTypes.ToListAsync(cancellationToken);
+
+        var workoutTypesByName = new Dictionary<string, WorkoutType>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var workoutType in workoutTypes)
         {
-            var workoutTypeName = await LocalizedProperty.PopulateMissingLanguages(
-                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
-                Language.HR, workoutType);
+            var nameHr = new LocalizedProperty(workoutType.Name).Get(Language.HR)?.Trim();
 
-            var workoutTypeDescription = await LocalizedProperty.PopulateMissingLanguages(
-                _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
-                Language.HR, workoutType);
+            if (string.IsNullOrEmpty(nameHr)) continue;
 
-            var newWorkoutType = new WorkoutType
-            {
-                Name = workoutTypeName,
-                Description = workoutTypeDescription
-            };
-
-            newWorkoutTypes.Add(newWorkoutType);
+            workoutTypesByName.TryAdd(nameHr, workoutType);
         }
 
-        if (newWorkoutTypes.Count is 0) return;
-
-        _context.WorkoutTypes.AddRange(newWorkoutTypes);
-
-        var result = await _context.SaveChangesAsync(cancellationToken);
-
-        if (result == 0)
-            ThrowError(ErrorCodes.SavingError);
+        return workoutTypesByName;
     }
 
-    /// <summary>
-    /// Convert names from string list to related
-    /// workout type guids from db.
-    /// Goal is to have easier workouts
-    /// save in db, while building m-m relation
-    /// with workout types.
-    /// </summary>
-    /// <param name="rows"></param>
-    /// <returns></returns>
-    private async Task<List<ExcelRow>> SetWorkoutTypes(List<ExcelRow> rows)
-    {
-        var workoutTypes = (await _context.WorkoutTypes
-                .AsNoTracking()
-                .Select(x => new { x.Id, x.Name })
-                .ToListAsync())
-            .Select(x => new
-            {
-                x.Id,
-                NameHr = new LocalizedProperty(x.Name).Get(Language.HR)
-            })
-            .ToList();
-
-        foreach (var excelRow in rows)
-        {
-            for (var i = 0; i < excelRow.WorkoutTypes.Count; i++)
-            {
-                var excelWorkoutType = excelRow.WorkoutTypes[i];
-
-                var relatedWorkoutType = workoutTypes.FirstOrDefault(x =>
-                    x.NameHr.Equals(excelWorkoutType, StringComparison.OrdinalIgnoreCase));
-
-                if (relatedWorkoutType is null)
-                    continue;
-
-                excelRow.WorkoutTypes[i] = relatedWorkoutType.Id.ToString();
-            }
-        }
-
-        return rows;
-    }
-
-    /// <summary>
-    /// Remove possible workout duplicates
-    /// and return clean list with unique
-    /// workouts.
-    /// </summary>
-    /// <param name="rows"></param>
-    /// <returns></returns>
-    private List<ExcelRow> RemoveWorkoutDuplicates(List<ExcelRow> rows)
-    {
-        var workoutsNames = _context.Workouts
-            .Select(x => new LocalizedProperty(x.Name))
-            .ToList();
-
-        var croatianWorkoutsNames = workoutsNames
-            .Select(x => x.Get(Language.HR)).ToList();
-
-        rows = rows
-            .Where(r => !croatianWorkoutsNames.Contains(r.Name.ToLower()))
-            .ToList();
-
-        return rows;
-    }
+    private Task<string> Translate(string text)
+        => LocalizedProperty.PopulateMissingLanguages(
+            _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
+            Language.HR, text);
 }

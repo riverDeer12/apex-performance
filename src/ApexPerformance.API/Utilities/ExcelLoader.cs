@@ -4,6 +4,7 @@ namespace ApexPerformance.API.Utilities;
 
 public sealed class ExcelRow
 {
+    public int RowNumber { get; init; }
     public string Name { get; init; } = "";
     public string Description { get; init; } = "";
     public string VideoUrl { get; init; } = "";
@@ -14,8 +15,9 @@ public static class ExcelLoader
 {
     /// <summary>
     /// Loads rows from an Excel file (.xlsx). The sheet is expected to have a header row with columns:
-    /// Name, Description, ThumbnailUrl, VideoUrl, Categories.
-    /// Categories are comma-separated strings and will be split into a list.
+    /// Name, Description, VideoUrl, WorkoutTypes.
+    /// WorkoutTypes are comma-separated strings and will be split into a list.
+    /// Blank rows are skipped, rows after them are still loaded.
     /// </summary>
     public static List<ExcelRow> Load(Stream excelStream, string? sheetName = null)
     {
@@ -53,8 +55,9 @@ public static class ExcelLoader
 
         var rows = new List<ExcelRow>();
         var firstDataRow = headerRow.RowNumber() + 1;
+        var lastDataRow = worksheet.LastRowUsed()?.RowNumber() ?? headerRow.RowNumber();
 
-        for (int r = firstDataRow;; r++)
+        for (var r = firstDataRow; r <= lastDataRow; r++)
         {
             var row = worksheet.Row(r);
 
@@ -65,10 +68,11 @@ public static class ExcelLoader
                 IsBlank(row.Cell(catsCol));
 
             if (allBlank)
-                break;
+                continue;
 
             rows.Add(new ExcelRow
             {
+                RowNumber = r,
                 Name = GetCellString(row.Cell(nameCol)),
                 Description = GetCellString(row.Cell(descCol)),
                 VideoUrl = GetCellString(row.Cell(videoCol)),
