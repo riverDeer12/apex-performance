@@ -31,6 +31,7 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
     {
         Put("api/workouts/{id}");
         Options(x => x.WithTags("Workouts"));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
     }
 
     public override async Task HandleAsync(UpdateWorkoutRequest request, CancellationToken cancellationToken)

@@ -19,6 +19,7 @@ public class DeleteWorkoutEndpoint : EndpointWithoutRequest<StatusResponse>
     {
         Delete("api/workouts/{id}");
         Options(x => x.WithTags("Workouts"));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)

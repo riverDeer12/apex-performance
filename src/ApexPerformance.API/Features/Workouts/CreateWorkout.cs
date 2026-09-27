@@ -31,6 +31,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
     {
         Post("api/workouts");
         Options(x => x.WithTags("Workouts"));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
     }
 
     public override async Task HandleAsync(CreateWorkoutRequest request, CancellationToken cancellationToken)

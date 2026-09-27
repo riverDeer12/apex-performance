@@ -71,6 +71,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
     {
         Post("api/workouts/import");
         Options(x => x.WithTags("Workouts"));
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         AllowFileUploads();
     }
 
