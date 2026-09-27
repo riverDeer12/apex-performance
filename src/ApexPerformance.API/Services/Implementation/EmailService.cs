@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Features.Payments;
+using ApexPerformance.API.Features.Workouts;
 using ApexPerformance.API.Services.Interfaces;
 using MimeKit;
 using Stripe.Checkout;
@@ -454,6 +455,45 @@ public class EmailService : IEmailService
         html = html.Replace("{{BillingCountry}}",
             address?.Country ?? string.Empty);
         
+        message.Body = new TextPart("html") { Text = html };
+
+        ConnectToMailServer(message);
+    }
+
+    public void SendWorkoutsImportFinishedEmail(User user, WorkoutsImportResult result)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
+
+        message.To.Add(new MailboxAddress(user.UserName, user.Email));
+
+        var failed = result.ErrorMessage is not null;
+
+        message.Subject = failed ? "Uvoz vježbi nije uspio" : "Uvoz vježbi je završen";
+
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "WorkoutsImportEmail.html");
+
+        var html = File.ReadAllText(templatePath);
+
+        var summary = failed
+            ? "<p>Nažalost, uvoz vježbi nije uspio i nijedna vježba nije spremljena.</p>" +
+              $"<p>Greška: {System.Net.WebUtility.HtmlEncode(result.ErrorMessage)}</p>" +
+              "<p>Pokušajte ponovno ili se javite administratoru.</p>"
+            : "<p>Uvoz vježbi iz Excel datoteke je uspješno završen.</p>" +
+              "<div class=\"credentials\">" +
+              $"<p><span>Kreirano vježbi:</span> {result.CreatedWorkoutsCount}</p>" +
+              $"<p><span>Preskočeno (već postoje):</span> {result.SkippedWorkoutsCount}</p>" +
+              $"<p><span>Novih vrsta vježbi:</span> {result.CreatedWorkoutTypesCount}</p>" +
+              "</div>";
+
+        html = html.Replace("{{Username}}", System.Net.WebUtility.HtmlEncode(user.UserName));
+
+        html = html.Replace("{{Summary}}", summary);
+
+        html = html.Replace("{{WorkoutsLink}}", $"{_configuration["WebAppUrl"]}/admin/workouts");
+
         message.Body = new TextPart("html") { Text = html };
 
         ConnectToMailServer(message);

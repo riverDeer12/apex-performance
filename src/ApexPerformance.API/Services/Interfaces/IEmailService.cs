@@ -1,6 +1,7 @@
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Features.Payments;
+using ApexPerformance.API.Features.Workouts;
 using Stripe.Checkout;
 
 namespace ApexPerformance.API.Services.Interfaces;
@@ -132,4 +133,12 @@ public interface IEmailService
     /// <param name="contactEmail"></param>
     /// <param name="checkoutSession"></param>
     void SendFiscalizationReminderEmail(string contactEmail, Session checkoutSession);
+
+    /// <summary>
+    /// Send email to user that started workouts
+    /// import when background import is finished.
+    /// </summary>
+    /// <param name="user">User that started the import.</param>
+    /// <param name="result">Import result or error message.</param>
+    void SendWorkoutsImportFinishedEmail(User user, WorkoutsImportResult result);
 }

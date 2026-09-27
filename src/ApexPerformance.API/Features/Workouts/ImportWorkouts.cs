@@ -2,9 +2,11 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Workouts;
@@ -16,20 +18,34 @@ public record ImportWorkoutsRequest(
 public record ImportWorkoutsResponse(
     Guid Id,
     bool Status,
+    int QueuedWorkoutsCount
+);
+
+/// <summary>
+/// Result of background workouts import
+/// that is sent to the user by email.
+/// </summary>
+public record WorkoutsImportResult(
     int CreatedWorkoutsCount,
     int SkippedWorkoutsCount,
-    int CreatedWorkoutTypesCount
+    int CreatedWorkoutTypesCount,
+    string? ErrorMessage = null
 );
 
 public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
-    public ImportWorkouts(ApexPerformanceContext context, IConfiguration configuration)
+    public ImportWorkouts(ApexPerformanceContext context, IConfiguration configuration,
+        ICurrentUserService currentUserService, IEmailService emailService)
     {
         _context = context;
         _configuration = configuration;
+        _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public override void Configure()
@@ -62,8 +78,58 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
         ValidateRows(rows);
 
-        var existingWorkoutNames = await GetExistingWorkoutNames(cancellationToken);
-        var workoutTypes = await GetExistingWorkoutTypes(cancellationToken);
+        // File is validated right away so user gets errors immediately,
+        // translating and saving can take a while so it runs in background
+        // and user is notified by email when it is finished.
+        var userId = _currentUserService.UserId;
+
+        BackgroundJob.Enqueue(() => ProcessImport(userId, rows));
+
+        await SendAsync(new ImportWorkoutsResponse
+        (
+            Guid.NewGuid(),
+            true,
+            rows.Count
+        ), cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Background job that translates and saves
+    /// imported workouts, and sends email with
+    /// the result to user that started the import.
+    /// Not retried, so user does not get multiple emails.
+    /// </summary>
+    /// <param name="userId">User that started the import.</param>
+    /// <param name="rows">Validated rows from Excel file.</param>
+    [AutomaticRetry(Attempts = 0)]
+    public async Task ProcessImport(Guid userId, List<ExcelRow> rows)
+    {
+        WorkoutsImportResult result;
+
+        try
+        {
+            result = await SaveWorkouts(userId, rows);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Workouts import failed: {ex}");
+
+            result = new WorkoutsImportResult(0, 0, 0, ex.Message);
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (user is not null)
+            _emailService.SendWorkoutsImportFinishedEmail(user, result);
+
+        if (result.ErrorMessage is not null)
+            throw new InvalidOperationException($"Workouts import failed: {result.ErrorMessage}");
+    }
+
+    private async Task<WorkoutsImportResult> SaveWorkouts(Guid userId, List<ExcelRow> rows)
+    {
+        var existingWorkoutNames = await GetExistingWorkoutNames(CancellationToken.None);
+        var workoutTypes = await GetExistingWorkoutTypes(CancellationToken.None);
         var importedWorkoutNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var newWorkouts = new List<Workout>();
@@ -108,6 +174,10 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
                 Description = await Translate(excelRow.Description),
                 ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(excelRow.VideoUrl),
                 VideoUrl = excelRow.VideoUrl,
+                // There is no logged user in background job,
+                // so audit fields are set to user that started import.
+                CreatedBy = userId,
+                UpdatedBy = userId,
                 WorkoutTypes = rowWorkoutTypes.Select(x => new WorkoutWorkoutType
                 {
                     WorkoutType = x
@@ -122,20 +192,13 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
             _context.WorkoutTypes.AddRange(newWorkoutTypes);
             _context.Workouts.AddRange(newWorkouts);
 
-            var result = await _context.SaveChangesAsync(cancellationToken);
+            var result = await _context.SaveChangesAsync();
 
             if (result == 0)
-                ThrowError(ErrorCodes.SavingError);
+                throw new InvalidOperationException(ErrorCodes.SavingError);
         }
 
-        await SendAsync(new ImportWorkoutsResponse
-        (
-            Guid.NewGuid(),
-            true,
-            newWorkouts.Count,
-            skippedWorkoutsCount,
-            newWorkoutTypes.Count
-        ), cancellation: cancellationToken);
+        return new WorkoutsImportResult(newWorkouts.Count, skippedWorkoutsCount, newWorkoutTypes.Count);
     }
 
     /// <summary>

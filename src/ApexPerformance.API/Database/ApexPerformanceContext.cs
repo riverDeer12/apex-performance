@@ -87,6 +87,10 @@ public class ApexPerformanceContext : DbContext
                 EntityState.Deleted
             });
 
+        // Background jobs have no logged user,
+        // in that case audit values set on entity are kept.
+        var currentUserId = _currentUserService.UserId;
+
         foreach (var entry in entries)
         {
             var entity = (BaseEntity)entry.Entity;
@@ -95,7 +99,7 @@ public class ApexPerformanceContext : DbContext
             {
                 case EntityState.Added:
                     entity.CreatedAt = DateTimeOffset.UtcNow;
-                    entity.CreatedBy = _currentUserService.UserId;
+                    if (currentUserId != Guid.Empty) entity.CreatedBy = currentUserId;
                     break;
                 case EntityState.Detached:
                 case EntityState.Unchanged:
@@ -107,7 +111,7 @@ public class ApexPerformanceContext : DbContext
             }
 
             entity.UpdatedAt = DateTimeOffset.UtcNow;
-            entity.UpdatedBy = _currentUserService.UserId;
+            if (currentUserId != Guid.Empty) entity.UpdatedBy = currentUserId;
         }
 
         return await base.SaveChangesAsync(cancellationToken);
