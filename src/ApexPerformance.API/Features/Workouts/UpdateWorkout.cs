@@ -46,6 +46,13 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         if (workout is null)
             ThrowError(ErrorCodes.NotFound);
 
+        var existingWorkoutKeys = await WorkoutDuplicates.GetExistingKeys(_context, workoutId,
+            cancellationToken);
+
+        if (existingWorkoutKeys.Contains(WorkoutDuplicates.GetKey(request.Name.Get(Language.HR),
+                request.Description.Get(Language.HR))))
+            ThrowError(ErrorCodes.AlreadyExists);
+
         var workoutTypeIds = (request.WorkoutTypes ?? []).Distinct().ToList();
 
         var workoutTypes = await _context.WorkoutTypes

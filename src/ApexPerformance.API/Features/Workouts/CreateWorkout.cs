@@ -35,6 +35,13 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
 
     public override async Task HandleAsync(CreateWorkoutRequest request, CancellationToken cancellationToken)
     {
+        var existingWorkoutKeys = await WorkoutDuplicates.GetExistingKeys(_context,
+            cancellationToken: cancellationToken);
+
+        if (existingWorkoutKeys.Contains(WorkoutDuplicates.GetKey(request.Name.Get(Language.HR),
+                request.Description.Get(Language.HR))))
+            ThrowError(ErrorCodes.AlreadyExists);
+
         var workoutTypeIds = (request.WorkoutTypes ?? []).Distinct().ToList();
 
         // Workout types are loaded so the response

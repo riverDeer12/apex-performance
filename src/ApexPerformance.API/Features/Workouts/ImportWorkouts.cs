@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using ApexPerformance.API.Constants;
+﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Database.Entities.Catalog;
@@ -152,7 +151,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
     private async Task<WorkoutsImportResult> SaveWorkouts(Guid userId, List<ExcelRow> rows)
     {
-        var existingWorkoutKeys = await GetExistingWorkoutKeys();
+        var existingWorkoutKeys = await WorkoutDuplicates.GetExistingKeys(_context);
         var workoutTypes = await GetExistingWorkoutTypes();
         var existingWorkoutTypes = workoutTypes.Values.ToHashSet();
         var importedWorkoutKeys = new HashSet<string>();
@@ -173,7 +172,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
             // Workout is duplicate if croatian name and description
             // match existing workout or workout from same file.
-            var workoutKey = GetWorkoutKey(excelRow.Name, excelRow.Description);
+            var workoutKey = WorkoutDuplicates.GetKey(excelRow.Name, excelRow.Description);
 
             if (existingWorkoutKeys.Contains(workoutKey))
             {
@@ -378,35 +377,6 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
     private static WorkoutsImportRowIssue ToIssue(ExcelRow excelRow, string reason)
         => new(excelRow.RowNumber, excelRow.Name, excelRow.Description, excelRow.VideoUrl,
             string.Join(", ", excelRow.WorkoutTypes), reason);
-
-    /// <summary>
-    /// Key for duplicate check made from croatian
-    /// name and description, ignoring letter case
-    /// and extra whitespace.
-    /// </summary>
-    private static string GetWorkoutKey(string? name, string? description)
-        => $"{Normalize(name)}\u001f{Normalize(description)}";
-
-    private static string Normalize(string? value)
-        => Regex.Replace(value ?? string.Empty, @"\s+", " ").Trim().ToLowerInvariant();
-
-    /// <summary>
-    /// Get duplicate check keys (croatian name
-    /// and description) of existing workouts.
-    /// </summary>
-    private async Task<HashSet<string>> GetExistingWorkoutKeys()
-    {
-        var workouts = await _context.Workouts
-            .AsNoTracking()
-            .Select(x => new { x.Name, x.Description })
-            .ToListAsync();
-
-        return workouts
-            .Select(x => GetWorkoutKey(
-                new LocalizedProperty(x.Name).Get(Language.HR),
-                new LocalizedProperty(x.Description).Get(Language.HR)))
-            .ToHashSet();
-    }
 
     /// <summary>
     /// Get existing workout types mapped
