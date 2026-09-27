@@ -28,7 +28,7 @@ public class CurrentUserService : ICurrentUserService
         
         if (string.IsNullOrWhiteSpace(roleClaim)) return false;
         
-        var roles = roleClaim.Split([',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries);
+        var roles = roleClaim.Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
         
         return roles.Contains(requiredRole, StringComparer.OrdinalIgnoreCase);
     }
