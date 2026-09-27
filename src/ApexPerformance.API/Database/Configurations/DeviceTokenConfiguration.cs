@@ -13,7 +13,15 @@ public class DeviceTokenConfiguration : IEntityTypeConfiguration<DeviceToken>
         builder.Property(e => e.Token).HasMaxLength(200);
         
         builder.Property(e => e.Platform).HasMaxLength(200);
-        
+
+        builder.Property(e => e.AppVersion).HasMaxLength(50);
+
+        builder.Property(e => e.BuildNumber).HasMaxLength(50);
+
+        builder.Property(e => e.OsVersion).HasMaxLength(50);
+
+        builder.Property(e => e.DeviceModel).HasMaxLength(100);
+
         builder.ToTable("DeviceTokens");
     }
 }

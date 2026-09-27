@@ -6,7 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Fcm;
 
-public record RegisterDeviceTokenRequest(string Token, string Platform);
+// Device info is optional so app versions that only send token and platform keep working.
+public record RegisterDeviceTokenRequest(
+    string Token,
+    string Platform,
+    string? AppVersion = null,
+    string? BuildNumber = null,
+    string? OsVersion = null,
+    string? DeviceModel = null);
 
 public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
 {
@@ -38,6 +45,10 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
                 UserId = userId,
                 Token = request.Token,
                 Platform = request.Platform,
+                AppVersion = request.AppVersion,
+                BuildNumber = request.BuildNumber,
+                OsVersion = request.OsVersion,
+                DeviceModel = request.DeviceModel,
                 CreatedAt = DateTimeOffset.UtcNow,
                 CreatedBy = userId,
                 UpdatedAt = DateTimeOffset.UtcNow,
@@ -47,6 +58,11 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
         else
         {
             existing.UserId = userId;
+            existing.Platform = request.Platform;
+            existing.AppVersion = request.AppVersion;
+            existing.BuildNumber = request.BuildNumber;
+            existing.OsVersion = request.OsVersion;
+            existing.DeviceModel = request.DeviceModel;
             existing.UpdatedAt = DateTimeOffset.UtcNow;
             existing.UpdatedBy = userId;
         }

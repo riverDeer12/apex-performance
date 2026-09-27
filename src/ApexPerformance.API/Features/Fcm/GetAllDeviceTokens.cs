@@ -10,6 +10,10 @@ public record DeviceTokenResponse(
     string Username,
     string Token,
     string Platform,
+    string? AppVersion,
+    string? BuildNumber,
+    string? OsVersion,
+    string? DeviceModel,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -38,7 +42,8 @@ public class GetAllDeviceTokensEndpoint : EndpointWithoutRequest<List<DeviceToke
             .ToListAsync(cancellationToken);
 
         await SendAsync(tokens.Select(t =>
-                new DeviceTokenResponse(t.Id, t.User!.UserName, t.Token, t.Platform, t.CreatedAt, t.UpdatedAt))
+                new DeviceTokenResponse(t.Id, t.User!.UserName, t.Token, t.Platform,
+                    t.AppVersion, t.BuildNumber, t.OsVersion, t.DeviceModel, t.CreatedAt, t.UpdatedAt))
             .ToList(), cancellation: cancellationToken);
     }
 }
