@@ -4,6 +4,7 @@ using ApexPerformance.API.Database.Entities.Catalog;
 using ApexPerformance.API.Features.Payments;
 using ApexPerformance.API.Features.Workouts;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Utilities;
 using MimeKit;
 using Stripe.Checkout;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
@@ -470,31 +471,74 @@ public class EmailService : IEmailService
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
         var failed = result.ErrorMessage is not null;
+        var hasFailedRows = result.FailedRows.Count > 0;
 
-        message.Subject = failed ? "Uvoz vježbi nije uspio" : "Uvoz vježbi je završen";
+        message.Subject = failed
+            ? "Uvoz vježbi nije uspio"
+            : hasFailedRows
+                ? "Uvoz vježbi je završen s greškama"
+                : "Uvoz vježbi je završen";
 
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "WorkoutsImportEmail.html");
 
         var html = File.ReadAllText(templatePath);
 
-        var summary = failed
-            ? "<p>Nažalost, uvoz vježbi nije uspio i nijedna vježba nije spremljena.</p>" +
-              $"<p>Greška: {System.Net.WebUtility.HtmlEncode(result.ErrorMessage)}</p>" +
-              "<p>Pokušajte ponovno ili se javite administratoru.</p>"
-            : "<p>Uvoz vježbi iz Excel datoteke je uspješno završen.</p>" +
-              "<div class=\"credentials\">" +
-              $"<p><span>Kreirano vježbi:</span> {result.CreatedWorkoutsCount}</p>" +
-              $"<p><span>Preskočeno (već postoje):</span> {result.SkippedWorkoutsCount}</p>" +
-              $"<p><span>Novih vrsta vježbi:</span> {result.CreatedWorkoutTypesCount}</p>" +
-              "</div>";
+        string Encode(string? value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
 
-        html = html.Replace("{{Username}}", System.Net.WebUtility.HtmlEncode(user.UserName));
+        string IssuesTable(List<WorkoutsImportRowIssue> issues) =>
+            "<table class=\"issues\" role=\"presentation\" cellpadding=\"6\" cellspacing=\"0\" width=\"100%\">" +
+            "<tr><th>Redak</th><th>Naziv</th><th>Razlog</th></tr>" +
+            string.Concat(issues.Select(x =>
+                $"<tr><td>{x.RowNumber}</td><td>{Encode(x.Name)}</td><td>{Encode(x.Reason)}</td></tr>")) +
+            "</table>";
+
+        string summary;
+
+        if (failed)
+        {
+            summary = "<p>Nažalost, uvoz vježbi nije uspio i nijedna vježba nije spremljena.</p>" +
+                      $"<p>Greška: {Encode(result.ErrorMessage)}</p>" +
+                      "<p>Pokušajte ponovno ili se javite administratoru.</p>";
+        }
+        else
+        {
+            summary = "<p>Uvoz vježbi iz Excel datoteke je završen. Sve ispravne vježbe su spremljene.</p>" +
+                      "<div class=\"credentials\">" +
+                      $"<p><span>Spremljeno vježbi:</span> {result.CreatedWorkoutsCount}</p>" +
+                      $"<p><span>Novih vrsta vježbi:</span> {result.CreatedWorkoutTypesCount}</p>" +
+                      $"<p><span>Nije spremljeno (greške):</span> {result.FailedRows.Count}</p>" +
+                      $"<p><span>Preskočeno (duplikati):</span> {result.SkippedRows.Count}</p>" +
+                      "</div>";
+
+            if (hasFailedRows)
+                summary += "<h3>Vježbe koje nisu spremljene</h3>" +
+                           "<p>Ove vježbe možete ispraviti u priloženoj Excel datoteci " +
+                           "(stupac Greska opisuje problem) i ponovno je uvesti.</p>" +
+                           IssuesTable(result.FailedRows);
+
+            if (result.SkippedRows.Count > 0)
+                summary += "<h3>Preskočeni duplikati</h3>" +
+                           "<p>Vježbe s istim nazivom i opisom već postoje, pa nisu ponovno spremljene.</p>" +
+                           IssuesTable(result.SkippedRows);
+        }
+
+        html = html.Replace("{{Username}}", Encode(user.UserName));
 
         html = html.Replace("{{Summary}}", summary);
 
         html = html.Replace("{{WorkoutsLink}}", $"{_configuration["WebAppUrl"]}/admin/workouts");
 
-        message.Body = new TextPart("html") { Text = html };
+        var builder = new BodyBuilder { HtmlBody = html };
+
+        if (hasFailedRows)
+        {
+            using var failedRowsFile = WorkoutsImportExcel.CreateFailedRowsFile(result.FailedRows);
+
+            builder.Attachments.Add("neuspjele-vjezbe.xlsx", failedRowsFile.ToArray(),
+                new ContentType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        }
+
+        message.Body = builder.ToMessageBody();
 
         ConnectToMailServer(message);
     }
