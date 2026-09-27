@@ -30,6 +30,8 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
     public override void Configure()
     {
         Post("api/workouts");
+        // Clients can only view workouts.
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("Workouts"));
     }
 

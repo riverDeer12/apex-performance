@@ -70,6 +70,8 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
     public override void Configure()
     {
         Post("api/workouts/import");
+        // Clients can only view workouts.
+        Roles(UserRoles.SuperAdmin, UserRoles.Administrator, UserRoles.Coach);
         Options(x => x.WithTags("Workouts"));
         AllowFileUploads();
     }
