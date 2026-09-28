@@ -48,7 +48,40 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
         var jwtToken = await _authenticationService.GenerateJwtToken(request.RememberMe, user);
 
+        await SaveUserSession(user.Id, request.RememberMe, cancellationToken);
+
         await SendAsync(new LoginResponse(jwtToken), cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Record successful login so admins and coaches
+    /// can see when user last logged in. Failing to save
+    /// session must not prevent user from logging in.
+    /// </summary>
+    private async Task SaveUserSession(Guid userId, bool rememberMe, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+            _context.UserSessions.Add(new UserSession
+            {
+                UserId = userId,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = userAgent.Length > 512 ? userAgent[..512] : userAgent,
+                RememberMe = rememberMe,
+                // Login is anonymous request, so audit
+                // fields are set to user that logged in.
+                CreatedBy = userId,
+                UpdatedBy = userId
+            });
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Saving user session failed: {ex.Message}");
+        }
     }
 }
 

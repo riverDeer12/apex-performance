@@ -69,6 +69,8 @@ public class ApexPerformanceContext : DbContext
     
     public DbSet<WorkoutWorkoutType> WorkoutWorkoutTypes { get; set; }
 
+    public DbSet<UserSession> UserSessions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
