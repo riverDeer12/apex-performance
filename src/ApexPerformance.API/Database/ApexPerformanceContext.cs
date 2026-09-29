@@ -73,6 +73,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<AppointmentLocation> AppointmentLocations { get; set; }
 
+    public DbSet<UserProfilePicture> UserProfilePictures { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
