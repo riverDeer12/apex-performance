@@ -71,6 +71,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<UserSession> UserSessions { get; set; }
 
+    public DbSet<TrainingLocation> TrainingLocations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

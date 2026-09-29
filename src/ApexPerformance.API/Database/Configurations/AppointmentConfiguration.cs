@@ -22,6 +22,15 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
             .WithMany(b => b.Appointments)
             .HasForeignKey(b => b.AppointmentStatusId);
 
+        // Location is optional, deleting location
+        // must not delete appointments held there.
+        builder
+            .HasOne(a => a.TrainingLocation)
+            .WithMany(b => b.Appointments)
+            .HasForeignKey(b => b.TrainingLocationId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.ToTable("Appointments", c => c.IsTemporal());
     }
 }
