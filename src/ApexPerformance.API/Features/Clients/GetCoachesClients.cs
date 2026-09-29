@@ -40,6 +40,7 @@ public class GetCoachesClientsEndpoint : Endpoint<GetCoachesClientsRequest, List
         var relatedClients = await _context.CoachClients
             .Where(x => coaches.Contains(x.CoachId))
             .Select(x => x.Client)
+            .WithActiveUserAccount()
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (relatedClients.Count == 0)

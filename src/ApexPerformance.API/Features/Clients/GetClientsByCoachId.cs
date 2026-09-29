@@ -35,6 +35,7 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDat
         var coachClients = await _context.CoachClients
             .Where(x => x.CoachId == coachId)
             .Select(x => x.Client)
+            .WithActiveUserAccount()
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(coachClients.Select(x => 

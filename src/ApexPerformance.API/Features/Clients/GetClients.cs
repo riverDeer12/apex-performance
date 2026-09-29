@@ -83,6 +83,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
     private async Task<List<Client>> GetAllClients(CancellationToken cancellationToken)
     {
         return await _context.Clients
+            .WithActiveUserAccount()
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
             .Include(x => x.BodyMeasurements)
@@ -105,6 +106,7 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             .ToListAsync(cancellationToken: cancellationToken);
 
         return await _context.Clients
+            .WithActiveUserAccount()
             .Where(x => coachClientsIds.Contains(x.Id))
             .Include(x => x.Coaches)
             .ThenInclude(x => x.Coach)
