@@ -13,8 +13,8 @@ public class Appointment : BaseEntity
     public Guid AppointmentStatusId { get; set; }
     public required TimeSlot TimeSlot { get; set; }
     public Guid TimeSlotId { get; set; }
-    public TrainingLocation? TrainingLocation { get; set; }
-    public Guid? TrainingLocationId { get; set; }
+    public AppointmentLocation? AppointmentLocation { get; set; }
+    public Guid? AppointmentLocationId { get; set; }
     public ICollection<ClientAppointment> Clients { get; set; } = null!;
     public ICollection<CoachAppointment> Coaches { get; set; } = null!;
 }

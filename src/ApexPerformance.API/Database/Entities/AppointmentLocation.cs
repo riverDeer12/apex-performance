@@ -3,10 +3,10 @@ using ApexPerformance.API.Database.Entities.Abstract;
 namespace ApexPerformance.API.Database.Entities;
 
 /// <summary>
-/// Place where trainings are held. Coordinates and
+/// Place where appointments (trainings) are held. Coordinates and
 /// Google Maps link are used for navigation to it.
 /// </summary>
-public class TrainingLocation : BaseEntity
+public class AppointmentLocation : BaseEntity
 {
     public required string Name { get; set; }
     public string? Address { get; set; }

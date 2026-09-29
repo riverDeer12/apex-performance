@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ApexPerformance.API.Database.Configurations;
 
-public class TrainingLocationConfiguration : IEntityTypeConfiguration<TrainingLocation>
+public class AppointmentLocationConfiguration : IEntityTypeConfiguration<AppointmentLocation>
 {
-    public void Configure(EntityTypeBuilder<TrainingLocation> builder)
+    public void Configure(EntityTypeBuilder<AppointmentLocation> builder)
     {
         builder.HasKey(e => e.Id);
 
@@ -23,12 +23,12 @@ public class TrainingLocationConfiguration : IEntityTypeConfiguration<TrainingLo
 
         builder.Property(e => e.GoogleMapsUrl).HasMaxLength(500);
 
-        builder.ToTable("TrainingLocations");
+        builder.ToTable("AppointmentLocations");
 
-        builder.HasData(new TrainingLocation
+        builder.HasData(new AppointmentLocation
         {
-            Id = TrainingLocationIds.Rijeka,
-            Name = "Apex Performance Rijeka",
+            Id = AppointmentLocationIds.LegacyGymSkurinje,
+            Name = "Legacy Gym Škurinje",
             // Plus Code 9C38+3H Rijeka (full code 8FQP9C38+3H).
             Address = "9C38+3H Rijeka",
             Latitude = 45.352688m,
@@ -40,7 +40,7 @@ public class TrainingLocationConfiguration : IEntityTypeConfiguration<TrainingLo
     }
 }
 
-public static class TrainingLocationIds
+public static class AppointmentLocationIds
 {
-    public static readonly Guid Rijeka = new("b3f1c2a4-5d6e-4f70-8a91-2c3d4e5f6a7b");
+    public static readonly Guid LegacyGymSkurinje = new("b3f1c2a4-5d6e-4f70-8a91-2c3d4e5f6a7b");
 }

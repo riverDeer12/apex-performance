@@ -71,7 +71,7 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<UserSession> UserSessions { get; set; }
 
-    public DbSet<TrainingLocation> TrainingLocations { get; set; }
+    public DbSet<AppointmentLocation> AppointmentLocations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -25,9 +25,9 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         // Location is optional, deleting location
         // must not delete appointments held there.
         builder
-            .HasOne(a => a.TrainingLocation)
+            .HasOne(a => a.AppointmentLocation)
             .WithMany(b => b.Appointments)
-            .HasForeignKey(b => b.TrainingLocationId)
+            .HasForeignKey(b => b.AppointmentLocationId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
