@@ -172,7 +172,7 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
-    public async void SendCredentialsEmail(User user, string password, string jwtToken)
+    public void SendCredentialsEmail(User user, string setPasswordToken, int linkValidHours)
     {
         var message = new MimeMessage();
 
@@ -181,18 +181,20 @@ public class EmailService : IEmailService
 
         message.To.Add(new MailboxAddress(user.UserName, user.Email));
 
-        message.Subject = "You Have Been Registered to Apex Performance";
+        message.Subject = "Dobrodošli u Apex Performance - postavite lozinku";
 
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CredentialsEmail.html");
 
-        var html = await File.ReadAllTextAsync(templatePath);
+        var html = File.ReadAllText(templatePath);
 
         html = html.Replace("{{Username}}", user.UserName);
 
-        html = html.Replace("{{Password}}", password);
+        html = html.Replace("{{SetPasswordLink}}",
+            $"{_configuration["WebAppUrl"]}/authentication/reset-password?token={setPasswordToken}");
 
-        html = html.Replace("{{LoginLink}}",
-            _configuration["WebAppUrl"] + "/authentication/mail-confirmation?token=" + jwtToken);
+        html = html.Replace("{{ForgotPasswordLink}}", $"{_configuration["WebAppUrl"]}/authentication/login");
+
+        html = html.Replace("{{LinkValidHours}}", linkValidHours.ToString());
 
         message.Body = new TextPart("html") { Text = html };
 
