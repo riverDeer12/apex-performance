@@ -45,8 +45,11 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
             new ClientDataDto(x.Id, x.FirstName, x.LastName,
                 x.Credits, x.Phone, x.Email, x.CreatedAt,
                 x.UpdatedAt,
+                // First credit top up happens when client is created,
+                // so creation date is used until credits are increased.
                 lastCreditIncreaseList
-                    .FirstOrDefault(creditIncrease => creditIncrease.ClientId == x.Id)?.LastCreditsIncreaseDate,
+                    .FirstOrDefault(creditIncrease => creditIncrease.ClientId == x.Id)?.LastCreditsIncreaseDate
+                ?? x.CreatedAt,
                 x.FullName,
                 x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
                         coach.Coach.LastName, coach.Coach.FullName))
