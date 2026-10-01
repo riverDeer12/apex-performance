@@ -39,6 +39,19 @@ public class AuthenticationService : IAuthenticationService
         return jwtToken;
     }
     
+    public string GenerateSetPasswordToken(User user, TimeSpan validFor)
+    {
+        return JwtBearer.CreateToken(
+            options: o =>
+            {
+                o.SigningKey = _configuration["JWTSecretKey"] ?? string.Empty;
+                o.ExpireAt = DateTime.UtcNow.Add(validFor);
+                o.User.Claims.Add(
+                    ("name", user.UserName),
+                    ("sub", user.Id.ToString()));
+            });
+    }
+
     private async Task<List<string>> GetUserPermissions(List<string> roles, ICollection<UserRole> userRoles)
     {
         var isSuperAdmin = roles.Contains(UserRoles.SuperAdmin);

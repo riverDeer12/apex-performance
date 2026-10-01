@@ -62,11 +62,10 @@ public interface IEmailService
     /// Send email with notification
     /// when a new user is registered in the system.
     /// </summary>
-    /// <param name="user">User account that needs to get credentials.</param>
-    /// <param name="password">Password value.</param>
-    /// <param name="jwtToken">JWT token value.</param>
-    /// <returns></returns>
-    void SendCredentialsEmail(User user, string password, string jwtToken);
+    /// <param name="user">User account that needs to set a password.</param>
+    /// <param name="setPasswordToken">Token used in the set password link.</param>
+    /// <param name="linkValidHours">How long the link is valid, shown in the email.</param>
+    void SendCredentialsEmail(User user, string setPasswordToken, int linkValidHours);
 
     /// <summary>
     /// Send email to coaches which are connected to this

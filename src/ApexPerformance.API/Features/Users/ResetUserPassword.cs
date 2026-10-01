@@ -44,6 +44,10 @@ public class ResetUserPasswordEndpoint : Endpoint<ResetUserPasswordRequest, Stat
 
         user.Password = Database.Entities.User.HashPassword(request.NewPassword);
 
+        // Setting a password from the emailed link
+        // proves that the user owns the email address.
+        user.EmailConfirmed = true;
+
         _context.Users.Update(user);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
