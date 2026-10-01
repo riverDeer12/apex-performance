@@ -14,6 +14,7 @@ public record GetAppointmentRequestsResponse(
     string Comment,
     CatalogDataDto Type,
     CatalogDataDto Status,
+    PersonDataDto Sender,
     AppointmentDataDto Appointment,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
@@ -92,8 +93,11 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
                 appointmentStatus,
                 clients, coaches, timeSlot);
 
+            var sender = new PersonDataDto(appointmentRequest.Client.Id, appointmentRequest.Client.FirstName,
+                appointmentRequest.Client.LastName, appointmentRequest.Client.FullName);
+
             appointmentRequestsResponse.Add(new GetAppointmentRequestsResponse(appointmentRequest.Id,
-                appointmentRequest.Comment, requestType, requestStatus, appointmentResponse,
+                appointmentRequest.Comment, requestType, requestStatus, sender, appointmentResponse,
                 appointmentRequest.CreatedAt, appointmentRequest.UpdatedAt));
         }
 
@@ -130,6 +134,10 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
+            .Include(appointmentRequest => appointmentRequest.Client)
+            .OrderByDescending(appointmentRequest => appointmentRequest.CreatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -159,6 +167,10 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
+            .Include(appointmentRequest => appointmentRequest.Client)
+            .OrderByDescending(appointmentRequest => appointmentRequest.CreatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
 
         return appointmentRequests;
@@ -186,6 +198,10 @@ public class GetAppointmentRequestsEndpoint : EndpointWithoutRequest<List<GetApp
             .ThenInclude(coachAppointment => coachAppointment.Coach)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestType)
             .Include(appointmentRequest => appointmentRequest.AppointmentRequestStatus)
+            .Include(appointmentRequest => appointmentRequest.Appointment)
+            .ThenInclude(appointment => appointment.TimeSlot)
+            .Include(appointmentRequest => appointmentRequest.Client)
+            .OrderByDescending(appointmentRequest => appointmentRequest.CreatedAt)
             .ToListAsync(cancellationToken: cancellationToken);
 
         return appointmentRequests;
