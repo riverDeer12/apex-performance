@@ -31,6 +31,12 @@ public class FunctionalMovementScreenConfiguration : IEntityTypeConfiguration<Fu
         builder.Property(f => f.ShoulderMobility)
             .HasMaxLength(50);
 
+        builder.Property(f => f.XTest)
+            .HasMaxLength(50);
+
+        builder.Property(f => f.Description)
+            .HasMaxLength(2000);
+
         builder.ToTable("FunctionalMovementScreens", c 
             => c.IsTemporal());
     }

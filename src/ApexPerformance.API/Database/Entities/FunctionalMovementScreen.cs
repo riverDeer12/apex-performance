@@ -11,6 +11,8 @@ public class FunctionalMovementScreen : BaseEntity
     public required string TrunkStabilityPushUp { get; set; }
     public required string RotaryStability { get; set; }
     public required string ShoulderMobility { get; set; }
+    public required string XTest { get; set; }
+    public string? Description { get; set; }
     public required Client Client { get; set; }
     public Guid ClientId { get; set; }
 }

@@ -14,7 +14,9 @@ public record UpdateFunctionalMovementScreenRequest(
     string ActiveStraightLegRaise,
     string TrunkStabilityPushUp,
     string RotaryStability,
-    string ShoulderMobility
+    string ShoulderMobility,
+    string XTest,
+    string? Description
 );
 
 public class UpdateFunctionalMovementScreenEndpoint : Endpoint<UpdateFunctionalMovementScreenRequest, int>
@@ -55,6 +57,9 @@ public class UpdateFunctionalMovementScreenEndpoint : Endpoint<UpdateFunctionalM
         functionalMovementScreen.TrunkStabilityPushUp = request.TrunkStabilityPushUp;
         functionalMovementScreen.RotaryStability = request.RotaryStability;
         functionalMovementScreen.ShoulderMobility = request.ShoulderMobility;
+        functionalMovementScreen.XTest = request.XTest;
+        functionalMovementScreen.Description =
+            string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         functionalMovementScreen.Client = client;
         functionalMovementScreen.ClientId = client.Id;
 
@@ -91,5 +96,8 @@ public sealed class UpdateFunctionalMovementScreenValidator
         RuleFor(x => x.TrunkStabilityPushUp).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.RotaryStability).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.ShoulderMobility).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.XTest).NotEmpty().WithMessage(ErrorCodes.Required)
+            .MaximumLength(50).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Description).MaximumLength(2000).WithMessage(ErrorCodes.NotValid);
     }
 }

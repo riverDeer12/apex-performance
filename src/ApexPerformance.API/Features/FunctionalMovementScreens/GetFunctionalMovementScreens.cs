@@ -18,6 +18,8 @@ public record FunctionalMovementScreenResponse(
     string TrunkStabilityPushUp,
     string RotaryStability,
     string ShoulderMobility,
+    string XTest,
+    string? Description,
     DateTimeOffset CreatedAt,
     PersonDataDto Client
 );
@@ -60,6 +62,8 @@ public class GetFunctionalMovementScreensEndpoint : EndpointWithoutRequest<List<
                 x.TrunkStabilityPushUp,
                 x.RotaryStability,
                 x.ShoulderMobility,
+                x.XTest,
+                x.Description,
                 x.CreatedAt,
                 new PersonDataDto(x.Client.Id, x.Client.FirstName, x.Client.LastName, x.Client.FullName)
             )
