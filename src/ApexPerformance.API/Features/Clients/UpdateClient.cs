@@ -14,7 +14,8 @@ public record UpdateClientRequest(
     string FirstName,
     string LastName,
     string Email,
-    string Phone,
+    // Optional, stored as empty text when not given.
+    string? Phone,
     int Credits,
     List<Guid>? Coaches
 );
@@ -63,7 +64,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         client.FirstName = request.FirstName;
         client.LastName = request.LastName;
         client.Email = request.Email;
-        client.Phone = request.Phone;
+        client.Phone = request.Phone?.Trim() ?? string.Empty;
         client.Credits = request.Credits;
 
         _context.Clients.Update(client);
@@ -112,6 +113,6 @@ public sealed class UpdateClientValidator : Validator<UpdateClientRequest>
         RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
-        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Phone).MaximumLength(200).WithMessage(ErrorCodes.NotValid);
     }
 }
