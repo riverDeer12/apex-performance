@@ -16,7 +16,9 @@ public record CreateClientRequest(
     // Optional, stored as empty text when not given.
     string? Phone,
     int Credits,
-    List<Guid> Coaches
+    List<Guid> Coaches,
+    // Private coaching when not given.
+    string? Plan = null
 );
 
 public record CreateClientResponse(
@@ -68,6 +70,7 @@ public class CreateClientEndpoint : Endpoint<CreateClientRequest, CreateClientRe
             Email = request.Email,
             Phone = request.Phone?.Trim() ?? string.Empty,
             Credits = request.Credits,
+            Plan = request.Plan ?? ClientPlans.PrivateCoaching,
             User = user
         };
 
@@ -138,5 +141,7 @@ public sealed class CreateClientValidator : Validator<CreateClientRequest>
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Phone).MaximumLength(200).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Plan).Must(x => ClientPlans.All.Contains(x)).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Plan is not null);
     }
 }

@@ -10,6 +10,11 @@ public class Client : UserType
     public required string Email { get; set; }
     public required string Phone { get; set; }
     public int Credits { get; set; }
+
+    /// <summary>
+    /// One of <see cref="Constants.ClientPlans"/>.
+    /// </summary>
+    public string Plan { get; set; } = Constants.ClientPlans.PrivateCoaching;
     public ICollection<ClientAppointment> Appointments { get; set; } = null!;
     
     public ICollection<BodyMeasurement> BodyMeasurements { get; set; } = null!;

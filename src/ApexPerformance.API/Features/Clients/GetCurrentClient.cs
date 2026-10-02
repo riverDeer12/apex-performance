@@ -15,7 +15,8 @@ public record GetCurrentClientResponse(
     string Email,
     string Phone,
     int Credits,
-    PersonDataDto User
+    PersonDataDto User,
+    string Plan
 );
 
 public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientResponse>
@@ -58,7 +59,8 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
             client.Email,
             client.Phone,
             client.Credits,
-            userResponse
+            userResponse,
+            client.Plan
             ), cancellation: cancellationToken);
     }
 }

@@ -17,6 +17,9 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(e => e.Email).HasMaxLength(200);
         
         builder.Property(e => e.Phone).HasMaxLength(200);
+
+        builder.Property(e => e.Plan).HasMaxLength(50)
+            .HasDefaultValue(Constants.ClientPlans.PrivateCoaching);
         
         builder.ToTable("Clients", c => c.IsTemporal());
     }

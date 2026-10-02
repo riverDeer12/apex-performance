@@ -12,4 +12,5 @@ public record ClientDataDto(
     DateTimeOffset? LastCreditsIncrease,
     string FullName,
     List<PersonDataDto> Coaches,
-    List<BodyMeasurementDto> BodyMeasurements);
+    List<BodyMeasurementDto> BodyMeasurements,
+    string Plan);

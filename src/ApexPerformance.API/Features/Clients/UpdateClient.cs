@@ -17,7 +17,9 @@ public record UpdateClientRequest(
     // Optional, stored as empty text when not given.
     string? Phone,
     int Credits,
-    List<Guid>? Coaches
+    List<Guid>? Coaches,
+    // Existing plan is kept when not given.
+    string? Plan = null
 );
 
 public record UpdateClientResponse(
@@ -26,7 +28,8 @@ public record UpdateClientResponse(
     string LastName,
     string Email,
     string Phone,
-    int Credits
+    int Credits,
+    string Plan
 );
 
 public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientResponse>
@@ -66,6 +69,7 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         client.Email = request.Email;
         client.Phone = request.Phone?.Trim() ?? string.Empty;
         client.Credits = request.Credits;
+        client.Plan = request.Plan ?? client.Plan;
 
         _context.Clients.Update(client);
 
@@ -77,7 +81,8 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
         if (request.Coaches is null)
         {
             await SendAsync(
-                new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits),
+                new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits,
+                    client.Plan),
                 cancellation: cancellationToken);
             return;
         }
@@ -86,7 +91,8 @@ public class UpdateClientEndpoint : Endpoint<UpdateClientRequest, UpdateClientRe
 
         BackgroundJob.Enqueue(() => SendAlertEmails(client.Id));
 
-        await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits),
+        await SendAsync(new(client.Id, client.FirstName, client.LastName, client.Email, client.Phone, client.Credits,
+                    client.Plan),
             cancellation: cancellationToken);
     }
 
@@ -114,5 +120,7 @@ public sealed class UpdateClientValidator : Validator<UpdateClientRequest>
         RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Phone).MaximumLength(200).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Plan).Must(x => ClientPlans.All.Contains(x)).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Plan is not null);
     }
 }

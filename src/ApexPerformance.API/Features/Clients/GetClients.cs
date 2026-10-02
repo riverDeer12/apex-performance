@@ -68,7 +68,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                             bodyMeasurement.Calves,
                             bodyMeasurement.Glutes,
                             bodyMeasurement.CreatedAt
-                        )).ToList())).ToList(), cancellation: cancellationToken);
+                        )).ToList(),
+                x.Plan)).ToList(), cancellation: cancellationToken);
     }
 
     private async Task<List<Client>> GetClientsForUser(CancellationToken cancellationToken)
