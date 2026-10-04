@@ -151,8 +151,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
     Authorization = new[] { new HangfireDashboardAuthPolicy() }
 });
 
-RecurringJob.AddOrUpdate<DeclineExpiredRequestsJob>(DeclineExpiredRequestsJob.JobId,
-    job => job.Run(), DeclineExpiredRequestsJob.Schedule);
+DeclineExpiredRequestsJob.Schedule();
 
 app.Run();
 
