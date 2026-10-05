@@ -148,7 +148,7 @@ app.UseHttpsRedirection();
 
 app.UseHangfireDashboard("/jobs", new DashboardOptions
 {
-    Authorization = new[] { new HangfireDashboardAuthPolicy() }
+    Authorization = new[] { new HangfireDashboardAuthPolicy(app.Configuration) }
 });
 
 DeclineExpiredRequestsJob.Schedule();
