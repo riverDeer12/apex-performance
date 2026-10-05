@@ -9,13 +9,16 @@ public sealed class ExcelRow
     public string Description { get; init; } = "";
     public string VideoUrl { get; init; } = "";
     public List<string> WorkoutTypes { get; init; } = new();
+
+    // Language of the row text (HR, EN, IT), croatian when not given.
+    public string Language { get; init; } = "HR";
 }
 
 public static class ExcelLoader
 {
     /// <summary>
     /// Loads rows from an Excel file (.xlsx). The sheet is expected to have a header row with columns:
-    /// Name, Description, VideoUrl, WorkoutTypes.
+    /// Name, Description, VideoUrl, WorkoutTypes and optional Language.
     /// WorkoutTypes are comma-separated strings and will be split into a list.
     /// Blank rows are skipped, rows after them are still loaded.
     /// </summary>
@@ -52,6 +55,7 @@ public static class ExcelLoader
         var descCol = Col("Description");
         var videoCol = Col("VideoUrl");
         var catsCol = Col("WorkoutTypes");
+        int? languageCol = headers.TryGetValue("Language", out var languageIdx) ? languageIdx : null;
 
         var rows = new List<ExcelRow>();
         var firstDataRow = headerRow.RowNumber() + 1;
@@ -76,7 +80,10 @@ public static class ExcelLoader
                 Name = GetCellString(row.Cell(nameCol)),
                 Description = GetCellString(row.Cell(descCol)),
                 VideoUrl = GetCellString(row.Cell(videoCol)),
-                WorkoutTypes = SplitCategories(GetCellString(row.Cell(catsCol)))
+                WorkoutTypes = SplitCategories(GetCellString(row.Cell(catsCol))),
+                Language = languageCol is null || IsBlank(row.Cell(languageCol.Value))
+                    ? "HR"
+                    : GetCellString(row.Cell(languageCol.Value)).ToUpperInvariant()
             });
         }
 

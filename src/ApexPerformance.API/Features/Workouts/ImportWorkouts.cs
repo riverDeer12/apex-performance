@@ -32,7 +32,8 @@ public record WorkoutsImportRowIssue(
     string Description,
     string VideoUrl,
     string WorkoutTypes,
-    string Reason
+    string Reason,
+    string Language = "HR"
 );
 
 /// <summary>
@@ -49,9 +50,10 @@ public record WorkoutsImportResult(
 
 public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResponse>
 {
-    // Name and Description columns are limited in db and
-    // contain JSON with all translations, not only croatian text.
-    private const int MaxLocalizedNameLength = 200;
+    // Name columns are limited in db and contain
+    // JSON with all translations, not only croatian text.
+    private const int MaxLocalizedWorkoutNameLength = 500;
+    private const int MaxLocalizedWorkoutTypeNameLength = 200;
 
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
@@ -153,9 +155,11 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
     private async Task<WorkoutsImportResult> SaveWorkouts(Guid userId, List<ExcelRow> rows)
     {
-        var existingWorkoutKeys = await WorkoutDuplicates.GetExistingKeys(_context);
+        // Rows can be written in any supported language, so duplicates
+        // and workout types are matched in the language of the row.
+        var existingWorkoutKeys = new Dictionary<Language, HashSet<string>>();
         var workoutTypes = await GetExistingWorkoutTypes();
-        var existingWorkoutTypes = workoutTypes.Values.ToHashSet();
+        var existingWorkoutTypes = workoutTypes.Values.SelectMany(x => x.Values).ToHashSet();
         var importedWorkoutKeys = new HashSet<string>();
 
         var prepared = new List<PreparedWorkout>();
@@ -172,17 +176,25 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
                 continue;
             }
 
-            // Workout is duplicate if croatian name and description
+            var language = Enum.Parse<Language>(excelRow.Language, ignoreCase: true);
+
+            if (!existingWorkoutKeys.TryGetValue(language, out var languageWorkoutKeys))
+            {
+                languageWorkoutKeys = await WorkoutDuplicates.GetExistingKeys(_context, language: language);
+                existingWorkoutKeys.Add(language, languageWorkoutKeys);
+            }
+
+            // Workout is duplicate if name and description in row language
             // match existing workout or workout from same file.
             var workoutKey = WorkoutDuplicates.GetKey(excelRow.Name, excelRow.Description);
 
-            if (existingWorkoutKeys.Contains(workoutKey))
+            if (languageWorkoutKeys.Contains(workoutKey))
             {
                 skippedRows.Add(ToIssue(excelRow, "Vježba s istim nazivom i opisom već postoji."));
                 continue;
             }
 
-            if (importedWorkoutKeys.Contains(workoutKey))
+            if (importedWorkoutKeys.Contains(language + workoutKey))
             {
                 skippedRows.Add(ToIssue(excelRow, "Vježba s istim nazivom i opisom ponavlja se u datoteci."));
                 continue;
@@ -190,10 +202,10 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
             try
             {
-                var workout = await PrepareWorkout(userId, excelRow, workoutTypes);
+                var workout = await PrepareWorkout(userId, excelRow, language, workoutTypes);
 
                 prepared.Add(new PreparedWorkout(excelRow, workout));
-                importedWorkoutKeys.Add(workoutKey);
+                importedWorkoutKeys.Add(language + workoutKey);
             }
             catch (Exception ex)
             {
@@ -216,8 +228,8 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
     }
 
     /// <summary>
-    /// Check that row has name
-    /// and valid YouTube video URL.
+    /// Check that row has name, supported language
+    /// and valid YouTube video URL when it is given.
     /// </summary>
     /// <returns>Error message or null if row is valid.</returns>
     private static string? ValidateRow(ExcelRow excelRow)
@@ -227,9 +239,12 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
         if (string.IsNullOrWhiteSpace(excelRow.Name))
             errors.Add("Naziv (Name) je obavezan.");
 
-        if (string.IsNullOrWhiteSpace(excelRow.VideoUrl))
-            errors.Add("YouTube poveznica (VideoUrl) je obavezna.");
-        else if (!YoutubeHelper.TryExtractVideoId(excelRow.VideoUrl, out _))
+        if (!Enum.TryParse<Language>(excelRow.Language, ignoreCase: true, out _))
+            errors.Add($"Jezik (Language) '{excelRow.Language}' nije podržan, koristite HR, EN ili IT.");
+
+        // Video is optional, it can be added later.
+        if (!string.IsNullOrWhiteSpace(excelRow.VideoUrl) &&
+            !YoutubeHelper.TryExtractVideoId(excelRow.VideoUrl, out _))
             errors.Add("YouTube poveznica (VideoUrl) nije ispravna.");
 
         return errors.Count == 0 ? null : string.Join(" ", errors);
@@ -241,52 +256,65 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
     /// added to <paramref name="workoutTypes"/> only when
     /// whole row is prepared, so failed row doesn't leave them behind.
     /// </summary>
-    private async Task<Workout> PrepareWorkout(Guid userId, ExcelRow excelRow,
-        Dictionary<string, WorkoutType> workoutTypes)
+    private async Task<Workout> PrepareWorkout(Guid userId, ExcelRow excelRow, Language language,
+        Dictionary<Language, Dictionary<string, WorkoutType>> workoutTypes)
     {
         var rowWorkoutTypes = new List<WorkoutType>();
-        var rowNewWorkoutTypes = new Dictionary<string, WorkoutType>(StringComparer.OrdinalIgnoreCase);
+        var rowNewWorkoutTypes = new List<WorkoutType>();
 
         foreach (var typeName in excelRow.WorkoutTypes)
         {
-            if (!workoutTypes.TryGetValue(typeName, out var workoutType) &&
-                !rowNewWorkoutTypes.TryGetValue(typeName, out workoutType))
-            {
-                var translatedTypeName = await Translate(typeName, "vrste vježbe");
+            var workoutType = FindWorkoutType(workoutTypes, language, typeName) ??
+                              rowNewWorkoutTypes.FirstOrDefault(x => HasName(x, language, typeName));
 
-                if (translatedTypeName.Length > MaxLocalizedNameLength)
+            if (workoutType is null)
+            {
+                var translatedTypeName = await Translate(typeName, "vrste vježbe", language);
+
+                if (translatedTypeName.Length > MaxLocalizedWorkoutTypeNameLength)
                     throw new InvalidOperationException($"Naziv vrste vježbe '{typeName}' je predugačak.");
 
-                workoutType = new WorkoutType
-                {
-                    Name = translatedTypeName,
-                    Description = translatedTypeName
-                };
+                // Type written in another language can already
+                // exist under its croatian name (e.g. Chest -> Prsa).
+                var nameHr = new LocalizedProperty(translatedTypeName).Get(Language.HR);
 
-                rowNewWorkoutTypes.Add(typeName, workoutType);
+                workoutType = FindWorkoutType(workoutTypes, Language.HR, nameHr) ??
+                              rowNewWorkoutTypes.FirstOrDefault(x => HasName(x, Language.HR, nameHr));
+
+                if (workoutType is null)
+                {
+                    workoutType = new WorkoutType
+                    {
+                        Name = translatedTypeName,
+                        Description = translatedTypeName
+                    };
+
+                    rowNewWorkoutTypes.Add(workoutType);
+                }
             }
 
             if (!rowWorkoutTypes.Contains(workoutType))
                 rowWorkoutTypes.Add(workoutType);
         }
 
-        var name = await Translate(excelRow.Name, "naziva");
+        var name = await Translate(excelRow.Name, "naziva", language);
 
-        if (name.Length > MaxLocalizedNameLength)
+        if (name.Length > MaxLocalizedWorkoutNameLength)
             throw new InvalidOperationException("Naziv (Name) je predugačak zajedno s prijevodima, skratite ga.");
 
         var description = string.IsNullOrWhiteSpace(excelRow.Description)
             ? new LocalizedProperty { Translations = { [Language.HR] = string.Empty } }.ToJsonString()
-            : await Translate(excelRow.Description, "opisa");
+            : await Translate(excelRow.Description, "opisa", language);
 
-        foreach (var (typeName, workoutType) in rowNewWorkoutTypes)
-            workoutTypes.Add(typeName, workoutType);
+        foreach (var workoutType in rowNewWorkoutTypes)
+            AddWorkoutType(workoutTypes, workoutType);
 
         return new Workout
         {
             Name = name,
             Description = description,
-            ThumbnailUrl = YoutubeHelper.GetYoutubeThumbnail(excelRow.VideoUrl),
+            // Video is optional, thumbnail is empty until it is added.
+            ThumbnailUrl = YoutubeHelper.GetThumbnailOrEmpty(excelRow.VideoUrl),
             VideoUrl = excelRow.VideoUrl,
             // There is no logged user in background job,
             // so audit fields are set to user that started import.
@@ -378,39 +406,52 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
 
     private static WorkoutsImportRowIssue ToIssue(ExcelRow excelRow, string reason)
         => new(excelRow.RowNumber, excelRow.Name, excelRow.Description, excelRow.VideoUrl,
-            string.Join(", ", excelRow.WorkoutTypes), reason);
+            string.Join(", ", excelRow.WorkoutTypes), reason, excelRow.Language);
 
     /// <summary>
-    /// Get existing workout types mapped
-    /// by croatian name (case-insensitive).
+    /// Get existing workout types mapped by language
+    /// and name in that language (case-insensitive).
     /// Types are tracked so new workouts
     /// can reference them directly.
     /// </summary>
-    private async Task<Dictionary<string, WorkoutType>> GetExistingWorkoutTypes()
+    private async Task<Dictionary<Language, Dictionary<string, WorkoutType>>> GetExistingWorkoutTypes()
     {
-        var workoutTypes = await _context.WorkoutTypes.ToListAsync();
+        var workoutTypesByLanguage = Enum.GetValues<Language>().ToDictionary(x => x,
+            _ => new Dictionary<string, WorkoutType>(StringComparer.OrdinalIgnoreCase));
 
-        var workoutTypesByName = new Dictionary<string, WorkoutType>(StringComparer.OrdinalIgnoreCase);
+        foreach (var workoutType in await _context.WorkoutTypes.ToListAsync())
+            AddWorkoutType(workoutTypesByLanguage, workoutType);
 
-        foreach (var workoutType in workoutTypes)
-        {
-            var nameHr = new LocalizedProperty(workoutType.Name).Get(Language.HR)?.Trim();
-
-            if (string.IsNullOrEmpty(nameHr)) continue;
-
-            workoutTypesByName.TryAdd(nameHr, workoutType);
-        }
-
-        return workoutTypesByName;
+        return workoutTypesByLanguage;
     }
 
-    private async Task<string> Translate(string text, string fieldName)
+    private static void AddWorkoutType(Dictionary<Language, Dictionary<string, WorkoutType>> workoutTypes,
+        WorkoutType workoutType)
+    {
+        foreach (var (language, name) in new LocalizedProperty(workoutType.Name).Translations)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                workoutTypes[language].TryAdd(name.Trim(), workoutType);
+        }
+    }
+
+    private static WorkoutType? FindWorkoutType(Dictionary<Language, Dictionary<string, WorkoutType>> workoutTypes,
+        Language language, string? name)
+        => !string.IsNullOrWhiteSpace(name) && workoutTypes[language].TryGetValue(name.Trim(), out var workoutType)
+            ? workoutType
+            : null;
+
+    private static bool HasName(WorkoutType workoutType, Language language, string? name)
+        => string.Equals(new LocalizedProperty(workoutType.Name).Get(language)?.Trim(), name?.Trim(),
+            StringComparison.OrdinalIgnoreCase);
+
+    private async Task<string> Translate(string text, string fieldName, Language sourceLanguage)
     {
         try
         {
             return await LocalizedProperty.PopulateMissingLanguages(
                 _configuration["GoogleCloudConfiguration:TranslateServiceUrl"]!,
-                Language.HR, text);
+                sourceLanguage, text);
         }
         catch (Exception ex)
         {

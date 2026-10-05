@@ -6,6 +6,13 @@
 /// </summary>
 public static class YoutubeHelper
 {
+    /// <summary>
+    /// Thumbnail of the video, or empty text when workout
+    /// has no video yet (video is added later).
+    /// </summary>
+    public static string GetThumbnailOrEmpty(string? videoUrl)
+        => string.IsNullOrWhiteSpace(videoUrl) ? string.Empty : GetYoutubeThumbnail(videoUrl);
+
     public static string GetYoutubeThumbnail(string videoUrl)
     {
         if (!TryExtractVideoId(videoUrl, out var videoId))

@@ -22,7 +22,8 @@ public static class WorkoutDuplicates
     /// <param name="excludedWorkoutId">Workout that is ignored (e.g. one that is being updated).</param>
     /// <param name="cancellationToken"></param>
     public static async Task<HashSet<string>> GetExistingKeys(ApexPerformanceContext context,
-        Guid? excludedWorkoutId = null, CancellationToken cancellationToken = default)
+        Guid? excludedWorkoutId = null, CancellationToken cancellationToken = default,
+        Language language = Language.HR)
     {
         var workouts = await context.Workouts
             .AsNoTracking()
@@ -32,8 +33,8 @@ public static class WorkoutDuplicates
 
         return workouts
             .Select(x => GetKey(
-                new LocalizedProperty(x.Name).Get(Language.HR),
-                new LocalizedProperty(x.Description).Get(Language.HR)))
+                new LocalizedProperty(x.Name).Get(language),
+                new LocalizedProperty(x.Description).Get(language)))
             .ToHashSet();
     }
 

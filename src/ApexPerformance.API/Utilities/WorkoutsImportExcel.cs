@@ -16,7 +16,7 @@ public static class WorkoutsImportExcel
 
         var worksheet = workbook.Worksheets.Add("Vjezbe");
 
-        string[] headers = ["Name", "Description", "VideoUrl", "WorkoutTypes", "Greska", "RedakUDatoteci"];
+        string[] headers = ["Name", "Description", "VideoUrl", "WorkoutTypes", "Language", "Greska", "RedakUDatoteci"];
 
         for (var i = 0; i < headers.Length; i++)
             worksheet.Cell(1, i + 1).Value = headers[i];
@@ -31,8 +31,9 @@ public static class WorkoutsImportExcel
             worksheet.Cell(rowNumber, 2).Value = failedRow.Description;
             worksheet.Cell(rowNumber, 3).Value = failedRow.VideoUrl;
             worksheet.Cell(rowNumber, 4).Value = failedRow.WorkoutTypes;
-            worksheet.Cell(rowNumber, 5).Value = failedRow.Reason;
-            worksheet.Cell(rowNumber, 6).Value = failedRow.RowNumber;
+            worksheet.Cell(rowNumber, 5).Value = failedRow.Language;
+            worksheet.Cell(rowNumber, 6).Value = failedRow.Reason;
+            worksheet.Cell(rowNumber, 7).Value = failedRow.RowNumber;
             rowNumber++;
         }
 

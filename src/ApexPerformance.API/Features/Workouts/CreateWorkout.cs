@@ -13,8 +13,9 @@ namespace ApexPerformance.API.Features.Workouts;
 public record CreateWorkoutRequest(
     LocalizedProperty Name,
     LocalizedProperty Description,
-    string ThumbnailUrl,
-    string VideoUrl,
+    string? ThumbnailUrl,
+    // Optional, video can be added later.
+    string? VideoUrl,
     List<Guid> WorkoutTypes
 );
 
@@ -61,9 +62,9 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
             Name = request.Name.ToJsonString(),
             Description = request.Description.ToJsonString(),
             ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl)
-                ? YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl)
+                ? YoutubeHelper.GetThumbnailOrEmpty(request.VideoUrl)
                 : request.ThumbnailUrl.Trim(),
-            VideoUrl = request.VideoUrl.Trim(),
+            VideoUrl = request.VideoUrl?.Trim() ?? string.Empty,
             WorkoutTypes = workoutTypes.Select(x => new WorkoutWorkoutType
             {
                 WorkoutType = x
@@ -96,7 +97,6 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
         RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Description.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
             .When(x => x.Description is not null);
-        RuleFor(x => x.VideoUrl).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.VideoUrl).Must(x => YoutubeHelper.TryExtractVideoId(x, out _))
             .WithMessage(ErrorCodes.NotValid)
             .When(x => !string.IsNullOrWhiteSpace(x.VideoUrl));

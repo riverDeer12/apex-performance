@@ -13,8 +13,9 @@ namespace ApexPerformance.API.Features.Workouts;
 public record UpdateWorkoutRequest(
     LocalizedProperty Name,
     LocalizedProperty Description,
-    string ThumbnailUrl,
-    string VideoUrl,
+    string? ThumbnailUrl,
+    // Optional, video can be added later.
+    string? VideoUrl,
     List<Guid> WorkoutTypes
 );
 
@@ -67,9 +68,9 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
         workout.Name = request.Name.ToJsonString();
         workout.Description = request.Description.ToJsonString();
         workout.ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl)
-            ? YoutubeHelper.GetYoutubeThumbnail(request.VideoUrl)
+            ? YoutubeHelper.GetThumbnailOrEmpty(request.VideoUrl)
             : request.ThumbnailUrl.Trim();
-        workout.VideoUrl = request.VideoUrl.Trim();
+        workout.VideoUrl = request.VideoUrl?.Trim() ?? string.Empty;
 
         // Only relations that changed are removed or added
         // so unchanged ones are not deleted and re-inserted
@@ -118,7 +119,6 @@ public sealed class UpdateWorkoutValidator : Validator<UpdateWorkoutRequest>
         RuleFor(x => x.Description).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Description.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
             .When(x => x.Description is not null);
-        RuleFor(x => x.VideoUrl).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.VideoUrl).Must(x => YoutubeHelper.TryExtractVideoId(x, out _))
             .WithMessage(ErrorCodes.NotValid)
             .When(x => !string.IsNullOrWhiteSpace(x.VideoUrl));

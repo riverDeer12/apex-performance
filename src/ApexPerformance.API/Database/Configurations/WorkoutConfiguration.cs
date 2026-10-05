@@ -11,7 +11,8 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
     {
         builder.HasKey(e => e.Id);
         
-        builder.Property(e => e.Name).HasMaxLength(200);
+        // Contains JSON with name in all languages.
+        builder.Property(e => e.Name).HasMaxLength(500);
         
         builder.HasQueryFilter(x => !x.IsDeleted);
         
