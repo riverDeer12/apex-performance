@@ -11,7 +11,9 @@ namespace ApexPerformance.API.Features.BodyMeasurements;
 
 public record CreateBodyMeasurementRequest(
     Guid Client,
-    decimal Height,
+    // Asked only at the first measurement, later the
+    // client's height from the last measurement is used.
+    decimal? Height,
     decimal Weight,
     decimal Shoulders,
     decimal Chest,
@@ -59,9 +61,20 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
         if (client is null)
             ThrowError(ErrorCodes.NotFound);
 
+        var height = request.Height is > 0
+            ? request.Height.Value
+            : await _context.BodyMeasurements
+                .Where(x => x.ClientId == client.Id && x.Height > 0)
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => (decimal?)x.Height)
+                .FirstOrDefaultAsync(cancellationToken);
+
+        if (height is null)
+            ThrowError(ErrorCodes.Required);
+
         var bodyMeasurement = new BodyMeasurement
         {
-            Height = request.Height,
+            Height = height.Value,
             Weight = request.Weight,
             Shoulders = request.Shoulders,
             Chest = request.Chest,
@@ -118,7 +131,8 @@ public sealed class CreateBodyMeasurementValidator : Validator<CreateBodyMeasure
             })
             .WithMessage(ErrorCodes.NotFound);
         
-        RuleFor(x => x.Height).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Height).GreaterThan(0).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Height is not null);
         RuleFor(x => x.Weight).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Chest).NotEmpty().WithMessage(ErrorCodes.Required);

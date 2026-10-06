@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.BodyMeasurements;
 
 public record UpdateBodyMeasurementRequest(
-    decimal Height,
+    // Existing height is kept when not given.
+    decimal? Height,
     decimal Weight,
     decimal Shoulders,
     decimal Chest,
@@ -45,7 +46,8 @@ public class UpdateBodyMeasurementEndpoint : Endpoint<UpdateBodyMeasurementReque
         if (bodyMeasurement is null)
             ThrowError(ErrorCodes.NotFound);
 
-        bodyMeasurement.Height = request.Height;
+        if (request.Height is > 0)
+            bodyMeasurement.Height = request.Height.Value;
         bodyMeasurement.Weight = request.Weight;
         bodyMeasurement.Shoulders = request.Shoulders;
         bodyMeasurement.Chest = request.Chest;
@@ -74,7 +76,8 @@ public sealed class UpdateBodyMeasurementValidator : Validator<UpdateBodyMeasure
 {
     public UpdateBodyMeasurementValidator()
     {
-        RuleFor(x => x.Height).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Height).GreaterThan(0).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Height is not null);
         RuleFor(x => x.Weight).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Shoulders).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Chest).NotEmpty().WithMessage(ErrorCodes.Required);
