@@ -12,11 +12,12 @@ public class TrainingExerciseConfiguration : IEntityTypeConfiguration<TrainingEx
         // trainings are hidden together with them.
         builder.HasQueryFilter(x => !x.Training.IsDeleted);
 
-        builder.Property(e => e.Reps).HasMaxLength(50);
-
-        builder.Property(e => e.Weight).HasColumnType("decimal(6,2)");
-
         builder.Property(e => e.Note).HasMaxLength(500);
+
+        builder.HasMany(e => e.Sets)
+            .WithOne(e => e.TrainingExercise)
+            .HasForeignKey(e => e.TrainingExerciseId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Workouts are soft deleted, so the relation is never removed by the database.
         builder.HasOne(e => e.Workout)

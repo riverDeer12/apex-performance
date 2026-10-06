@@ -67,7 +67,9 @@ public class CreateTrainingEndpoint : Endpoint<CreateTrainingRequest, TrainingRe
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        await _context.Entry(training).Collection(x => x.Exercises).Query().Include(x => x.Workout)
+        await _context.Entry(training).Collection(x => x.Exercises).Query()
+            .Include(x => x.Workout)
+            .Include(x => x.Sets)
             .LoadAsync(cancellationToken);
 
         await SendAsync(TrainingMapper.ToResponse(training), cancellation: cancellationToken);

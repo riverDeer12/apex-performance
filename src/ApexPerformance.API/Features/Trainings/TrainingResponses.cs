@@ -3,16 +3,21 @@ using ApexPerformance.API.Shared.DataTransferObjects;
 
 namespace ApexPerformance.API.Features.Trainings;
 
+public record TrainingExerciseSetResponse(
+    Guid Id,
+    int Order,
+    string? Reps,
+    decimal? Weight
+);
+
 public record TrainingExerciseResponse(
     Guid Id,
     Guid WorkoutId,
     // Persisted JSON with workout name translations.
     string WorkoutName,
     int Order,
-    int? Sets,
-    string? Reps,
-    decimal? Weight,
-    string? Note
+    string? Note,
+    List<TrainingExerciseSetResponse> Sets
 );
 
 public record TrainingResponse(
@@ -28,12 +33,15 @@ public record TrainingResponse(
     DateTimeOffset UpdatedAt
 );
 
+public record TrainingExerciseSetRequest(
+    string? Reps,
+    decimal? Weight
+);
+
 public record TrainingExerciseRequest(
     Guid Workout,
-    int? Sets,
-    string? Reps,
-    decimal? Weight,
-    string? Note
+    string? Note,
+    List<TrainingExerciseSetRequest>? Sets
 );
 
 public static class TrainingMapper
@@ -49,23 +57,29 @@ public static class TrainingMapper
             training.Client.FullName),
         training.Exercises
             .OrderBy(x => x.Order)
-            .Select(x => new TrainingExerciseResponse(x.Id, x.WorkoutId, x.Workout.Name, x.Order, x.Sets,
-                x.Reps, x.Weight, x.Note))
+            .Select(x => new TrainingExerciseResponse(x.Id, x.WorkoutId, x.Workout.Name, x.Order, x.Note,
+                x.Sets
+                    .OrderBy(set => set.Order)
+                    .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight))
+                    .ToList()))
             .ToList(),
         training.CreatedAt,
         training.UpdatedAt);
 
     /// <summary>
-    /// Exercises in the order they are given.
+    /// Exercises and their sets in the order they are given.
     /// </summary>
     public static List<TrainingExercise> ToExercises(IEnumerable<TrainingExerciseRequest>? exercises)
         => (exercises ?? []).Select((x, index) => new TrainingExercise
         {
             WorkoutId = x.Workout,
             Order = index,
-            Sets = x.Sets,
-            Reps = string.IsNullOrWhiteSpace(x.Reps) ? null : x.Reps.Trim(),
-            Weight = x.Weight,
-            Note = string.IsNullOrWhiteSpace(x.Note) ? null : x.Note.Trim()
+            Note = string.IsNullOrWhiteSpace(x.Note) ? null : x.Note.Trim(),
+            Sets = (x.Sets ?? []).Select((set, setIndex) => new TrainingExerciseSet
+            {
+                Order = setIndex,
+                Reps = string.IsNullOrWhiteSpace(set.Reps) ? null : set.Reps.Trim(),
+                Weight = set.Weight
+            }).ToList()
         }).ToList();
 }

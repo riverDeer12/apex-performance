@@ -30,6 +30,8 @@ public class GetTrainingsEndpoint : EndpointWithoutRequest<List<TrainingResponse
             .Include(x => x.Client)
             .Include(x => x.Exercises)
             .ThenInclude(x => x.Workout)
+            .Include(x => x.Exercises)
+            .ThenInclude(x => x.Sets)
             .OrderByDescending(x => x.Date)
             .ToListAsync(cancellationToken);
 

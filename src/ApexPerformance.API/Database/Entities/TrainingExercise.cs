@@ -20,11 +20,7 @@ public class TrainingExercise
     public Workout Workout { get; set; } = null!;
 
     public int Order { get; set; }
-    public int? Sets { get; set; }
-
-    // Text, so ranges like "8-12" or "30 s" can be used.
-    public string? Reps { get; set; }
-
-    public decimal? Weight { get; set; }
     public string? Note { get; set; }
+
+    public ICollection<TrainingExerciseSet> Sets { get; set; } = new List<TrainingExerciseSet>();
 }

@@ -42,6 +42,7 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
         var training = await (await TrainingAccess.GetVisibleTrainings(_context, _currentUserService,
                 cancellationToken))
             .Include(x => x.Exercises)
+            .ThenInclude(x => x.Sets)
             .FirstOrDefaultAsync(x => x.Id == trainingId, cancellationToken);
 
         if (training is null)
@@ -76,7 +77,9 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        await _context.Entry(training).Collection(x => x.Exercises).Query().Include(x => x.Workout)
+        await _context.Entry(training).Collection(x => x.Exercises).Query()
+            .Include(x => x.Workout)
+            .Include(x => x.Sets)
             .LoadAsync(cancellationToken);
 
         await SendAsync(TrainingMapper.ToResponse(training), cancellation: cancellationToken);
