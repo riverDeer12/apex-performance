@@ -60,6 +60,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<TimeSlot> TimeSlots { get; set; }
+    public DbSet<Training> Trainings { get; set; }
+    public DbSet<TrainingExercise> TrainingExercises { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     
