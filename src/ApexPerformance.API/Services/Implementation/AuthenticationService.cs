@@ -19,7 +19,9 @@ public class AuthenticationService : IAuthenticationService
         _configuration = configuration;
     }
     
-    public async Task<string> GenerateJwtToken(bool rememberMe, User user)
+    public DateTime GetTokenExpiration(bool rememberMe) => DateTime.UtcNow.AddDays(rememberMe ? 30 : 1);
+
+    public async Task<string> GenerateJwtToken(User user, Guid sessionId, DateTime expiresAt)
     {
         var roles = user.Roles.Select(r => r.Role.Name).ToList();
 
@@ -29,12 +31,13 @@ public class AuthenticationService : IAuthenticationService
             options: o =>
             {
                 o.SigningKey = _configuration["JWTSecretKey"] ?? string.Empty;
-                o.ExpireAt = DateTime.UtcNow.AddDays(rememberMe ? 30 : 1);
+                o.ExpireAt = expiresAt;
                 o.User.Roles.AddRange(roles);
                 o.User.Permissions.AddRange(permissions);
                 o.User.Claims.Add(
                     ("name", user.UserName),
-                    ("sub", user.Id.ToString()));
+                    ("sub", user.Id.ToString()),
+                    (UserSessionSettings.SessionIdClaim, sessionId.ToString()));
             });
         return jwtToken;
     }

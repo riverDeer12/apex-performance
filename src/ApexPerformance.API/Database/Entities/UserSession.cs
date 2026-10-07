@@ -13,4 +13,13 @@ public class UserSession : BaseEntity
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public bool RememberMe { get; set; }
+
+    // When login token of this session expires.
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    public DateTimeOffset? RevokedAt { get; set; }
+    public string? RevokeReason { get; set; }
+
+    public bool IsActive(DateTimeOffset now) =>
+        RevokedAt is null && ExpiresAt is not null && ExpiresAt > now;
 }
