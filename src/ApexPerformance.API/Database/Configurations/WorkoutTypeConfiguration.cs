@@ -8,7 +8,8 @@ public class WorkoutTypeConfiguration : IEntityTypeConfiguration<WorkoutType>
 {
     public void Configure(EntityTypeBuilder<WorkoutType> builder)
     {
-        builder.Property(e => e.Name).HasMaxLength(200);
+        // Names are JSON with translations, long names need the room.
+        builder.Property(e => e.Name).HasMaxLength(500);
         builder.ToTable("WorkoutTypes");
     }
 }
