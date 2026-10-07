@@ -4,7 +4,12 @@ namespace ApexPerformance.API.Services.Interfaces;
 
 public interface IAuthenticationService
 {
-    Task<string> GenerateJwtToken(bool rememberMe, User user);
+    /// <summary>
+    /// Login token bound to the given user session.
+    /// </summary>
+    Task<string> GenerateJwtToken(User user, Guid sessionId, DateTime expiresAt);
+
+    DateTime GetTokenExpiration(bool rememberMe);
 
     /// <summary>
     /// Token without roles and permissions that only

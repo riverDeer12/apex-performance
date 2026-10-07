@@ -11,7 +11,11 @@ public sealed record GetUserSessionResponse(
     DateTimeOffset LoggedInAt,
     string? IpAddress,
     string? UserAgent,
-    bool RememberMe);
+    bool RememberMe,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset? RevokedAt,
+    string? RevokeReason,
+    bool IsActive);
 
 /// <summary>
 /// Latest logins of one user. Coach
@@ -47,12 +51,16 @@ public sealed class GetUserSessionHistoryEndpoint : EndpointWithoutRequest<List<
         if (visibleUserIds is not null && !visibleUserIds.Contains(userId))
             ThrowError(ErrorCodes.UnauthorizedAction, StatusCodes.Status403Forbidden);
 
+        var now = DateTimeOffset.UtcNow;
+
         var sessions = await _context.UserSessions
             .AsNoTracking()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
             .Take(MaxSessions)
-            .Select(x => new GetUserSessionResponse(x.Id, x.CreatedAt, x.IpAddress, x.UserAgent, x.RememberMe))
+            .Select(x => new GetUserSessionResponse(x.Id, x.CreatedAt, x.IpAddress, x.UserAgent, x.RememberMe,
+                x.ExpiresAt, x.RevokedAt, x.RevokeReason,
+                x.RevokedAt == null && x.ExpiresAt != null && x.ExpiresAt > now))
             .ToListAsync(cancellationToken);
 
         await SendAsync(sessions, cancellation: cancellationToken);

@@ -46,42 +46,57 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         if (!user.IsValidPassword(request.Password))
             ThrowError(ErrorCodes.WrongUserNameOrPassword);
 
-        var jwtToken = await _authenticationService.GenerateJwtToken(request.RememberMe, user);
+        var expiresAt = _authenticationService.GetTokenExpiration(request.RememberMe);
 
-        await SaveUserSession(user.Id, request.RememberMe, cancellationToken);
+        var session = await StartUserSession(user.Id, request.RememberMe, expiresAt, cancellationToken);
+
+        var jwtToken = await _authenticationService.GenerateJwtToken(user, session.Id, expiresAt);
 
         await SendAsync(new LoginResponse(jwtToken), cancellation: cancellationToken);
     }
 
     /// <summary>
-    /// Record successful login so admins and coaches
-    /// can see when user last logged in. Failing to save
-    /// session must not prevent user from logging in.
+    /// User can be logged in on only one device at a time,
+    /// so logging in ends all other active sessions of the user
+    /// and the new session is the only one its token is valid for.
     /// </summary>
-    private async Task SaveUserSession(Guid userId, bool rememberMe, CancellationToken cancellationToken)
+    private async Task<UserSession> StartUserSession(Guid userId, bool rememberMe, DateTime expiresAt,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+        var now = DateTimeOffset.UtcNow;
 
-            _context.UserSessions.Add(new UserSession
-            {
-                UserId = userId,
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = userAgent.Length > 512 ? userAgent[..512] : userAgent,
-                RememberMe = rememberMe,
-                // Login is anonymous request, so audit
-                // fields are set to user that logged in.
-                CreatedBy = userId,
-                UpdatedBy = userId
-            });
+        await _context.UserSessions
+            .Where(x => x.UserId == userId && x.RevokedAt == null && x.ExpiresAt > now)
+            .ExecuteUpdateAsync(x => x
+                    .SetProperty(session => session.RevokedAt, now)
+                    .SetProperty(session => session.RevokeReason, SessionRevokeReasons.NewLogin)
+                    .SetProperty(session => session.UpdatedAt, now)
+                    .SetProperty(session => session.UpdatedBy, userId),
+                cancellationToken);
 
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex)
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        var session = new UserSession
         {
-            Console.WriteLine($"Saving user session failed: {ex.Message}");
-        }
+            UserId = userId,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = userAgent.Length > 512 ? userAgent[..512] : userAgent,
+            RememberMe = rememberMe,
+            ExpiresAt = expiresAt,
+            // Login is anonymous request, so audit
+            // fields are set to user that logged in.
+            CreatedBy = userId,
+            UpdatedBy = userId
+        };
+
+        _context.UserSessions.Add(session);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        if (result == 0)
+            ThrowError(ErrorCodes.SavingError);
+
+        return session;
     }
 }
 

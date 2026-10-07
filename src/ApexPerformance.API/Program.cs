@@ -13,6 +13,7 @@ using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.SqlServer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Serilog;
@@ -29,7 +30,11 @@ var configuration = builder.Configuration;
 
 builder.Services
     .AddAuthenticationJwtBearer(s =>
-        s.SigningKey = configuration["JWTSecretKey"])
+            s.SigningKey = configuration["JWTSecretKey"],
+        o => o.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = UserSessionTokenValidation.ValidateAsync
+        })
     .AddAuthorization()
     .AddFastEndpoints();
 

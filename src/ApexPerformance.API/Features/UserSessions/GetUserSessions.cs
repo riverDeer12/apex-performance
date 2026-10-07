@@ -15,7 +15,8 @@ public sealed record GetUserLastSessionResponse(
     DateTimeOffset? LastLoginAt,
     string? LastIpAddress,
     string? LastUserAgent,
-    int LoginsCount);
+    int LoginsCount,
+    Guid? ActiveSessionId);
 
 /// <summary>
 /// Users with their last login. Super admin sees
@@ -81,10 +82,23 @@ public sealed class GetUserSessionsEndpoint : EndpointWithoutRequest<List<GetUse
                 .First())
             .ToDictionaryAsync(x => x.UserId, cancellationToken);
 
+        var now = DateTimeOffset.UtcNow;
+
+        // User can have only one active session (one device at a time).
+        var activeSessions = await _context.UserSessions
+            .AsNoTracking()
+            .Where(x => visibleUserIds.Contains(x.UserId) &&
+                        x.RevokedAt == null &&
+                        x.ExpiresAt > now)
+            .GroupBy(x => x.UserId)
+            .Select(x => new { UserId = x.Key, SessionId = x.OrderByDescending(session => session.CreatedAt).First().Id })
+            .ToDictionaryAsync(x => x.UserId, x => x.SessionId, cancellationToken);
+
         var response = users.Select(x =>
             {
                 lastSessions.TryGetValue(x.Id, out var lastSession);
                 loginsCounts.TryGetValue(x.Id, out var loginsCount);
+                Guid? activeSessionId = activeSessions.TryGetValue(x.Id, out var sessionId) ? sessionId : null;
 
                 return new GetUserLastSessionResponse(
                     x.Id,
@@ -95,7 +109,8 @@ public sealed class GetUserSessionsEndpoint : EndpointWithoutRequest<List<GetUse
                     lastSession?.CreatedAt,
                     lastSession?.IpAddress,
                     lastSession?.UserAgent,
-                    loginsCount);
+                    loginsCount,
+                    activeSessionId);
             })
             .OrderByDescending(x => x.LastLoginAt.HasValue)
             .ThenByDescending(x => x.LastLoginAt)

@@ -14,6 +14,8 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
 
         builder.Property(e => e.UserAgent).HasMaxLength(512);
 
+        builder.Property(e => e.RevokeReason).HasMaxLength(32);
+
         builder.HasOne(e => e.User)
             .WithMany()
             .HasForeignKey(e => e.UserId)
