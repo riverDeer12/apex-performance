@@ -1,4 +1,5 @@
 ﻿using ApexPerformance.API.Database;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
@@ -18,10 +19,12 @@ public record GetWorkoutResponse(
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetWorkoutsEndpoint(ApexPerformanceContext context)
+    public GetWorkoutsEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -36,6 +39,12 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
             .Include(workout => workout.WorkoutTypes)
             .ThenInclude(workoutWorkoutType => workoutWorkoutType.WorkoutType)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        // Clients only see the workouts their plan includes.
+        var planFilter = await WorkoutPlanAccess.GetFilter(_context, _currentUserService, cancellationToken);
+
+        if (planFilter is not null)
+            workouts = workouts.Where(planFilter).ToList();
 
         if (workouts.Count is 0)
         {
