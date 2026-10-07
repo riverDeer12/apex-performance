@@ -22,5 +22,9 @@ public class TrainingExercise
     public int Order { get; set; }
     public string? Note { get; set; }
 
+    // Done right after the previous exercise without rest,
+    // together they make one set (superset).
+    public bool IsSupersetWithPrevious { get; set; }
+
     public ICollection<TrainingExerciseSet> Sets { get; set; } = new List<TrainingExerciseSet>();
 }

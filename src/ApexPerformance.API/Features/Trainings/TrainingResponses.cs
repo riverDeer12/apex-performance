@@ -17,7 +17,8 @@ public record TrainingExerciseResponse(
     string WorkoutName,
     int Order,
     string? Note,
-    List<TrainingExerciseSetResponse> Sets
+    List<TrainingExerciseSetResponse> Sets,
+    bool IsSupersetWithPrevious
 );
 
 public record TrainingResponse(
@@ -41,7 +42,9 @@ public record TrainingExerciseSetRequest(
 public record TrainingExerciseRequest(
     Guid Workout,
     string? Note,
-    List<TrainingExerciseSetRequest>? Sets
+    List<TrainingExerciseSetRequest>? Sets,
+    // Optional, exercise is done right after the previous one (superset).
+    bool IsSupersetWithPrevious = false
 );
 
 public static class TrainingMapper
@@ -61,7 +64,8 @@ public static class TrainingMapper
                 x.Sets
                     .OrderBy(set => set.Order)
                     .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight))
-                    .ToList()))
+                    .ToList(),
+                x.IsSupersetWithPrevious))
             .ToList(),
         training.CreatedAt,
         training.UpdatedAt);
@@ -75,6 +79,8 @@ public static class TrainingMapper
             WorkoutId = x.Workout,
             Order = index,
             Note = string.IsNullOrWhiteSpace(x.Note) ? null : x.Note.Trim(),
+            // First exercise has no previous one to be in a superset with.
+            IsSupersetWithPrevious = index > 0 && x.IsSupersetWithPrevious,
             Sets = (x.Sets ?? []).Select((set, setIndex) => new TrainingExerciseSet
             {
                 Order = setIndex,
