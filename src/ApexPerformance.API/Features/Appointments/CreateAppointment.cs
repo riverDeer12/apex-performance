@@ -143,7 +143,20 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         if (existingAppointment is null)
             ThrowError(ErrorCodes.NotFound);
 
-        foreach (var client in requestClients)
+        var existingClientIds = existingAppointment.Clients
+            .Select(x => x.ClientId)
+            .ToList();
+
+        // Clients already on the appointment are skipped
+        // so they are not added or charged twice.
+        var newClients = requestClients
+            .Where(x => !existingClientIds.Contains(x.Id))
+            .ToList();
+
+        if (newClients.Count is 0)
+            return existingAppointment;
+
+        foreach (var client in newClients)
         {
             var clientAppointment = new ClientAppointment
             {
@@ -155,12 +168,6 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
             existingAppointment.Clients.Add(clientAppointment);
         }
-        
-        BackgroundJob.Enqueue(() =>
-            SendFcmNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
-        
-        BackgroundJob.Enqueue(() =>
-            SendEmailNotifications(request.Coaches, request.Clients, existingAppointment.Id, timeSlot.Id));
 
         _context.Appointments.Update(existingAppointment);
 
@@ -169,11 +176,63 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        var removeCreditClients = new List<Client>(requestClients);
+        await _clientService.RemoveClientsCredits(newClients, 1, cancellationToken);
 
-        await _clientService.RemoveClientsCredits(removeCreditClients, 1, cancellationToken);
-        
+        var newClientIds = newClients.Select(x => x.Id).ToList();
+
+        // A coach (or administrator) adding a client to an existing
+        // appointment needs no approval, so instead of a request
+        // only the clients are notified that the client was added.
+        if (_currentUserService.LoggedUserHasRole(UserRoles.Client))
+        {
+            BackgroundJob.Enqueue(() =>
+                SendFcmNotifications(request.Coaches, newClientIds, existingAppointment.Id, timeSlot.Id));
+
+            BackgroundJob.Enqueue(() =>
+                SendEmailNotifications(request.Coaches, newClientIds, existingAppointment.Id, timeSlot.Id));
+        }
+        else
+        {
+            BackgroundJob.Enqueue(() =>
+                SendAddedToAppointmentNotifications(existingClientIds, newClientIds, existingAppointment.Id));
+        }
+
         return existingAppointment;
+    }
+
+    public async Task SendAddedToAppointmentNotifications(List<Guid> existingClientIds, List<Guid> newClientIds,
+        Guid appointmentId)
+    {
+        var appointment =
+            await _context.Appointments
+                .Include(appointment => appointment.AppointmentStatus)
+                .Include(appointment => appointment.TimeSlot)
+                .SingleAsync(x => x.Id == appointmentId);
+
+        var existingClients = await _context.Clients
+            .Where(x => existingClientIds.Contains(x.Id))
+            .ToListAsync();
+
+        var newClients = await _context.Clients
+            .Where(x => newClientIds.Contains(x.Id))
+            .ToListAsync();
+
+        _emailService.SendAppointmentStatus(newClients, appointment, appointment.TimeSlot);
+
+        foreach (var newClient in newClients)
+            _emailService.SendJoinedAppointmentEmail(appointment, existingClients, newClient);
+
+        var newClientUserIds = newClients.Select(x => x.UserId).ToList();
+
+        var newClientDeviceTokens = await _context.DeviceTokens
+            .Where(x => newClientUserIds.Contains(x.UserId))
+            .Select(t => t.Token)
+            .ToListAsync();
+
+        _ = await _notificationService.SendToMultipleDevices(newClientDeviceTokens,
+            "You have appointment update",
+            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+            PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
 
     public async Task SendEmailNotifications(List<Guid> coachesIds, List<Guid> clientsIds, Guid appointmentId,
