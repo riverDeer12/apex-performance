@@ -54,6 +54,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 // Background Jobs
 builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
+builder.Services.AddScoped<MonthlyReviewReminderJob>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
@@ -152,6 +153,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 });
 
 DeclineExpiredRequestsJob.Schedule();
+MonthlyReviewReminderJob.ScheduleJob();
 
 app.Run();
 

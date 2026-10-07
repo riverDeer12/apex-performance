@@ -8,7 +8,7 @@ namespace ApexPerformance.API.Features.Trainings;
 
 /// <summary>
 /// Administrators see and manage all trainings, coaches only
-/// trainings of their clients and clients only their own.
+/// trainings of their clients and clients only their own completed ones.
 /// </summary>
 public static class TrainingAccess
 {
@@ -29,8 +29,10 @@ public static class TrainingAccess
             return context.Trainings.Where(x => clientIds.Contains(x.ClientId));
         }
 
+        // Clients only see trainings their coach marked as completed,
+        // planned trainings are for the coach.
         if (currentUserService.LoggedUserHasRole(UserRoles.Client))
-            return context.Trainings.Where(x => x.Client.UserId == currentUserService.UserId);
+            return context.Trainings.Where(x => x.Client.UserId == currentUserService.UserId && x.IsCompleted);
 
         return context.Trainings.Where(_ => false);
     }
