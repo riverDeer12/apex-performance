@@ -19,11 +19,14 @@ public class ChangeTrainingCompletionEndpoint
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPersonalRecordService _personalRecordService;
 
-    public ChangeTrainingCompletionEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public ChangeTrainingCompletionEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IPersonalRecordService personalRecordService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _personalRecordService = personalRecordService;
     }
 
     public override void Configure()
@@ -54,6 +57,8 @@ public class ChangeTrainingCompletionEndpoint
 
             if (result == 0)
                 ThrowError(ErrorCodes.SavingError);
+
+            await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
         }
 
         await SendAsync(new ChangeTrainingCompletionResponse(training.Id, training.IsCompleted,

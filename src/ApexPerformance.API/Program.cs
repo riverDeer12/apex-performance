@@ -55,6 +55,7 @@ builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentService>();
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
 
 // Background Jobs
 builder.Services.AddScoped<IEmailJob, EmailJob>();
@@ -159,6 +160,9 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 
 DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
+
+// Records of trainings completed before personal records existed.
+BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());
 
 app.Run();
 

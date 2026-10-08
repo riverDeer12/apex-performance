@@ -21,11 +21,14 @@ public class CreateTrainingEndpoint : Endpoint<CreateTrainingRequest, TrainingRe
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPersonalRecordService _personalRecordService;
 
-    public CreateTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public CreateTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IPersonalRecordService personalRecordService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _personalRecordService = personalRecordService;
     }
 
     public override void Configure()
@@ -66,6 +69,8 @@ public class CreateTrainingEndpoint : Endpoint<CreateTrainingRequest, TrainingRe
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+
+        await _personalRecordService.RecalculateForClientsAsync([client.Id], cancellationToken);
 
         await _context.Entry(training).Collection(x => x.Exercises).Query()
             .Include(x => x.Workout)

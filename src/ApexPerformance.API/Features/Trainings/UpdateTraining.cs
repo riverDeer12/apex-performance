@@ -20,11 +20,14 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPersonalRecordService _personalRecordService;
 
-    public UpdateTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public UpdateTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IPersonalRecordService personalRecordService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _personalRecordService = personalRecordService;
     }
 
     public override void Configure()
@@ -57,6 +60,9 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
         if (!await TrainingValidation.WorkoutsExist(_context, request.Exercises, cancellationToken))
             ThrowError(ErrorCodes.NotValid);
 
+        // Records of both clients change when training is moved to another client.
+        var previousClientId = training.ClientId;
+
         training.Name = request.Name.Trim();
         training.Date = request.Date;
         training.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
@@ -76,6 +82,8 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+
+        await _personalRecordService.RecalculateForClientsAsync([previousClientId, client.Id], cancellationToken);
 
         await _context.Entry(training).Collection(x => x.Exercises).Query()
             .Include(x => x.Workout)

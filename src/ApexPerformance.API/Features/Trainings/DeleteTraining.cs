@@ -12,11 +12,14 @@ public class DeleteTrainingEndpoint : EndpointWithoutRequest<DeleteTrainingRespo
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPersonalRecordService _personalRecordService;
 
-    public DeleteTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public DeleteTrainingEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IPersonalRecordService personalRecordService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _personalRecordService = personalRecordService;
     }
 
     public override void Configure()
@@ -43,6 +46,8 @@ public class DeleteTrainingEndpoint : EndpointWithoutRequest<DeleteTrainingRespo
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+
+        await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
 
         await SendAsync(new DeleteTrainingResponse(training.Id), cancellation: cancellationToken);
     }
