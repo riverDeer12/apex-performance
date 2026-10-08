@@ -27,7 +27,8 @@ public record InactiveClientDto(Guid Id, string FullName, DateTimeOffset? LastAc
 
 public record PendingRequestsDto(int Appointments, int CancelationRequests, int JoinRequests);
 
-public record MonthlyReviewsDueDto(int Year, int Month, DateTimeOffset DueAt, List<OverviewClientDto> MissingClients);
+public record MonthlyReviewsDueDto(int Year, int Month, DateTimeOffset DueAt, int TotalClients,
+    List<OverviewClientDto> MissingClients);
 
 public record GetTodayOverviewResponse(
     List<TodayAppointmentDto> TodayAppointments,
@@ -197,9 +198,12 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             .Select(x => new OverviewClientDto(x.Id, x.FirstName + " " + x.LastName))
             .ToListAsync(cancellationToken);
 
+        var totalClients = await clients.CountAsync(cancellationToken);
+
         var firstOfMonth = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, now.Offset);
 
-        return new MonthlyReviewsDueDto(now.Year, now.Month, firstOfMonth.AddMonths(1), missingClients);
+        return new MonthlyReviewsDueDto(now.Year, now.Month, firstOfMonth.AddMonths(1), totalClients,
+            missingClients);
     }
 
     private static TimeZoneInfo GetCroatianTimeZone()
