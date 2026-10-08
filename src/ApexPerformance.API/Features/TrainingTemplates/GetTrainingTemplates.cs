@@ -26,7 +26,7 @@ public class GetTrainingTemplatesEndpoint : EndpointWithoutRequest<List<Training
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var templates = await _context.TrainingTemplates
+        var templates = await TrainingTemplateAccess.GetVisibleTemplates(_context, _currentUserService)
             .AsNoTracking()
             .Include(x => x.Exercises)
             .ThenInclude(x => x.Workout)

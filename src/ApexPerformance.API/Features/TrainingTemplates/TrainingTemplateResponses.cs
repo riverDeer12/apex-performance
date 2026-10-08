@@ -14,7 +14,7 @@ public record TrainingTemplateResponse(
     string? Note,
     List<TrainingExerciseResponse> Exercises,
     string? AuthorName,
-    // Only the author and administrators can change the template.
+    // Coaches change only their own templates, administrators all of them.
     bool CanEdit,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
@@ -38,11 +38,17 @@ public sealed class TrainingTemplateRequestValidator : Validator<TrainingTemplat
 }
 
 /// <summary>
-/// Templates are a library shared by all coaches,
-/// only their author or an administrator changes them.
+/// Every coach has their own templates, other coaches don't see them.
+/// Administrators see and manage templates of all coaches.
 /// </summary>
 public static class TrainingTemplateAccess
 {
+    public static IQueryable<TrainingTemplate> GetVisibleTemplates(ApexPerformanceContext context,
+        ICurrentUserService currentUserService)
+        => TrainingAccess.IsAdministrator(currentUserService)
+            ? context.TrainingTemplates
+            : context.TrainingTemplates.Where(x => x.CreatedBy == currentUserService.UserId);
+
     public static bool CanEdit(TrainingTemplate template, ICurrentUserService currentUserService)
         => TrainingAccess.IsAdministrator(currentUserService) || template.CreatedBy == currentUserService.UserId;
 }

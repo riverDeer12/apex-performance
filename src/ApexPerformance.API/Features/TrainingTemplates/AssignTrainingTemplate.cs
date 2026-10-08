@@ -43,7 +43,7 @@ public class AssignTrainingTemplateEndpoint
     {
         var templateId = Route<Guid>("id", isRequired: true);
 
-        var template = await _context.TrainingTemplates
+        var template = await TrainingTemplateAccess.GetVisibleTemplates(_context, _currentUserService)
             .AsNoTracking()
             .Include(x => x.Exercises)
             .ThenInclude(x => x.Sets)

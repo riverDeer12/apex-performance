@@ -29,7 +29,7 @@ public class UpdateTrainingTemplateEndpoint : Endpoint<TrainingTemplateRequest, 
     {
         var templateId = Route<Guid>("id", isRequired: true);
 
-        var template = await _context.TrainingTemplates
+        var template = await TrainingTemplateAccess.GetVisibleTemplates(_context, _currentUserService)
             .Include(x => x.Exercises)
             .ThenInclude(x => x.Sets)
             .FirstOrDefaultAsync(x => x.Id == templateId, cancellationToken);

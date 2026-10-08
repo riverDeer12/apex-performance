@@ -29,7 +29,7 @@ public class DeleteTrainingTemplateEndpoint : EndpointWithoutRequest<StatusRespo
     {
         var templateId = Route<Guid>("id", isRequired: true);
 
-        var template = await _context.TrainingTemplates
+        var template = await TrainingTemplateAccess.GetVisibleTemplates(_context, _currentUserService)
             .FirstOrDefaultAsync(x => x.Id == templateId, cancellationToken);
 
         if (template is null)
