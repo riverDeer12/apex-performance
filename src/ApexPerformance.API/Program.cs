@@ -56,11 +56,13 @@ builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentSer
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
+builder.Services.AddScoped<IPriceListService, PriceListService>();
 
 // Background Jobs
 builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
 builder.Services.AddScoped<MonthlyReviewReminderJob>();
+builder.Services.AddScoped<PriceListJob>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
@@ -160,6 +162,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 
 DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
+PriceListJob.Schedule();
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());

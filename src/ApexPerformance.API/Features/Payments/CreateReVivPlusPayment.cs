@@ -1,3 +1,4 @@
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using Stripe;
 using Stripe.Checkout;
@@ -15,10 +16,12 @@ public record CreateReVivPlusPaymentRequest(
 public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, CreatePaymentResponse>
 {
     private readonly IConfiguration _configuration;
+    private readonly IPriceListService _priceListService;
 
-    public CreateReVivPlusPayment(IConfiguration configuration)
+    public CreateReVivPlusPayment(IConfiguration configuration, IPriceListService priceListService)
     {
         _configuration = configuration;
+        _priceListService = priceListService;
     }
 
     public override void Configure()
@@ -32,6 +35,8 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
     {
         var productService = new ProductService();
         var lineItems = new List<SessionLineItemOptions>();
+        var anchorPrices = await _priceListService.GetAnchorPricesAsync(cancellationToken);
+        var anchorPriceLines = new List<string>();
 
         foreach (var item in request.Items)
         {
@@ -39,6 +44,9 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             {
                 ApiKey = _configuration["Stripe:ReVivPlus:SecretKey"]
             }, cancellationToken: cancellationToken);
+
+            if (anchorPrices.TryGetValue(item.ProductId, out var anchorPrice))
+                anchorPriceLines.Add($"{product.Name}: {anchorPrice:0.00} €");
 
             var priceId = product.DefaultPriceId;
             if (string.IsNullOrEmpty(priceId))
@@ -78,6 +86,18 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
                 }
             },
             AllowPromotionCodes = true,
+            // Anchor price must be shown wherever the price is shown. Set here and not in the
+            // product description, which the shop owner edits in Stripe.
+            CustomText = anchorPriceLines.Count == 0
+                ? null
+                : new SessionCustomTextOptions
+                {
+                    Submit = new SessionCustomTextSubmitOptions
+                    {
+                        Message = $"Sidrena cijena na {_priceListService.AnchorDate} " +
+                                  string.Join(", ", anchorPriceLines.Distinct())
+                    }
+                },
             SuccessUrl = _configuration["Stripe:ReVivPlus:SuccessUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
             CancelUrl = _configuration["Stripe:ReVivPlus:CancelUrl"] + "?session_id={CHECKOUT_SESSION_ID}",
         };
