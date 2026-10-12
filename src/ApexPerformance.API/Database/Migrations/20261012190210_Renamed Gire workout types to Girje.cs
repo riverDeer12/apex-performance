@@ -27,7 +27,8 @@ namespace ApexPerformance.API.Database.Migrations
                 SELECT r.[OldId], MIN(CAST(t.[Id] AS NVARCHAR(36))) AS [ExistingId]
                 INTO #MergedTypes
                 FROM #RenamedTypes r
-                JOIN [WorkoutTypes] t ON t.[Name] = r.[NewName] AND t.[Id] <> r.[OldId]
+                JOIN [WorkoutTypes] t ON t.[Name] COLLATE Latin1_General_CS_AS = r.[NewName] COLLATE Latin1_General_CS_AS
+                    AND t.[Id] <> r.[OldId]
                 GROUP BY r.[OldId];
 
                 INSERT INTO [WorkoutWorkoutTypes] ([WorkoutId], [WorkoutTypeId])
