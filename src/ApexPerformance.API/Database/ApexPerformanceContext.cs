@@ -86,6 +86,10 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<AuditLog> AuditLogs { get; set; }
 
+    public DbSet<ChatConversation> ChatConversations { get; set; }
+
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

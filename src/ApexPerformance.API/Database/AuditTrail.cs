@@ -31,7 +31,9 @@ public static class AuditTrail
     [
         nameof(BaseEntity.CreatedAt), nameof(BaseEntity.CreatedBy),
         nameof(BaseEntity.UpdatedAt), nameof(BaseEntity.UpdatedBy),
-        nameof(BaseEntity.DeletedAt), "PeriodStart", "PeriodEnd"
+        nameof(BaseEntity.DeletedAt), "PeriodStart", "PeriodEnd",
+        // Changes with every chat message, not a change anyone makes.
+        nameof(ChatConversation.LastMessageAt)
     ];
 
     private static readonly string[] SensitiveNameParts = ["password", "token", "secret"];

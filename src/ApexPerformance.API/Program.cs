@@ -2,6 +2,7 @@ using ApexPerformance.API;
 using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Extensions;
+using ApexPerformance.API.Hubs;
 using ApexPerformance.API.Middlewares;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Implementation;
@@ -33,6 +34,17 @@ builder.Services
             s.SigningKey = configuration["JWTSecretKey"],
         o => o.Events = new JwtBearerEvents
         {
+            // Browsers can't send headers on WebSocket connections,
+            // so the chat hub gets the token in the query string.
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query["access_token"];
+
+                if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments(ChatHub.Path))
+                    context.Token = token;
+
+                return Task.CompletedTask;
+            },
             OnTokenValidated = UserSessionTokenValidation.ValidateAsync
         })
     .AddAuthorization()
@@ -56,6 +68,10 @@ builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentSer
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
+builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubClaimUserIdProvider>();
 
 builder.Services.AddApiRateLimiting();
 
@@ -120,6 +136,8 @@ app.UseFastEndpoints();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapHub<ChatHub>(ChatHub.Path);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
 {

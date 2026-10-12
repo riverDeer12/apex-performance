@@ -40,6 +40,12 @@ public static class PushTexts
         return Supported.Contains(code) ? code : null;
     }
 
+    // The message itself is not in the push, it goes through Firebase and shows on the lock screen.
+    public static PushText ChatMessage(string language, string senderName) => Pick(language,
+        new("Nova poruka", $"Nova poruka od: {senderName}"),
+        new("New message", $"New message from {senderName}"),
+        new("Nuovo messaggio", $"Nuovo messaggio da: {senderName}"));
+
     public static PushText BodyMeasurement(string language) => Pick(language,
         new("Novo mjerenje", "Trener je dodao novo mjerenje tijela."),
         new("New body measurement", "Your coach added a new body measurement."),
