@@ -1,4 +1,5 @@
-﻿using ApexPerformance.API.Services.Interfaces;
+﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Services.Interfaces;
 using FirebaseAdmin.Messaging;
 
 namespace ApexPerformance.API.Services.Implementation;
@@ -58,6 +59,18 @@ public class NotificationService : INotificationService
         };
 
         return await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
+    }
+
+    public async Task SendLocalized(IReadOnlyCollection<PushRecipient> recipients, Func<string, PushText> text,
+        Dictionary<string, string>? data = null)
+    {
+        // One message per language, devices without a language get Croatian.
+        foreach (var group in recipients.GroupBy(x => PushTexts.Normalize(x.Language) ?? PushTexts.Croatian))
+        {
+            var localized = text(group.Key);
+            await SendToMultipleDevices(group.Select(x => x.Token).Distinct().ToList(), localized.Title,
+                localized.Body, data);
+        }
     }
 
     public async Task<string> SendToTopic(string topic, string title, string body)

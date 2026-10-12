@@ -83,12 +83,10 @@ public class UpdateClientGoalEndpoint : Endpoint<UpdateClientGoalRequest, Client
     {
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "Goal and plan",
-            "Your coach updated your goal and plan.",
+        await _notificationService.SendLocalized(clientDeviceTokens, PushTexts.ClientGoal,
             PushNotificationTypes.Data(PushNotificationTypes.ClientGoal));
     }
 }

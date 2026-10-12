@@ -73,12 +73,11 @@ public class MonthlyReviewReminderJob
         {
             var deviceTokens = await _context.DeviceTokens
                 .Where(x => x.UserId == coach.CoachUserId)
-                .Select(x => x.Token)
+                .Select(x => new PushRecipient(x.Token, x.Language))
                 .ToListAsync();
 
-            _ = await _notificationService.SendToMultipleDevices(deviceTokens,
-                "Monthly reviews",
-                $"{coach.Count} client(s) still have no monthly review. Write it before the 1st.",
+            await _notificationService.SendLocalized(deviceTokens,
+                language => PushTexts.MonthlyReviewReminder(language, coach.Count),
                 PushNotificationTypes.Data(PushNotificationTypes.MonthlyReviewReminder));
         }
 

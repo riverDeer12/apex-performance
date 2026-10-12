@@ -124,11 +124,11 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
 
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "You have new join request from " + client.FullName,
+        await _notificationService.SendLocalized(coachDeviceTokens,
+            language => PushTexts.JoinRequest(language, client.FullName),
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentRequest));
     }
 

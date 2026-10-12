@@ -226,12 +226,11 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         var newClientDeviceTokens = await _context.DeviceTokens
             .Where(x => newClientUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(newClientDeviceTokens,
-            "You have appointment update",
-            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+        await _notificationService.SendLocalized(newClientDeviceTokens,
+            language => PushTexts.AppointmentUpdated(language, appointment.AppointmentStatus.Name),
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
 
@@ -283,21 +282,19 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => clientUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "New Appointment Requested.",
+        await _notificationService.SendLocalized(coachDeviceTokens, PushTexts.AppointmentRequested,
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
 
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "You have appointment update",
-            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+        await _notificationService.SendLocalized(clientDeviceTokens,
+            language => PushTexts.AppointmentUpdated(language, appointment.AppointmentStatus.Name),
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
     

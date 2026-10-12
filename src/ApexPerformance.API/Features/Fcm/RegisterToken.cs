@@ -1,4 +1,5 @@
-﻿using ApexPerformance.API.Database;
+﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
@@ -13,7 +14,9 @@ public record RegisterDeviceTokenRequest(
     string? AppVersion = null,
     string? BuildNumber = null,
     string? OsVersion = null,
-    string? DeviceModel = null);
+    string? DeviceModel = null,
+    // Language of the app, so pushes come in it.
+    string? Language = null);
 
 public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
 {
@@ -49,6 +52,7 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
                 BuildNumber = request.BuildNumber,
                 OsVersion = request.OsVersion,
                 DeviceModel = request.DeviceModel,
+                Language = PushTexts.Normalize(request.Language),
                 CreatedAt = DateTimeOffset.UtcNow,
                 CreatedBy = userId,
                 UpdatedAt = DateTimeOffset.UtcNow,
@@ -63,6 +67,7 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
             existing.BuildNumber = request.BuildNumber;
             existing.OsVersion = request.OsVersion;
             existing.DeviceModel = request.DeviceModel;
+            existing.Language = PushTexts.Normalize(request.Language);
             existing.UpdatedAt = DateTimeOffset.UtcNow;
             existing.UpdatedBy = userId;
         }
