@@ -140,4 +140,12 @@ public interface IEmailService
     /// <param name="user">User that started the import.</param>
     /// <param name="result">Import result or error message.</param>
     void SendWorkoutsImportFinishedEmail(User user, WorkoutsImportResult result);
+
+    /// <summary>
+    /// Send alert email when the ReViv Plus
+    /// price list was not published on time.
+    /// </summary>
+    /// <param name="contactEmail">Contact Email.</param>
+    /// <param name="alertMessage">What went wrong.</param>
+    void SendPriceListAlertEmail(string contactEmail, string alertMessage);
 }
