@@ -93,12 +93,11 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
 
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => clientUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
         
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "You have appointment update",
-            "Your Appointment has been " + appointment.AppointmentStatus.Name,
+        await _notificationService.SendLocalized(clientDeviceTokens,
+            language => PushTexts.AppointmentUpdated(language, appointment.AppointmentStatus.Name),
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
     }
 

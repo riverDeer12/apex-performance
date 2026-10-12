@@ -88,12 +88,10 @@ public class SaveMonthlyReviewEndpoint : Endpoint<SaveMonthlyReviewRequest, Mont
     {
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "Monthly review",
-            "Your coach wrote the review of your month.",
+        await _notificationService.SendLocalized(clientDeviceTokens, PushTexts.MonthlyReview,
             PushNotificationTypes.Data(PushNotificationTypes.MonthlyReview));
     }
 }

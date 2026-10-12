@@ -151,16 +151,13 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
             var clientDeviceTokens = deviceTokens
                 .Where(t => t.UserId == client.UserId)
-                .Select(t => t.Token)
+                .Select(t => new PushRecipient(t.Token, t.Language))
                 .ToList();
 
             if (clientDeviceTokens.Count is 0) continue;
 
-            var notificationBody = PrepareNotificationBody(clientAppointments);
-
-            _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-                "Your weekly training schedule is ready",
-                notificationBody,
+            await _notificationService.SendLocalized(clientDeviceTokens,
+                language => PushTexts.WeeklySchedule(language, clientAppointments),
                 PushNotificationTypes.Data(PushNotificationTypes.AppointmentUpdated));
         }
     }
@@ -189,26 +186,6 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             if (!string.IsNullOrEmpty(emailBody))
                 _emailService.SendWeekAppointmentsSchedule(emailClient, emailBody);
         }
-    }
-
-    private string PrepareNotificationBody(List<Appointment> clientAppointments)
-    {
-        var lines = new List<string>();
-
-        foreach (var appointment in clientAppointments)
-        {
-            var day = Enum.GetName(typeof(DayOfWeek), appointment.TimeSlot.Day);
-
-            var appointmentTime = $"{appointment.TimeSlot.StartTime} - {appointment.TimeSlot.EndTime}";
-
-            var coach = appointment.Coaches.First().Coach.FullName;
-
-            var type = appointment.AppointmentType.Name;
-
-            lines.Add($"{day}, {appointmentTime} - {type} - {coach}");
-        }
-
-        return string.Join("\n", lines);
     }
 
     private string PrepareEmailBody(List<Appointment> clientAppointments)

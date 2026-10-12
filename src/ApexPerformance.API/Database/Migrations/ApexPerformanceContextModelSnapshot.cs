@@ -945,6 +945,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OsVersion")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
