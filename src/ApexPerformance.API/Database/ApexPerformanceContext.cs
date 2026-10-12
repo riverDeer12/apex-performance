@@ -84,6 +84,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<UserProfilePicture> UserProfilePictures { get; set; }
 
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
@@ -129,6 +131,38 @@ public class ApexPerformanceContext : DbContext
             if (currentUserId != Guid.Empty) entity.UpdatedBy = currentUserId;
         }
 
-        return await base.SaveChangesAsync(cancellationToken);
+        // Changes are collected before saving and written after it,
+        // when ids of new entities are known.
+        var auditEntries = AuditTrail.Collect(ChangeTracker);
+
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        if (auditEntries.Count > 0)
+            await SaveAuditLogs(auditEntries, currentUserId, cancellationToken);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Failing to write the change history must not fail the request,
+    /// the changes themselves are already saved.
+    /// </summary>
+    private async Task SaveAuditLogs(List<AuditTrail.PendingEntry> auditEntries, Guid currentUserId,
+        CancellationToken cancellationToken)
+    {
+        var auditLogs = AuditTrail.ToAuditLogs(auditEntries, currentUserId);
+
+        try
+        {
+            AuditLogs.AddRange(auditLogs);
+            await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Saving audit logs failed: {ex.Message}");
+
+            foreach (var auditLog in auditLogs)
+                Entry(auditLog).State = EntityState.Detached;
+        }
     }
 }

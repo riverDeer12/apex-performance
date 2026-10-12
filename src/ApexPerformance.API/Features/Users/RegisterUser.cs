@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Extensions;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FastEndpoints.Security;
@@ -14,7 +15,9 @@ public sealed record RegisterUserRequest(
     string FirstName,
     string LastName,
     string Email,
-    string Phone
+    string Phone,
+    // Hidden field people don't see and bots fill in (honeypot).
+    string? Website = null
 );
 
 public sealed record RegisterUserResponse(
@@ -42,11 +45,22 @@ public sealed class RegisterUserEndpoint : Endpoint<RegisterUserRequest, Registe
     {
         Post("api/users/register");
         AllowAnonymous();
-        Options(x => x.WithTags("Users"));
+        Options(x => x.WithTags("Users").RequireRateLimiting(RateLimiting.Registration));
     }
 
     public override async Task HandleAsync(RegisterUserRequest request, CancellationToken cancellationToken)
     {
+        // A filled hidden field means a bot, it gets a normal looking
+        // response so it doesn't learn it was detected, nothing is created.
+        if (!string.IsNullOrWhiteSpace(request.Website))
+        {
+            Logger.LogWarning("Registration rejected by honeypot from {IpAddress}",
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+
+            await SendAsync(new RegisterUserResponse(Guid.NewGuid(), request.Email), cancellation: cancellationToken);
+            return;
+        }
+
         var clientRole = await _context.Roles
             .SingleAsync(x => x.Name == UserRoles.Client, cancellationToken);
 
@@ -103,10 +117,14 @@ public sealed class RegisterUserValidator : Validator<RegisterUserRequest>
 {
     public RegisterUserValidator()
     {
-        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required);
-        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.FirstName).NotEmpty().WithMessage(ErrorCodes.Required)
+            .MaximumLength(100).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.LastName).NotEmpty().WithMessage(ErrorCodes.Required)
+            .MaximumLength(100).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Email).NotEmpty().WithMessage(ErrorCodes.Required)
+            .MaximumLength(256).WithMessage(ErrorCodes.NotValid)
             .EmailAddress().WithMessage(ErrorCodes.NotValid);
-        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Phone).NotEmpty().WithMessage(ErrorCodes.Required)
+            .MaximumLength(30).WithMessage(ErrorCodes.NotValid);
     }
 }

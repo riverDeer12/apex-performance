@@ -57,6 +57,8 @@ builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
 
+builder.Services.AddApiRateLimiting();
+
 // Background Jobs
 builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
@@ -110,6 +112,8 @@ app.UseCors(corsPolicyBuilder => corsPolicyBuilder
     .AllowAnyOrigin()
     .AllowAnyMethod()
     .AllowAnyHeader());
+
+app.UseRateLimiter();
 
 app.UseFastEndpoints();
 

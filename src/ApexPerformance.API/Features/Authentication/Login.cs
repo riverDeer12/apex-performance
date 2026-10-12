@@ -1,3 +1,4 @@
+using ApexPerformance.API.Extensions;
 using System.Linq.Expressions;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
@@ -31,7 +32,7 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
     {
         Post("api/authentication/login");
         AllowAnonymous();
-        Options(x => x.WithTags("Authentication"));
+        Options(x => x.WithTags("Authentication").RequireRateLimiting(RateLimiting.Login));
     }
 
     public override async Task HandleAsync(LoginRequest request, CancellationToken cancellationToken)

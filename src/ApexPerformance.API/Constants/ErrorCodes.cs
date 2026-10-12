@@ -29,4 +29,7 @@ public static class ErrorCodes
     // System / Infrastructure (1400–1499)
     public const string SavingError = "1400";
     public const string ErrorSendingEmail = "1401";
+
+    // Limits (1500–1599)
+    public const string TooManyRequests = "1500";
 }
