@@ -8,7 +8,9 @@ namespace ApexPerformance.API.Features.Workouts;
 public record GetWorkoutTypeResponse(
     Guid Id,
     LocalizedProperty Name,
-    LocalizedProperty Description
+    LocalizedProperty Description,
+    // Number of (not deleted) workouts with this type.
+    int WorkoutsCount
 );
 
 public class GetWorkoutTypesEndpoint : EndpointWithoutRequest<List<GetWorkoutTypeResponse>>
@@ -30,12 +32,21 @@ public class GetWorkoutTypesEndpoint : EndpointWithoutRequest<List<GetWorkoutTyp
     {
         var workoutTypes = await _context.WorkoutTypes
             .AsNoTracking()
+            .Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.Description,
+                WorkoutsCount = _context.WorkoutWorkoutTypes
+                    .Count(relation => relation.WorkoutTypeId == x.Id && !relation.Workout.IsDeleted)
+            })
             .ToListAsync(cancellationToken: cancellationToken);
 
         await SendAsync(
             workoutTypes.Select(workoutType => new GetWorkoutTypeResponse(workoutType.Id,
                 new LocalizedProperty(workoutType.Name),
-                new LocalizedProperty(workoutType.Description))).ToList(),
+                new LocalizedProperty(workoutType.Description),
+                workoutType.WorkoutsCount)).ToList(),
             cancellation: cancellationToken);
     }
 }
