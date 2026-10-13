@@ -24,3 +24,6 @@ public record ChatConversationResponse(
 );
 
 public record MessagesReadEvent(Guid ConversationId, Guid ReaderUserId, DateTimeOffset ReadAt);
+
+// Coach or client the logged user can chat with.
+public record ChatContactResponse(Guid Id, Guid UserId, string FullName, Guid? ConversationId, bool IsEnabled);

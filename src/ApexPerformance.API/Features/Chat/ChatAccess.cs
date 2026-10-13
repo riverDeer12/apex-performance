@@ -7,15 +7,15 @@ namespace ApexPerformance.API.Features.Chat;
 
 /// <summary>
 /// Only the coach and the client of a conversation can read it, nobody else
-/// (administrators included). A client can use it only while the coach has it
-/// enabled and the client is still one of the coach's clients.
+/// (administrators included), and only while the client is still one of the
+/// coach's clients. A conversation the coach disabled stays visible to both
+/// sides as read only.
 /// </summary>
 public static class ChatAccess
 {
     public static IQueryable<ChatConversation> VisibleConversations(ApexPerformanceContext context, Guid userId)
         => context.ChatConversations
-            .Where(x => x.Coach.UserId == userId ||
-                        (x.Client.UserId == userId && x.IsEnabled))
+            .Where(x => x.Coach.UserId == userId || x.Client.UserId == userId)
             .Where(x => context.CoachClients.Any(coachClient =>
                 coachClient.CoachId == x.CoachId && coachClient.ClientId == x.ClientId));
 

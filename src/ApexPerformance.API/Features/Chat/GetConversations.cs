@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Chat;
 
 /// <summary>
-/// Conversations of the logged user, newest first. Coaches get all of their
-/// conversations (also disabled ones), clients only the enabled ones.
+/// Conversations of the logged user, newest first, disabled ones included
+/// (they are read only).
 /// </summary>
 public class GetConversationsEndpoint : EndpointWithoutRequest<List<ChatConversationResponse>>
 {
