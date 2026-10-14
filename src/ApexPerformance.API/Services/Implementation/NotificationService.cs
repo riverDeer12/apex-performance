@@ -8,12 +8,12 @@ namespace ApexPerformance.API.Services.Implementation;
 
 public class NotificationService : INotificationService
 {
-    // Errors about the device token itself: the app was uninstalled or the token
-    // expired. Normal over time, so they are warnings and don't send an alert email.
+    // Errors about the device token itself: the app was uninstalled, the token expired
+    // or belongs to another Firebase project. Normal over time, so they are warnings
+    // (no alert email) and the token is removed, it will never work again.
     private static readonly HashSet<MessagingErrorCode> InvalidTokenErrors =
     [
         MessagingErrorCode.Unregistered,
-        MessagingErrorCode.InvalidArgument,
         MessagingErrorCode.SenderIdMismatch
     ];
 
@@ -56,7 +56,7 @@ public class NotificationService : INotificationService
         }
         catch (FirebaseMessagingException ex)
         {
-            await LogFailures([(deviceToken, ex.MessagingErrorCode, ex.Message)], title, data);
+            await HandleFailures([(deviceToken, ex.MessagingErrorCode, ex.Message)], title, data);
             throw;
         }
     }
@@ -107,19 +107,26 @@ public class NotificationService : INotificationService
                 .Select(x => (x.Token, x.Result.Exception?.MessagingErrorCode, x.Result.Exception?.Message ?? "Unknown error"))
                 .ToList();
 
-            await LogFailures(failures, title, data);
+            await HandleFailures(failures, title, data);
         }
 
         return response;
     }
 
     /// <summary>
-    /// One log entry per device that didn't get the notification, with the user it belongs to.
+    /// One log entry per device that didn't get the notification, with the user it
+    /// belongs to. Tokens that are no longer valid are removed.
     /// </summary>
-    private async Task LogFailures(IReadOnlyCollection<(string Token, MessagingErrorCode? Code, string Error)> failures,
+    private async Task HandleFailures(IReadOnlyCollection<(string Token, MessagingErrorCode? Code, string Error)> failures,
         string title, Dictionary<string, string>? data)
     {
         Dictionary<string, (Guid UserId, string? UserName, string Platform)> devices = new();
+
+        var invalidTokens = failures
+            .Where(x => IsInvalidToken(x.Code, x.Error))
+            .Select(x => x.Token)
+            .Distinct()
+            .ToList();
 
         try
         {
@@ -135,18 +142,27 @@ public class NotificationService : INotificationService
                     .ToListAsync())
                 .GroupBy(x => x.Token)
                 .ToDictionary(x => x.Key, x => (x.First().UserId, x.First().UserName, x.First().Platform));
+
+            if (invalidTokens.Count > 0)
+            {
+                // Deleted, not soft deleted: the same token registered again
+                // (it never is once invalid) would otherwise be a duplicate.
+                var removed = await context.DeviceTokens
+                    .Where(x => invalidTokens.Contains(x.Token))
+                    .ExecuteDeleteAsync();
+
+                _logger.LogInformation("Removed {Count} device tokens that are no longer valid.", removed);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Users of failed push notification devices could not be loaded.");
+            _logger.LogWarning(ex, "Devices of failed push notifications could not be loaded or cleaned up.");
         }
 
         foreach (var (token, code, error) in failures)
         {
             var device = devices.GetValueOrDefault(token);
-            var level = code is { } errorCode && InvalidTokenErrors.Contains(errorCode)
-                ? LogLevel.Warning
-                : LogLevel.Error;
+            var level = invalidTokens.Contains(token) ? LogLevel.Warning : LogLevel.Error;
 
             _logger.Log(level,
                 "Push notification {Title} ({NotificationType}) was not delivered to {UserName} ({Platform}): {ErrorCode} - {Error} (UserId {UserId}, token {TokenStart}...)",
@@ -154,6 +170,13 @@ public class NotificationService : INotificationService
                 code?.ToString() ?? "Unknown", error, device.UserId, token.Length > 12 ? token[..12] : token);
         }
     }
+
+    // InvalidArgument is also returned for a wrong message, then all tokens would be
+    // removed, so it counts only when Firebase says the token itself is not valid.
+    private static bool IsInvalidToken(MessagingErrorCode? code, string error)
+        => code is { } errorCode && InvalidTokenErrors.Contains(errorCode) ||
+           code == MessagingErrorCode.InvalidArgument &&
+           error.Contains("registration token", StringComparison.OrdinalIgnoreCase);
 
     private static string NotificationType(Dictionary<string, string>? data)
         => data?.GetValueOrDefault("type") ?? "none";
