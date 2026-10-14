@@ -79,6 +79,7 @@ builder.Services.AddApiRateLimiting();
 builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
 builder.Services.AddScoped<MonthlyReviewReminderJob>();
+builder.Services.AddScoped<ErrorAlertJob>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
@@ -182,6 +183,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 
 DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
+ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());

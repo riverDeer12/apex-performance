@@ -545,6 +545,22 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendErrorAlertEmail(string to, string subject, string htmlBody)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress(_configuration["MailConfiguration:FromName"],
+            _configuration["MailConfiguration:FromAddress"]));
+
+        message.To.Add(MailboxAddress.Parse(to));
+
+        message.Subject = subject;
+
+        message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
+
+        ConnectToMailServer(message);
+    }
+
     private void ConnectToMailServer(MimeMessage message)
     {
         using var smtpClient = new SmtpClient();

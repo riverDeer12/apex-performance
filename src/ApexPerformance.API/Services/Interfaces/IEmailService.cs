@@ -140,4 +140,13 @@ public interface IEmailService
     /// <param name="user">User that started the import.</param>
     /// <param name="result">Import result or error message.</param>
     void SendWorkoutsImportFinishedEmail(User user, WorkoutsImportResult result);
+
+    /// <summary>
+    /// Send an alert about errors in the application
+    /// logs or a failed backup to the administrator.
+    /// </summary>
+    /// <param name="to">Email address that gets the alert.</param>
+    /// <param name="subject">Subject of the email.</param>
+    /// <param name="htmlBody">HTML with the list of errors.</param>
+    void SendErrorAlertEmail(string to, string subject, string htmlBody);
 }
