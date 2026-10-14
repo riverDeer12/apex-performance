@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -11,7 +12,9 @@ namespace ApexPerformance.API.Features.TrainingTemplates;
 
 public record AssignTrainingTemplateRequest(
     List<Guid> Clients,
-    DateTimeOffset Date
+    DateTimeOffset Date,
+    // Push notification to the clients, sent unless false.
+    bool? NotifyClient = null
 );
 
 public record AssignTrainingTemplateResponse(List<Guid> TrainingIds);
@@ -82,6 +85,12 @@ public class AssignTrainingTemplateEndpoint
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+
+        if (request.NotifyClient ?? true)
+        {
+            foreach (var training in trainings)
+                TrainingNotificationJob.Enqueue(training.Client.UserId, training.Id, training.Name, isNew: true);
+        }
 
         await SendAsync(new AssignTrainingTemplateResponse(trainings.Select(x => x.Id).ToList()),
             cancellation: cancellationToken);

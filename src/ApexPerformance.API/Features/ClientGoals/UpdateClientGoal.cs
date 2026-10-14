@@ -15,7 +15,9 @@ public record UpdateClientGoalRequest(
     string? CurrentBlock,
     string? Focus,
     string? NextAssessment,
-    DateTimeOffset? NextAssessmentDate
+    DateTimeOffset? NextAssessmentDate,
+    // Push notification to the client, sent unless false.
+    bool? NotifyClient = null
 );
 
 /// <summary>
@@ -71,7 +73,8 @@ public class UpdateClientGoalEndpoint : Endpoint<UpdateClientGoalRequest, Client
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        BackgroundJob.Enqueue(() => SendClientGoalNotification(client.UserId));
+        if (request.NotifyClient ?? true)
+            BackgroundJob.Enqueue(() => SendClientGoalNotification(client.UserId));
 
         await SendAsync(ClientGoalResponse.From(clientId, goal), cancellation: cancellationToken);
     }

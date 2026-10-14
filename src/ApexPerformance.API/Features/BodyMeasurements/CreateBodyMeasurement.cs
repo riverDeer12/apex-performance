@@ -21,7 +21,9 @@ public record CreateBodyMeasurementRequest(
     decimal Waist,
     decimal Thigh,
     decimal Calves,
-    decimal Glutes
+    decimal Glutes,
+    // Push notification to the client, sent unless false.
+    bool? NotifyClient = null
 );
 
 public record CreateBodyMeasurementResponse(
@@ -93,7 +95,8 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        BackgroundJob.Enqueue(() => SendBodyMeasurementFcmNotification(client.UserId));
+        if (request.NotifyClient ?? true)
+            BackgroundJob.Enqueue(() => SendBodyMeasurementFcmNotification(client.UserId));
 
         await SendAsync(
             new CreateBodyMeasurementResponse(

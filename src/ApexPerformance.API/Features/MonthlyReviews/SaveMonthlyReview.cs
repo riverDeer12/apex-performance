@@ -14,7 +14,10 @@ public record SaveMonthlyReviewRequest(
     Guid Client,
     int Year,
     int Month,
-    string Content
+    string Content,
+    // Push notification to the client. Without it the client
+    // is notified about a new review, not about every correction.
+    bool? NotifyClient = null
 );
 
 /// <summary>
@@ -76,8 +79,7 @@ public class SaveMonthlyReviewEndpoint : Endpoint<SaveMonthlyReviewRequest, Mont
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        // Client is notified about a new review, not about every correction.
-        if (isNew)
+        if (request.NotifyClient ?? isNew)
             BackgroundJob.Enqueue(() => SendMonthlyReviewNotification(client.UserId));
 
         await SendAsync(MonthlyReviewResponse.From(review), cancellation: cancellationToken);

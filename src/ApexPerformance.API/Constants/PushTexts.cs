@@ -51,6 +51,16 @@ public static class PushTexts
         new("New body measurement", "Your coach added a new body measurement."),
         new("Nuova misurazione", "Il tuo coach ha aggiunto una nuova misurazione corporea."));
 
+    public static PushText Training(string language, string name) => Pick(language,
+        new("Novi trening", $"Trener ti je dodao trening: {name}"),
+        new("New training", $"Your coach added a training: {name}"),
+        new("Nuovo allenamento", $"Il tuo coach ha aggiunto un allenamento: {name}"));
+
+    public static PushText TrainingUpdated(string language, string name) => Pick(language,
+        new("Trening ažuriran", $"Trener je ažurirao tvoj trening: {name}"),
+        new("Training updated", $"Your coach updated your training: {name}"),
+        new("Allenamento aggiornato", $"Il tuo coach ha aggiornato il tuo allenamento: {name}"));
+
     public static PushText MonthlyReview(string language) => Pick(language,
         new("Mjesečni review", "Trener je napisao review tvog mjeseca."),
         new("Monthly review", "Your coach wrote the review of your month."),

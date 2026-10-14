@@ -80,6 +80,7 @@ builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
 builder.Services.AddScoped<MonthlyReviewReminderJob>();
 builder.Services.AddScoped<ErrorAlertJob>();
+builder.Services.AddScoped<TrainingNotificationJob>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));

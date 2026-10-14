@@ -9,6 +9,8 @@ public static class PushNotificationTypes
     public const string ClientGoal = "client_goal";
     public const string MonthlyReview = "monthly_review";
     public const string MonthlyReviewReminder = "monthly_review_reminder";
+    // Data also has "trainingId" of the training to open.
+    public const string Training = "training";
     // Data also has "conversationId" of the conversation to open.
     public const string ChatMessage = "chat_message";
 
