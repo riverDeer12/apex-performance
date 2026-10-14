@@ -16,6 +16,7 @@ public static class RateLimiting
     public const string Login = "login";
     public const string PasswordReset = "password-reset";
     public const string ChatMessages = "chat-messages";
+    public const string ChatReports = "chat-reports";
 
     private const string RegistrationPath = "/api/users/register";
 
@@ -36,6 +37,10 @@ public static class RateLimiting
             // Protects against flooding a chat with a script, normal typing stays far below it.
             options.AddPolicy(ChatMessages, context =>
                 FixedWindowPerIp(context, permits: 120, window: TimeSpan.FromMinutes(1)));
+
+            // Every report sends an email to the administrator.
+            options.AddPolicy(ChatReports, context =>
+                FixedWindowPerIp(context, permits: 10, window: TimeSpan.FromHours(1)));
 
             // Many addresses (a botnet) can't flood registration either.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>

@@ -143,7 +143,7 @@ public interface IEmailService
 
     /// <summary>
     /// Send an alert about errors in the application
-    /// logs or a failed backup to the administrator.
+    /// logs, a failed backup or a reported chat to the administrator.
     /// </summary>
     /// <param name="to">Email address that gets the alert.</param>
     /// <param name="subject">Subject of the email.</param>

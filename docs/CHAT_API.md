@@ -78,6 +78,7 @@ The other participant is `client` for a coach and `coach` for a client.
 | GET | `/chat/conversations/{id}/messages` | `?before=<ISO date>&take=50` (both optional, take ≤ 200) | `ChatMessage[]` oldest → newest | Without `before`: newest messages. For older ones pass `createdAt` of the oldest loaded message. |
 | POST | `/chat/conversations/{id}/messages` | `{ "content": "text" }` | `ChatMessage` | `400` with error code `1101` if the coach disabled the conversation (reload it to show it read only), `404` if not visible. Rate limit: 120/min per IP (`429`, error code `1500`). |
 | POST | `/chat/conversations/{id}/read` | – | `204` | Marks all messages of the other participant as read. Call when the conversation is open and visible, and when a new message arrives into the open conversation. |
+| POST | `/chat/conversations/{id}/report` | `{ "reason": "text" }` (optional, ≤ 1000) | `204` | Either participant reports the conversation (App Store rule for user content). The administrator gets an email with the reason and the last 50 messages — tell the user the messages are shared. Rate limit: 10/hour per IP. |
 | GET | `/chat/unread-count` | – | `{ "count": 5 }` | Total unread, for a badge. |
 
 Errors use the usual API shape: `{ "statusCode": 404, "message": "...", "errors": { "generalErrors": ["1200"] } }`.
