@@ -31,6 +31,11 @@ public class ErrorAlertJob
 
     private static readonly string[] AlertLevels = ["Error", "Fatal"];
 
+    // Requests the client cancelled (closed the app, lost the connection) are
+    // logged as errors by the framework but are not problems of the application.
+    private static readonly string[] CancellationExceptions =
+        ["System.Threading.Tasks.TaskCanceledException", "System.OperationCanceledException"];
+
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
@@ -102,6 +107,8 @@ public class ErrorAlertJob
 
             errors.AddRange(entries
                 .Where(x => AlertLevels.Contains(x.Level, StringComparer.OrdinalIgnoreCase))
+                .Where(x => x.Exception is null ||
+                            !CancellationExceptions.Any(name => x.Exception.StartsWith(name, StringComparison.Ordinal)))
                 .Where(x => x.Timestamp > from && x.Timestamp <= to)
                 .Select(x => (file.Name, x)));
         }

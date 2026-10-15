@@ -41,7 +41,9 @@ public static class UserSessionTokenValidation
                            x.UserId == userId &&
                            x.RevokedAt == null &&
                            x.ExpiresAt > now,
-                context.HttpContext.RequestAborted);
+                // Not cancelled with the request: a client leaving while the connection
+                // opens would log it as an error, and this check is a single small query.
+                CancellationToken.None);
 
         if (!isActive)
             context.Fail("Login session has ended.");
