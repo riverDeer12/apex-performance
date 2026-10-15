@@ -16,7 +16,10 @@ public record RegisterDeviceTokenRequest(
     string? OsVersion = null,
     string? DeviceModel = null,
     // Language of the app, so pushes come in it.
-    string? Language = null);
+    string? Language = null,
+    // Token this app had before, when Firebase gave it a new one. Its row is
+    // removed, otherwise the device would get every push twice.
+    string? PreviousToken = null);
 
 public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
 {
@@ -73,7 +76,16 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        
+
+        // Deleted, not soft deleted, like tokens Firebase reports as invalid.
+        if (!string.IsNullOrWhiteSpace(request.PreviousToken) && request.PreviousToken != request.Token)
+        {
+            await _db.DeviceTokens
+                .IgnoreQueryFilters()
+                .Where(t => t.Token == request.PreviousToken)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
         await SendOkAsync(cancellationToken);
     }
 }
