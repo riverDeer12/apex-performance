@@ -54,8 +54,8 @@ public class SendMessageEndpoint : Endpoint<SendMessageRequest, ChatMessageRespo
         if (conversation is null)
             ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        // A disabled conversation is read only, also for the coach.
-        if (!conversation.IsEnabled)
+        // A disabled or blocked conversation is read only for both sides.
+        if (!ChatAccess.CanWrite(conversation))
             ThrowError(ErrorCodes.UnauthorizedAction);
 
         var (encryptedContent, keyId) = _encryption.Encrypt(request.Content.Trim(), conversation.Id);

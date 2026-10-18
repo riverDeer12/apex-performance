@@ -69,8 +69,6 @@ public class SetConversationEndpoint : Endpoint<SetConversationRequest, ChatConv
         await _hub.Clients.Users(coach.UserId.ToString(), client.UserId.ToString())
             .SendAsync(ChatHub.Events.ConversationUpdated, conversation.Id, cancellationToken);
 
-        await SendAsync(new ChatConversationResponse(conversation.Id, ChatAccess.Participant(coach),
-                ChatAccess.Participant(client), conversation.IsEnabled, conversation.LastMessageAt, null, 0),
-            cancellation: cancellationToken);
+        await SendAsync(ChatAccess.ToResponse(conversation, coach, client), cancellation: cancellationToken);
     }
 }

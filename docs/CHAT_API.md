@@ -11,6 +11,8 @@ Base URL: `https://apex-performance.fit/api` (test: `https://test.apex-performan
 - A chat exists only between a coach and one of **their** clients (coach–client link).
 - The chat is **open by default**: a client can start a chat with any of their coaches at any time, and a
   coach with any of their clients.
+- The **client** can block the chat with their coach (and unblock it). A blocked conversation is read only
+  for both sides like a disabled one, and the coach can't turn it back on until the client unblocks it.
 - Only the **coach** can disable (and re-enable) a chat, at any time. A disabled conversation keeps its
   messages and stays visible to both sides as **read only**; nobody can write until the coach enables it
   again. A client can't re-enable it.
@@ -40,7 +42,8 @@ ChatContact (someone the logged user can chat with):
   "userId": "guid",
   "fullName": "Ana Kovač",
   "conversationId": "guid" | null,  // null: no chat started yet
-  "isEnabled": true                 // false: the coach disabled the chat (read only)
+  "isEnabled": true,                // false: disabled by the coach or blocked by the client (read only)
+  "isBlockedByClient": false
 }
 
 // ChatMessage
@@ -58,10 +61,11 @@ ChatContact (someone the logged user can chat with):
   "id": "guid",
   "coach": ChatParticipant,
   "client": ChatParticipant,
-  "isEnabled": true,
+  "isEnabled": true,                // whether anyone can write: the coach enabled it and the client didn't block it
   "lastMessageAt": "..." | null,
   "lastMessage": ChatMessage | null,
-  "unreadCount": 3                  // messages of the other participant the logged user hasn't read
+  "unreadCount": 3,                 // messages of the other participant the logged user hasn't read
+  "isBlockedByClient": false        // the client blocked it; show who did, the coach can't re-enable it
 }
 ```
 
@@ -77,6 +81,7 @@ The other participant is `client` for a coach and `coach` for a client.
 | POST | `/chat/conversations` | `{ "clientId": "guid", "isEnabled": true }` | `ChatConversation` | **Coach only.** Creates the conversation if needed and enables/disables it. `404` if the client isn't the coach's client. |
 | GET | `/chat/conversations/{id}/messages` | `?before=<ISO date>&take=50` (both optional, take ≤ 200) | `ChatMessage[]` oldest → newest | Without `before`: newest messages. For older ones pass `createdAt` of the oldest loaded message. |
 | POST | `/chat/conversations/{id}/messages` | `{ "content": "text" }` | `ChatMessage` | `400` with error code `1101` if the coach disabled the conversation (reload it to show it read only), `404` if not visible. Rate limit: 120/min per IP (`429`, error code `1500`). |
+| POST | `/chat/conversations/{id}/block` | `{ "isBlocked": true }` | `ChatConversation` | **Client only.** Blocks or unblocks the chat with their coach; both sides get `ConversationUpdated`. `404` if not the client of the conversation. |
 | POST | `/chat/conversations/{id}/read` | – | `204` | Marks all messages of the other participant as read. Call when the conversation is open and visible, and when a new message arrives into the open conversation. |
 | POST | `/chat/conversations/{id}/report` | `{ "reason": "text" }` (optional, ≤ 1000) | `204` | Either participant reports the conversation (App Store rule for user content). The administrator gets an email with the reason and the last 50 messages — tell the user the messages are shared. Rate limit: 10/hour per IP. |
 | GET | `/chat/unread-count` | – | `{ "count": 5 }` | Total unread, for a badge. |

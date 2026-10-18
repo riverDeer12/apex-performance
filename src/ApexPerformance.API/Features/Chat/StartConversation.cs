@@ -81,9 +81,7 @@ public class StartConversationEndpoint : Endpoint<StartConversationRequest, Chat
                 .SendAsync(ChatHub.Events.ConversationUpdated, conversation.Id, cancellationToken);
         }
 
-        await SendAsync(new ChatConversationResponse(conversation.Id, ChatAccess.Participant(coach),
-                ChatAccess.Participant(client), conversation.IsEnabled, conversation.LastMessageAt, null, 0),
-            cancellation: cancellationToken);
+        await SendAsync(ChatAccess.ToResponse(conversation, coach, client), cancellation: cancellationToken);
     }
 
     private Task<ChatConversation?> FindConversation(Guid coachId, Guid clientId, CancellationToken cancellationToken)

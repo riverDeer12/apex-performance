@@ -16,14 +16,17 @@ public record ChatConversationResponse(
     Guid Id,
     ChatParticipantResponse Coach,
     ChatParticipantResponse Client,
+    // Whether anyone can write: the coach enabled it and the client hasn't blocked it.
     bool IsEnabled,
     DateTimeOffset? LastMessageAt,
     ChatMessageResponse? LastMessage,
     // Messages of the other side the logged user hasn't read yet.
-    int UnreadCount
+    int UnreadCount,
+    bool IsBlockedByClient
 );
 
 public record MessagesReadEvent(Guid ConversationId, Guid ReaderUserId, DateTimeOffset ReadAt);
 
 // Coach or client the logged user can chat with.
-public record ChatContactResponse(Guid Id, Guid UserId, string FullName, Guid? ConversationId, bool IsEnabled);
+public record ChatContactResponse(Guid Id, Guid UserId, string FullName, Guid? ConversationId, bool IsEnabled,
+    bool IsBlockedByClient);

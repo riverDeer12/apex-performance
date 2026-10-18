@@ -26,6 +26,15 @@ public static class ChatAccess
             .Include(x => x.Client)
             .FirstOrDefaultAsync(x => x.Id == conversationId, cancellationToken);
 
+    // Nobody can write while the coach has it disabled or the client blocked it.
+    public static bool CanWrite(ChatConversation conversation)
+        => conversation.IsEnabled && !conversation.IsBlockedByClient;
+
+    // Response without the last message, after the conversation was created or changed.
+    public static ChatConversationResponse ToResponse(ChatConversation conversation, Coach coach, Client client)
+        => new(conversation.Id, Participant(coach), Participant(client), CanWrite(conversation),
+            conversation.LastMessageAt, null, 0, conversation.IsBlockedByClient);
+
     public static ChatMessageResponse ToResponse(ChatMessage message, IChatEncryptionService encryption)
         => new(message.Id, message.ConversationId, message.SenderUserId,
             encryption.Decrypt(message.EncryptedContent, message.KeyId, message.ConversationId),

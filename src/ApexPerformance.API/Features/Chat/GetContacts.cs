@@ -42,7 +42,7 @@ public class GetContactsEndpoint : EndpointWithoutRequest<List<ChatContactRespon
                 x.Client,
                 Conversation = _context.ChatConversations
                     .Where(conversation => conversation.CoachId == x.CoachId && conversation.ClientId == x.ClientId)
-                    .Select(conversation => new { conversation.Id, conversation.IsEnabled })
+                    .Select(conversation => new { conversation.Id, conversation.IsEnabled, conversation.IsBlockedByClient })
                     .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
@@ -55,7 +55,8 @@ public class GetContactsEndpoint : EndpointWithoutRequest<List<ChatContactRespon
                 return new ChatContactResponse(participant.Id, participant.UserId, participant.FullName,
                     x.Conversation?.Id,
                     // No conversation yet means the chat is open.
-                    x.Conversation?.IsEnabled ?? true);
+                    x.Conversation is null || (x.Conversation.IsEnabled && !x.Conversation.IsBlockedByClient),
+                    x.Conversation?.IsBlockedByClient ?? false);
             })
             .OrderBy(x => x.FullName)
             .ToList();

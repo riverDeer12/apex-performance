@@ -53,10 +53,11 @@ public class GetConversationsEndpoint : EndpointWithoutRequest<List<ChatConversa
                 x.Conversation.Id,
                 ChatAccess.Participant(x.Conversation.Coach),
                 ChatAccess.Participant(x.Conversation.Client),
-                x.Conversation.IsEnabled,
+                ChatAccess.CanWrite(x.Conversation),
                 x.Conversation.LastMessageAt,
                 x.LastMessage is null ? null : ChatAccess.ToResponse(x.LastMessage, _encryption),
-                x.UnreadCount))
+                x.UnreadCount,
+                x.Conversation.IsBlockedByClient))
             .ToList();
 
         await SendAsync(response, cancellation: cancellationToken);

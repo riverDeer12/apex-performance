@@ -3,8 +3,8 @@ using ApexPerformance.API.Database.Entities.Abstract;
 namespace ApexPerformance.API.Database.Entities;
 
 /// <summary>
-/// Chat between a coach and one of their clients. The coach turns it on,
-/// the client sees and uses it only while it is enabled.
+/// Chat between a coach and one of their clients. Either side can write
+/// while the coach has it enabled and the client hasn't blocked it.
 /// </summary>
 public class ChatConversation : BaseEntity
 {
@@ -14,7 +14,12 @@ public class ChatConversation : BaseEntity
     public Guid ClientId { get; set; }
     public Client Client { get; set; } = null!;
 
+    // Coach's setting.
     public bool IsEnabled { get; set; }
+
+    // The client blocked the chat (App Store rule for user content): read
+    // only for both until the client unblocks it, whatever the coach sets.
+    public bool IsBlockedByClient { get; set; }
 
     // Time of the newest message, conversations are sorted by it.
     public DateTimeOffset? LastMessageAt { get; set; }
