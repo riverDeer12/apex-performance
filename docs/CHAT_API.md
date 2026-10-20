@@ -144,9 +144,12 @@ When a message is sent, the recipient's devices get a push (in the language of t
 
 ## Workout muscles
 
-`GET /workouts` (and the workout in chat messages) returns `muscles`: codes of the muscles the workout works, for
-a body map — `chest`, `shoulders`, `biceps`, `triceps`, `forearms`, `abs`, `obliques`, `traps`, `upper_back`,
-`lats`, `lower_back`, `glutes`, `quads`, `hamstrings`, `adductors`, `calves` (front: chest, shoulders, biceps,
-forearms, abs, obliques, quads, adductors, calves; back: shoulders, traps, upper_back, lats, lower_back, triceps,
-glutes, hamstrings, calves). They are guessed from the name for existing and new workouts; staff correct them with
-`muscles` in `POST /workouts` and `PUT /workouts/{id}` (omit it to keep them). Unknown codes give `400`.
+`GET /workouts` (and the workout in chat messages) returns `muscles` and `secondaryMuscles`: codes of the
+muscles the workout works, for a body map. `muscles` are the primary ones doing most of the work (shown in the
+main color), `secondaryMuscles` the ones helping (main color, lighter); a muscle is never in both. Codes:
+`chest`, `shoulders`, `biceps`, `triceps`, `forearms`, `abs`, `obliques`, `traps`, `upper_back`, `lats`,
+`lower_back`, `glutes`, `quads`, `hamstrings`, `adductors`, `calves` (front: chest, shoulders, biceps, forearms,
+abs, obliques, traps, quads, adductors, calves; back: shoulders, traps, upper_back, lats, lower_back, triceps,
+forearms, glutes, hamstrings, calves). They are guessed from the name for existing and new workouts; staff
+correct them with `muscles` and `secondaryMuscles` in `POST /workouts` and `PUT /workouts/{id}` (omit one to keep
+it; a code in both counts as primary). Unknown codes give `400`.

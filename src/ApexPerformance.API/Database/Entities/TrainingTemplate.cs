@@ -47,4 +47,5 @@ public class TrainingTemplateExerciseSet
     public int Order { get; set; }
     public string? Reps { get; set; }
     public decimal? Weight { get; set; }
+    public bool IsDropSet { get; set; }
 }

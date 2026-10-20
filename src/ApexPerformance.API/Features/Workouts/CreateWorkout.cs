@@ -17,8 +17,10 @@ public record CreateWorkoutRequest(
     // Optional, video can be added later.
     string? VideoUrl,
     List<Guid> WorkoutTypes,
-    // Codes of WorkoutMuscles. Null keeps the current ones (guessed from the name for a new workout).
-    List<string>? Muscles = null
+    // Codes of WorkoutMuscles, primary and secondary. Null keeps the
+    // current ones (guessed from the name for a new workout).
+    List<string>? Muscles = null,
+    List<string>? SecondaryMuscles = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -67,12 +69,16 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 ? YoutubeHelper.GetThumbnailOrEmpty(request.VideoUrl)
                 : request.ThumbnailUrl.Trim(),
             VideoUrl = request.VideoUrl?.Trim() ?? string.Empty,
-            Muscles = WorkoutMuscles.Serialize(request.Muscles ?? WorkoutMuscles.Guess(request.Name.ToJsonString())),
             WorkoutTypes = workoutTypes.Select(x => new WorkoutWorkoutType
             {
                 WorkoutType = x
             }).ToList()
         };
+
+        if (request.Muscles is null)
+            WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name));
+        else
+            WorkoutMuscles.Apply(workout, request.Muscles, request.SecondaryMuscles ?? []);
 
         _context.Workouts.Add(workout);
 
@@ -86,7 +92,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles)),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout)),
             cancellation: cancellationToken);
     }
 }
@@ -96,6 +102,7 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
     public CreateWorkoutValidator()
     {
         RuleForEach(x => x.Muscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
+        RuleForEach(x => x.SecondaryMuscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
             .When(x => x.Name is not null);

@@ -15,8 +15,10 @@ public record GetWorkoutResponse(
     string ThumbnailUrl,
     string VideoUrl,
     List<CatalogDataDto> WorkoutTypes,
-    // Codes of WorkoutMuscles, for the body map.
-    List<string> Muscles
+    // Codes of WorkoutMuscles, for the body map: primary ones
+    // doing most of the work and secondary ones helping.
+    List<string> Muscles,
+    List<string> SecondaryMuscles
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -61,7 +63,7 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles))).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout))).ToList(),
             cancellation: cancellationToken);
     }
 }

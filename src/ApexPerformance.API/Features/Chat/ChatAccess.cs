@@ -59,7 +59,7 @@ public static class ChatAccess
             (workout.WorkoutTypes ?? []).Where(x => x.WorkoutType is not null)
                 .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
                 .ToList(),
-            WorkoutMuscles.Parse(workout.Muscles));
+            WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout));
 
     public static string TypeName(ChatMessageType type) => type switch
     {

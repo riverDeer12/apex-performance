@@ -11,6 +11,8 @@ public class Workout : BaseEntity
     public string VideoUrl { get; set; }
     // Comma separated codes of WorkoutMuscles; null until set or guessed.
     public string? Muscles { get; set; }
+    // Muscles that help, same codes; null until set or guessed.
+    public string? SecondaryMuscles { get; set; }
     public ICollection<WorkoutWorkoutType> WorkoutTypes { get; set; } = null!;
     
 }

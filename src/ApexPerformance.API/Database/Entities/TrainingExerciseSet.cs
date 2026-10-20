@@ -22,4 +22,8 @@ public class TrainingExerciseSet
     public string? Reps { get; set; }
 
     public decimal? Weight { get; set; }
+
+    // Done right after the previous set without rest, the same
+    // exercise with less weight (drop set).
+    public bool IsDropSet { get; set; }
 }

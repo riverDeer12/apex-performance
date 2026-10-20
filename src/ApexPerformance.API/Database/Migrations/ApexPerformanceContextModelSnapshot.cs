@@ -2008,6 +2008,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsDropSet")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
@@ -2102,6 +2105,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDropSet")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -2363,6 +2369,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
                         .HasColumnName("PeriodStart");
+
+                    b.Property<string>("SecondaryMuscles")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ThumbnailUrl")
                         .IsRequired()

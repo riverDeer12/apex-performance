@@ -309,6 +309,8 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
         foreach (var workoutType in rowNewWorkoutTypes)
             AddWorkoutType(workoutTypes, workoutType);
 
+        var guessed = WorkoutMuscles.Guess(name);
+
         return new Workout
         {
             Name = name,
@@ -316,7 +318,8 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
             // Video is optional, thumbnail is empty until it is added.
             ThumbnailUrl = YoutubeHelper.GetThumbnailOrEmpty(excelRow.VideoUrl),
             VideoUrl = excelRow.VideoUrl,
-            Muscles = WorkoutMuscles.Serialize(WorkoutMuscles.Guess(name)),
+            Muscles = WorkoutMuscles.Serialize(guessed.Primary),
+            SecondaryMuscles = WorkoutMuscles.Serialize(guessed.Secondary),
             // There is no logged user in background job,
             // so audit fields are set to user that started import.
             CreatedBy = userId,
