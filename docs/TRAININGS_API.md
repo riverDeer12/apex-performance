@@ -18,5 +18,6 @@ don't count them as separate sets.
 
 ## Exercise in a training
 
-Each exercise has `workoutId`, so tapping it in a training opens that workout (`GET /workouts`) with its
-description, video and muscles.
+Each exercise has `workoutId`, so tapping it in a training opens that workout with its description, video and
+muscles: `GET /workouts/{id}` returns one workout (same as an item of `GET /workouts`). Clients get the workouts
+their plan includes and also the ones in their own trainings; others give `404`.

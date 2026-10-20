@@ -51,15 +51,7 @@ public static class ChatAccess
                 ? new ChatAttachmentResponse(attachmentId, message.AttachmentContentType ?? "image/jpeg",
                     message.AttachmentWidth, message.AttachmentHeight)
                 : null,
-            workout is null ? null : WorkoutResponse(workout));
-
-    private static GetWorkoutResponse WorkoutResponse(Workout workout)
-        => new(workout.Id, new LocalizedProperty(workout.Name), new LocalizedProperty(workout.Description),
-            workout.ThumbnailUrl, workout.VideoUrl,
-            (workout.WorkoutTypes ?? []).Where(x => x.WorkoutType is not null)
-                .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
-                .ToList(),
-            WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout));
+            workout is null ? null : WorkoutMapper.ToResponse(workout));
 
     public static string TypeName(ChatMessageType type) => type switch
     {
