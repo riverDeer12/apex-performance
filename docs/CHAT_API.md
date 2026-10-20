@@ -17,8 +17,9 @@ Base URL: `https://apex-performance.fit/api` (test: `https://test.apex-performan
   messages and stays visible to both sides as **read only**; nobody can write until the coach enables it
   again. A client can't re-enable it.
 - Only the two participants can read a conversation — administrators can't.
-- Text messages only (max 4000 characters). Message content is stored **encrypted** in the database
-  (AES-256-GCM); the API returns plain text to the participants over HTTPS.
+- Messages are text (max 4000 characters), pictures (`type: "image"`) or workouts shared by the coach
+  (`type: "workout"`). Message content is stored **encrypted** in the database (AES-256-GCM); the API returns
+  plain text to the participants over HTTPS.
 - Roles: endpoints accept users with the `Coach` or `Client` role (the coach-only endpoint is marked).
 
 ## Authentication
@@ -89,7 +90,7 @@ The other participant is `client` for a coach and `coach` for a client.
 | POST | `/chat/conversations/start` | `{ "coachId": "guid" }` | `ChatConversation` | **Client only.** Opens the chat with one of their coaches: creates it (enabled) if needed, otherwise returns the existing one — also when disabled (`isEnabled: false`, read only). `404` if not their coach. |
 | POST | `/chat/conversations` | `{ "clientId": "guid", "isEnabled": true }` | `ChatConversation` | **Coach only.** Creates the conversation if needed and enables/disables it. `404` if the client isn't the coach's client. |
 | GET | `/chat/conversations/{id}/messages` | `?before=<ISO date>&take=50` (both optional, take ≤ 200) | `ChatMessage[]` oldest → newest | Without `before`: newest messages. For older ones pass `createdAt` of the oldest loaded message. |
-| POST | `/chat/conversations/{id}/images` | `multipart/form-data`: `file` (JPEG, PNG, WebP or GIF, ≤ 10 MB), optional `content`, `width`, `height` | `ChatMessage` (`type: "image"`) | One picture per message. The type is detected from the file. Shrink photos before sending (e.g. longer side 1600 px, JPEG); send GIFs as they are so they stay animated. Same rules and rate limit as messages. |
+| POST | `/chat/conversations/{id}/images` | `multipart/form-data`: `file` (JPEG, PNG, WebP or GIF, ≤ 10 MB), optional `content`, `width`, `height` | `ChatMessage` (`type: "image"`) | One picture per message. The type is detected from the file. Shrink photos before sending (e.g. longer side 1600 px, JPEG); send GIFs as they are so they stay animated. Same rules and rate limit as messages. A bigger file gets `413` with error code `1102`. |
 | GET | `/chat/conversations/{id}/attachments/{attachmentId}` | – | picture bytes | Participants only, `Cache-Control: private, max-age=31536000, immutable` (cache it by id). `404` otherwise. |
 | POST | `/chat/conversations/{id}/messages` | `{ "content": "text", "workoutId": "guid" (optional, coach only) }` | `ChatMessage` | With `workoutId` the message shares that workout (`type: "workout"`, content optional); a client sending one gets `400`/`1101`, an unknown workout `404`. |
 | POST | `/chat/conversations/{id}/messages` | `{ "content": "text" }` | `ChatMessage` | `400` with error code `1101` if the coach disabled the conversation (reload it to show it read only), `404` if not visible. Rate limit: 120/min per IP (`429`, error code `1500`). |
@@ -113,7 +114,7 @@ Errors use the usual API shape: `{ "statusCode": 404, "message": "...", "errors"
 |---|---|---|
 | `MessageReceived` | `ChatMessage` | A message was sent in one of the user's conversations — also echoed to the sender's other devices. Deduplicate by `id` (the sender already has it from the POST response). |
 | `MessagesRead` | `{ "conversationId": "guid", "readerUserId": "guid", "readAt": "..." }` | The other participant read messages — set `readAt` on own messages up to `readAt`. If `readerUserId` is the logged user, another device of theirs read them: clear the unread badge. |
-| `ConversationUpdated` | `"conversation id"` (string) | A chat was started, or the coach disabled/enabled it. Reload `GET /chat/conversations`. |
+| `ConversationUpdated` | `"conversation id"` (string) | A chat was started, the coach disabled/enabled it or the client blocked/unblocked it. Reload `GET /chat/conversations`. |
 
 Reconnect automatically (`withAutomaticReconnect`) and after reconnecting reload the conversation list
 and the open conversation's newest messages, as events missed while offline are not replayed.
