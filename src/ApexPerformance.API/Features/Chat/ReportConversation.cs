@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Extensions;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
@@ -91,6 +92,8 @@ public class ReportConversationEndpoint : Endpoint<ReportConversationRequest>
         foreach (var message in messages.OrderBy(x => x.CreatedAt))
         {
             var content = _encryption.Decrypt(message.EncryptedContent, message.KeyId, message.ConversationId);
+            if (content is not null && message.Type != ChatMessageType.Text)
+                content = $"[{ChatAccess.TypeName(message.Type)}] {content}";
             html.Append($"<li>{message.CreatedAt.UtcDateTime:yyyy-MM-dd HH:mm} <b>{Encode(Name(message.SenderUserId))}</b>: " +
                         $"{(content is null ? "<i>unreadable</i>" : Encode(content))}</li>");
         }

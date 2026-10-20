@@ -90,6 +90,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<ChatMessage> ChatMessages { get; set; }
 
+    public DbSet<ChatAttachment> ChatAttachments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

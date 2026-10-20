@@ -19,6 +19,9 @@ public class ChatMessage
 
     public Guid SenderUserId { get; set; }
 
+    public ChatMessageType Type { get; set; }
+
+    // Text, or the caption of a picture (empty when there is none).
     public required string EncryptedContent { get; set; }
     public required string KeyId { get; set; }
 
@@ -26,4 +29,21 @@ public class ChatMessage
 
     // When the other side of the conversation read the message.
     public DateTimeOffset? ReadAt { get; set; }
+
+    // Picture of an Image message (ChatAttachment), with what the
+    // apps need to lay it out before it is loaded.
+    public Guid? AttachmentId { get; set; }
+    public string? AttachmentContentType { get; set; }
+    public int? AttachmentWidth { get; set; }
+    public int? AttachmentHeight { get; set; }
+
+    // Workout a coach shared (Workout message).
+    public Guid? WorkoutId { get; set; }
+}
+
+public enum ChatMessageType
+{
+    Text = 0,
+    Image = 1,
+    Workout = 2
 }

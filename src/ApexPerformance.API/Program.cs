@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Serilog;
 using Stripe;
+using ApexPerformance.API.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -188,6 +189,9 @@ ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());
+
+// Muscles of workouts added before muscles existed, guessed from their names.
+BackgroundJob.Enqueue<WorkoutMusclesJob>(job => job.FillMissingAsync());
 
 app.Run();
 

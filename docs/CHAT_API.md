@@ -53,8 +53,17 @@ ChatContact (someone the logged user can chat with):
   "senderUserId": "guid",          // compare with the logged user's id ("sub" claim) to tell own messages
   "content": "text" | null,         // null when the message can't be decrypted (show a placeholder)
   "createdAt": "2026-10-13T08:15:02.123+00:00",
-  "readAt": "..." | null            // when the OTHER participant read it (read receipt for own messages)
+  "readAt": "..." | null,           // when the OTHER participant read it (read receipt for own messages)
+  "type": "text" | "image" | "workout",
+  "attachment": {                   // "image" messages: picture to load from GET .../attachments/{id}
+    "id": "guid", "contentType": "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+    "width": 1080 | null, "height": 1440 | null    // as sent by the app, for the layout before loading
+  } | null,
+  "workout": Workout | null         // "workout" messages: the whole workout as GET /workouts returns it
+                                    // (opens even if the client's plan doesn't list it); null if it was deleted
 }
+// For "image" content is an optional caption (may be ""), for "workout" an optional note.
+// Older messages are all "text".
 
 // ChatConversation
 {
@@ -80,6 +89,9 @@ The other participant is `client` for a coach and `coach` for a client.
 | POST | `/chat/conversations/start` | `{ "coachId": "guid" }` | `ChatConversation` | **Client only.** Opens the chat with one of their coaches: creates it (enabled) if needed, otherwise returns the existing one — also when disabled (`isEnabled: false`, read only). `404` if not their coach. |
 | POST | `/chat/conversations` | `{ "clientId": "guid", "isEnabled": true }` | `ChatConversation` | **Coach only.** Creates the conversation if needed and enables/disables it. `404` if the client isn't the coach's client. |
 | GET | `/chat/conversations/{id}/messages` | `?before=<ISO date>&take=50` (both optional, take ≤ 200) | `ChatMessage[]` oldest → newest | Without `before`: newest messages. For older ones pass `createdAt` of the oldest loaded message. |
+| POST | `/chat/conversations/{id}/images` | `multipart/form-data`: `file` (JPEG, PNG, WebP or GIF, ≤ 10 MB), optional `content`, `width`, `height` | `ChatMessage` (`type: "image"`) | One picture per message. The type is detected from the file. Shrink photos before sending (e.g. longer side 1600 px, JPEG); send GIFs as they are so they stay animated. Same rules and rate limit as messages. |
+| GET | `/chat/conversations/{id}/attachments/{attachmentId}` | – | picture bytes | Participants only, `Cache-Control: private, max-age=31536000, immutable` (cache it by id). `404` otherwise. |
+| POST | `/chat/conversations/{id}/messages` | `{ "content": "text", "workoutId": "guid" (optional, coach only) }` | `ChatMessage` | With `workoutId` the message shares that workout (`type: "workout"`, content optional); a client sending one gets `400`/`1101`, an unknown workout `404`. |
 | POST | `/chat/conversations/{id}/messages` | `{ "content": "text" }` | `ChatMessage` | `400` with error code `1101` if the coach disabled the conversation (reload it to show it read only), `404` if not visible. Rate limit: 120/min per IP (`429`, error code `1500`). |
 | POST | `/chat/conversations/{id}/block` | `{ "isBlocked": true }` | `ChatConversation` | **Client only.** Blocks or unblocks the chat with their coach; both sides get `ConversationUpdated`. `404` if not the client of the conversation. |
 | POST | `/chat/conversations/{id}/read` | – | `204` | Marks all messages of the other participant as read. Call when the conversation is open and visible, and when a new message arrives into the open conversation. |
@@ -129,3 +141,12 @@ When a message is sent, the recipient's devices get a push (in the language of t
 4. On `MessageReceived` for another conversation: update its last message and unread count.
 5. Coach can disable/enable the chat from the conversation screen (same POST with `isEnabled`).
    A disabled conversation shows its history with a notice instead of the message input.
+
+## Workout muscles
+
+`GET /workouts` (and the workout in chat messages) returns `muscles`: codes of the muscles the workout works, for
+a body map — `chest`, `shoulders`, `biceps`, `triceps`, `forearms`, `abs`, `obliques`, `traps`, `upper_back`,
+`lats`, `lower_back`, `glutes`, `quads`, `hamstrings`, `adductors`, `calves` (front: chest, shoulders, biceps,
+forearms, abs, obliques, quads, adductors, calves; back: shoulders, traps, upper_back, lats, lower_back, triceps,
+glutes, hamstrings, calves). They are guessed from the name for existing and new workouts; staff correct them with
+`muscles` in `POST /workouts` and `PUT /workouts/{id}` (omit it to keep them). Unknown codes give `400`.

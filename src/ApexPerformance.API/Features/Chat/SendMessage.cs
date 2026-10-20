@@ -12,12 +12,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Chat;
 
-public record SendMessageRequest(string Content);
+public record SendMessageRequest(
+    string? Content,
+    // Coach only: shares a workout, the content is then optional.
+    Guid? WorkoutId = null);
 
 /// <summary>
 /// Sends a message to the conversation. The content is stored encrypted,
 /// both sides get it live through the chat hub and the other side also
 /// gets a push notification (without the content of the message).
+/// A coach can share a workout, which opens in the client's app.
 /// </summary>
 public class SendMessageEndpoint : Endpoint<SendMessageRequest, ChatMessageResponse>
 {
@@ -58,14 +62,34 @@ public class SendMessageEndpoint : Endpoint<SendMessageRequest, ChatMessageRespo
         if (!ChatAccess.CanWrite(conversation))
             ThrowError(ErrorCodes.UnauthorizedAction);
 
-        var (encryptedContent, keyId) = _encryption.Encrypt(request.Content.Trim(), conversation.Id);
+        Workout? workout = null;
+
+        if (request.WorkoutId is { } workoutId)
+        {
+            // Only coaches share workouts with their clients.
+            if (conversation.Coach.UserId != userId)
+                ThrowError(ErrorCodes.UnauthorizedAction);
+
+            workout = await _context.Workouts.AsNoTracking()
+                .Include(x => x.WorkoutTypes)
+                .ThenInclude(x => x.WorkoutType)
+                .FirstOrDefaultAsync(x => x.Id == workoutId, cancellationToken);
+
+            if (workout is null)
+                ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+        }
+
+        var content = request.Content?.Trim() ?? string.Empty;
+        var (encryptedContent, keyId) = _encryption.Encrypt(content, conversation.Id);
 
         var message = new ChatMessage
         {
             ConversationId = conversation.Id,
             SenderUserId = userId,
+            Type = workout is null ? ChatMessageType.Text : ChatMessageType.Workout,
             EncryptedContent = encryptedContent,
             KeyId = keyId,
+            WorkoutId = workout?.Id,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -74,18 +98,33 @@ public class SendMessageEndpoint : Endpoint<SendMessageRequest, ChatMessageRespo
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var response = new ChatMessageResponse(message.Id, message.ConversationId, message.SenderUserId,
-            request.Content.Trim(), message.CreatedAt, null);
+        var response = ChatAccess.ToResponse(message, content, workout);
 
-        var recipientUserId = conversation.Coach.UserId == userId ? conversation.Client.UserId : conversation.Coach.UserId;
-        var senderName = conversation.Coach.UserId == userId ? conversation.Coach.FullName : conversation.Client.FullName;
-
-        await _hub.Clients.Users(userId.ToString(), recipientUserId.ToString())
-            .SendAsync(ChatHub.Events.MessageReceived, response, cancellationToken);
-
-        BackgroundJob.Enqueue(() => SendPushNotification(recipientUserId, senderName, conversation.Id));
+        await Deliver(_hub, conversation, userId, response, cancellationToken);
 
         await SendAsync(response, cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends a new message to both sides through the hub and a push
+    /// notification to the other side.
+    /// </summary>
+    public static async Task Deliver(IHubContext<ChatHub> hub, ChatConversation conversation, Guid senderUserId,
+        ChatMessageResponse response, CancellationToken cancellationToken)
+    {
+        var recipientUserId = conversation.Coach.UserId == senderUserId
+            ? conversation.Client.UserId
+            : conversation.Coach.UserId;
+        var senderName = conversation.Coach.UserId == senderUserId
+            ? conversation.Coach.FullName
+            : conversation.Client.FullName;
+
+        await hub.Clients.Users(senderUserId.ToString(), recipientUserId.ToString())
+            .SendAsync(ChatHub.Events.MessageReceived, response, cancellationToken);
+
+        var conversationId = conversation.Id;
+        BackgroundJob.Enqueue<SendMessageEndpoint>(endpoint =>
+            endpoint.SendPushNotification(recipientUserId, senderName, conversationId));
     }
 
     [AutomaticRetry(Attempts = 0)]
@@ -110,6 +149,8 @@ public sealed class SendMessageValidator : Validator<SendMessageRequest>
     {
         RuleFor(x => x.Content)
             .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage(ErrorCodes.Required)
+            .When(x => x.WorkoutId is null);
+        RuleFor(x => x.Content)
             .MaximumLength(4000).WithMessage(ErrorCodes.NotValid);
     }
 }

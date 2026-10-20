@@ -40,8 +40,28 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
 
         builder.Property(e => e.KeyId).HasMaxLength(16);
 
+        builder.Property(e => e.AttachmentContentType).HasMaxLength(50);
+
         builder.HasIndex(e => new { e.ConversationId, e.CreatedAt });
 
         builder.ToTable("ChatMessages");
+    }
+}
+
+public class ChatAttachmentConfiguration : IEntityTypeConfiguration<ChatAttachment>
+{
+    public void Configure(EntityTypeBuilder<ChatAttachment> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.ContentType).HasMaxLength(50);
+        builder.Property(e => e.KeyId).HasMaxLength(16);
+
+        builder.HasOne(e => e.Conversation)
+            .WithMany()
+            .HasForeignKey(e => e.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.ToTable("ChatAttachments");
     }
 }

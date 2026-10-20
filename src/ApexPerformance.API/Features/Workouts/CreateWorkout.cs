@@ -16,7 +16,9 @@ public record CreateWorkoutRequest(
     string? ThumbnailUrl,
     // Optional, video can be added later.
     string? VideoUrl,
-    List<Guid> WorkoutTypes
+    List<Guid> WorkoutTypes,
+    // Codes of WorkoutMuscles. Null keeps the current ones (guessed from the name for a new workout).
+    List<string>? Muscles = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -65,6 +67,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 ? YoutubeHelper.GetThumbnailOrEmpty(request.VideoUrl)
                 : request.ThumbnailUrl.Trim(),
             VideoUrl = request.VideoUrl?.Trim() ?? string.Empty,
+            Muscles = WorkoutMuscles.Serialize(request.Muscles ?? WorkoutMuscles.Guess(request.Name.ToJsonString())),
             WorkoutTypes = workoutTypes.Select(x => new WorkoutWorkoutType
             {
                 WorkoutType = x
@@ -82,7 +85,8 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
-                        workoutTypeRelation.WorkoutType.Description)).ToList()),
+                        workoutTypeRelation.WorkoutType.Description)).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles)),
             cancellation: cancellationToken);
     }
 }
@@ -91,6 +95,7 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
 {
     public CreateWorkoutValidator()
     {
+        RuleForEach(x => x.Muscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
             .When(x => x.Name is not null);

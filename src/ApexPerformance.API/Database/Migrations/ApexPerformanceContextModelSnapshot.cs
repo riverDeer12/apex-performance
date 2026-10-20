@@ -598,6 +598,39 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("WorkoutTypes", (string)null);
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ChatAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("EncryptedData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.ToTable("ChatAttachments", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ChatConversation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -653,6 +686,19 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentContentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("AttachmentHeight")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("AttachmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("AttachmentWidth")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
@@ -672,6 +718,12 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("WorkoutId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -2253,6 +2305,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Muscles")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -2421,6 +2476,17 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ChatAttachment", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.ChatConversation", "Conversation")
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ChatConversation", b =>

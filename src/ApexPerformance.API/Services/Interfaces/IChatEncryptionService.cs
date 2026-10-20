@@ -11,4 +11,14 @@ public interface IChatEncryptionService
     /// Decrypted content, or null when it can't be decrypted (unknown key, changed data).
     /// </summary>
     string? Decrypt(string encryptedContent, string keyId, Guid conversationId);
+
+    /// <summary>
+    /// Encrypts an attachment (picture) of the conversation.
+    /// </summary>
+    (byte[] EncryptedData, string KeyId) EncryptBytes(byte[] data, Guid conversationId);
+
+    /// <summary>
+    /// Decrypted attachment, or null when it can't be decrypted.
+    /// </summary>
+    byte[]? DecryptBytes(byte[] encryptedData, string keyId, Guid conversationId);
 }

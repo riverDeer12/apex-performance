@@ -53,7 +53,12 @@ public class ChatEncryptionService : IChatEncryptionService
 
     public (string EncryptedContent, string KeyId) Encrypt(string content, Guid conversationId)
     {
-        var plain = Encoding.UTF8.GetBytes(content);
+        var (data, keyId) = EncryptBytes(Encoding.UTF8.GetBytes(content), conversationId);
+        return (Convert.ToBase64String(data), keyId);
+    }
+
+    public (byte[] EncryptedData, string KeyId) EncryptBytes(byte[] plain, Guid conversationId)
+    {
         var nonce = RandomNumberGenerator.GetBytes(NonceSize);
         var cipher = new byte[plain.Length];
         var tag = new byte[TagSize];
@@ -67,10 +72,28 @@ public class ChatEncryptionService : IChatEncryptionService
         tag.CopyTo(result, NonceSize);
         cipher.CopyTo(result, NonceSize + TagSize);
 
-        return (Convert.ToBase64String(result), _currentKeyId);
+        return (result, _currentKeyId);
     }
 
     public string? Decrypt(string encryptedContent, string keyId, Guid conversationId)
+    {
+        byte[] data;
+
+        try
+        {
+            data = Convert.FromBase64String(encryptedContent);
+        }
+        catch (FormatException ex)
+        {
+            _logger.LogError(ex, "Chat message of conversation {ConversationId} could not be decrypted", conversationId);
+            return null;
+        }
+
+        var plain = DecryptBytes(data, keyId, conversationId);
+        return plain is null ? null : Encoding.UTF8.GetString(plain);
+    }
+
+    public byte[]? DecryptBytes(byte[] data, string keyId, Guid conversationId)
     {
         if (!_keys.TryGetValue(keyId, out var key))
         {
@@ -80,8 +103,6 @@ public class ChatEncryptionService : IChatEncryptionService
 
         try
         {
-            var data = Convert.FromBase64String(encryptedContent);
-
             if (data.Length < NonceSize + TagSize)
                 return null;
 
@@ -93,9 +114,9 @@ public class ChatEncryptionService : IChatEncryptionService
             using var aes = new AesGcm(key, TagSize);
             aes.Decrypt(nonce, cipher, tag, plain, conversationId.ToByteArray());
 
-            return Encoding.UTF8.GetString(plain);
+            return plain;
         }
-        catch (Exception ex) when (ex is CryptographicException or FormatException)
+        catch (CryptographicException ex)
         {
             _logger.LogError(ex, "Chat message of conversation {ConversationId} could not be decrypted", conversationId);
             return null;

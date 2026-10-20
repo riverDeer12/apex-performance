@@ -316,6 +316,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
             // Video is optional, thumbnail is empty until it is added.
             ThumbnailUrl = YoutubeHelper.GetThumbnailOrEmpty(excelRow.VideoUrl),
             VideoUrl = excelRow.VideoUrl,
+            Muscles = WorkoutMuscles.Serialize(WorkoutMuscles.Guess(name)),
             // There is no logged user in background job,
             // so audit fields are set to user that started import.
             CreatedBy = userId,

@@ -1,3 +1,5 @@
+using ApexPerformance.API.Features.Workouts;
+
 namespace ApexPerformance.API.Features.Chat;
 
 public record ChatParticipantResponse(Guid Id, Guid UserId, string FullName);
@@ -9,8 +11,18 @@ public record ChatMessageResponse(
     // Null when the message can't be decrypted.
     string? Content,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? ReadAt
+    DateTimeOffset? ReadAt,
+    // "text", "image" or "workout".
+    string Type,
+    ChatAttachmentResponse? Attachment,
+    // Whole workout (as GET workouts returns it), so it opens even when the
+    // client's plan doesn't list it. Null when the workout was deleted.
+    GetWorkoutResponse? Workout
 );
+
+// Picture of an image message, loaded from GET .../attachments/{id}.
+public record ChatAttachmentResponse(Guid Id, string ContentType, int? Width, int? Height);
+
 
 public record ChatConversationResponse(
     Guid Id,

@@ -59,9 +59,11 @@ public class GetMessagesEndpoint : Endpoint<GetMessagesRequest, List<ChatMessage
             .Take(Math.Clamp(request.Take ?? DefaultTake, 1, MaxTake))
             .ToListAsync(cancellationToken);
 
+        var workouts = await ChatAccess.LoadWorkouts(_context, messages, cancellationToken);
+
         await SendAsync(messages
                 .OrderBy(x => x.CreatedAt)
-                .Select(x => ChatAccess.ToResponse(x, _encryption))
+                .Select(x => ChatAccess.ToResponse(x, _encryption, workouts))
                 .ToList(),
             cancellation: cancellationToken);
     }

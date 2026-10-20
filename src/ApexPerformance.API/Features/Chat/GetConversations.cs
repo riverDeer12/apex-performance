@@ -47,6 +47,9 @@ public class GetConversationsEndpoint : EndpointWithoutRequest<List<ChatConversa
             })
             .ToListAsync(cancellationToken);
 
+        var workouts = await ChatAccess.LoadWorkouts(_context, conversations.Select(x => x.LastMessage),
+            cancellationToken);
+
         var response = conversations
             .OrderByDescending(x => x.Conversation.LastMessageAt ?? x.Conversation.CreatedAt)
             .Select(x => new ChatConversationResponse(
@@ -55,7 +58,7 @@ public class GetConversationsEndpoint : EndpointWithoutRequest<List<ChatConversa
                 ChatAccess.Participant(x.Conversation.Client),
                 ChatAccess.CanWrite(x.Conversation),
                 x.Conversation.LastMessageAt,
-                x.LastMessage is null ? null : ChatAccess.ToResponse(x.LastMessage, _encryption),
+                x.LastMessage is null ? null : ChatAccess.ToResponse(x.LastMessage, _encryption, workouts),
                 x.UnreadCount,
                 x.Conversation.IsBlockedByClient))
             .ToList();

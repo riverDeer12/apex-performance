@@ -1,6 +1,10 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Features.Workouts;
+using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
+using ApexPerformance.API.Utilities.Localization;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Chat;
@@ -35,10 +39,51 @@ public static class ChatAccess
         => new(conversation.Id, Participant(coach), Participant(client), CanWrite(conversation),
             conversation.LastMessageAt, null, 0, conversation.IsBlockedByClient);
 
-    public static ChatMessageResponse ToResponse(ChatMessage message, IChatEncryptionService encryption)
-        => new(message.Id, message.ConversationId, message.SenderUserId,
-            encryption.Decrypt(message.EncryptedContent, message.KeyId, message.ConversationId),
-            message.CreatedAt, message.ReadAt);
+    public static ChatMessageResponse ToResponse(ChatMessage message, IChatEncryptionService encryption,
+        IReadOnlyDictionary<Guid, Workout>? workouts = null)
+        => ToResponse(message, encryption.Decrypt(message.EncryptedContent, message.KeyId, message.ConversationId),
+            message.WorkoutId is { } workoutId ? workouts?.GetValueOrDefault(workoutId) : null);
+
+    public static ChatMessageResponse ToResponse(ChatMessage message, string? content, Workout? workout)
+        => new(message.Id, message.ConversationId, message.SenderUserId, content, message.CreatedAt, message.ReadAt,
+            TypeName(message.Type),
+            message.AttachmentId is { } attachmentId
+                ? new ChatAttachmentResponse(attachmentId, message.AttachmentContentType ?? "image/jpeg",
+                    message.AttachmentWidth, message.AttachmentHeight)
+                : null,
+            workout is null ? null : WorkoutResponse(workout));
+
+    private static GetWorkoutResponse WorkoutResponse(Workout workout)
+        => new(workout.Id, new LocalizedProperty(workout.Name), new LocalizedProperty(workout.Description),
+            workout.ThumbnailUrl, workout.VideoUrl,
+            (workout.WorkoutTypes ?? []).Where(x => x.WorkoutType is not null)
+                .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
+                .ToList(),
+            WorkoutMuscles.Parse(workout.Muscles));
+
+    public static string TypeName(ChatMessageType type) => type switch
+    {
+        ChatMessageType.Image => "image",
+        ChatMessageType.Workout => "workout",
+        _ => "text"
+    };
+
+    // Workouts shared in the given messages, by id.
+    public static async Task<Dictionary<Guid, Workout>> LoadWorkouts(ApexPerformanceContext context,
+        IEnumerable<ChatMessage?> messages, CancellationToken cancellationToken)
+    {
+        var ids = messages.Select(x => x?.WorkoutId).OfType<Guid>().Distinct().ToList();
+
+        if (ids.Count == 0)
+            return new Dictionary<Guid, Workout>();
+
+        return await context.Workouts
+            .AsNoTracking()
+            .Include(x => x.WorkoutTypes)
+            .ThenInclude(x => x.WorkoutType)
+            .Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+    }
 
     public static ChatParticipantResponse Participant(Coach coach) => new(coach.Id, coach.UserId, coach.FullName);
 

@@ -1,5 +1,6 @@
 ﻿using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
@@ -13,7 +14,9 @@ public record GetWorkoutResponse(
     LocalizedProperty Description,
     string ThumbnailUrl,
     string VideoUrl,
-    List<CatalogDataDto> WorkoutTypes
+    List<CatalogDataDto> WorkoutTypes,
+    // Codes of WorkoutMuscles, for the body map.
+    List<string> Muscles
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -57,7 +60,8 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
-                        workoutTypeRelation.WorkoutType.Description)).ToList())).ToList(),
+                        workoutTypeRelation.WorkoutType.Description)).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles))).ToList(),
             cancellation: cancellationToken);
     }
 }
