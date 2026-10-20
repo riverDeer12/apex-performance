@@ -151,7 +151,7 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
 
             var clientDeviceTokens = deviceTokens
                 .Where(t => t.UserId == client.UserId)
-                .Select(t => new PushRecipient(t.Token, t.Language))
+                .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
                 .ToList();
 
             if (clientDeviceTokens.Count is 0) continue;

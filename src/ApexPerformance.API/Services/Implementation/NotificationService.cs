@@ -1,5 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
+using System.Text.Json;
 using ApexPerformance.API.Database;
+using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using FirebaseAdmin.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -191,7 +193,59 @@ public class NotificationService : INotificationService
             await SendToMultipleDevices(group.Select(x => x.Token).Distinct().ToList(), localized.Title,
                 localized.Body, data);
         }
+
+        await KeepForInbox(recipients, text, data);
     }
+
+    // Each user gets the notification once in the app's list, in the
+    // language of their (first) device. Chat messages have their own list.
+    private async Task KeepForInbox(IReadOnlyCollection<PushRecipient> recipients, Func<string, PushText> text,
+        Dictionary<string, string>? data)
+    {
+        var type = NotificationType(data);
+        if (type == PushNotificationTypes.ChatMessage) return;
+
+        var users = recipients
+            .Where(x => x.UserId is not null)
+            .GroupBy(x => x.UserId!.Value)
+            .ToList();
+
+        if (users.Count == 0) return;
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApexPerformanceContext>();
+            var now = DateTimeOffset.UtcNow;
+            var json = JsonSerializer.Serialize(data ?? new Dictionary<string, string>());
+
+            foreach (var user in users)
+            {
+                var language = user.Select(x => PushTexts.Normalize(x.Language)).FirstOrDefault(x => x is not null)
+                               ?? PushTexts.Croatian;
+                var localized = text(language);
+
+                context.UserNotifications.Add(new UserNotification
+                {
+                    UserId = user.Key,
+                    Type = type,
+                    Title = Truncate(localized.Title, 200),
+                    Body = Truncate(localized.Body, 1000),
+                    Data = json,
+                    CreatedAt = now
+                });
+            }
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // The push itself was sent, only the list misses it.
+            _logger.LogError(ex, "Notification {Type} could not be kept for the users' list.", type);
+        }
+    }
+
+    private static string Truncate(string value, int length) => value.Length <= length ? value : value[..length];
 
     public async Task<string> SendToTopic(string topic, string title, string body)
     {

@@ -124,7 +124,7 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
 
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
         await _notificationService.SendLocalized(coachDeviceTokens,

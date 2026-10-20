@@ -48,6 +48,28 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
     }
 }
 
+public class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotification>
+{
+    public void Configure(EntityTypeBuilder<UserNotification> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Type).HasMaxLength(50);
+        builder.Property(e => e.Title).HasMaxLength(200);
+        builder.Property(e => e.Body).HasMaxLength(1000);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // The list of a user, newest first.
+        builder.HasIndex(e => new { e.UserId, e.CreatedAt });
+
+        builder.ToTable("UserNotifications");
+    }
+}
+
 public class ChatAttachmentConfiguration : IEntityTypeConfiguration<ChatAttachment>
 {
     public void Configure(EntityTypeBuilder<ChatAttachment> builder)

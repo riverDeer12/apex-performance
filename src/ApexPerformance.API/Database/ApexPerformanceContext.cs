@@ -92,6 +92,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<ChatAttachment> ChatAttachments { get; set; }
 
+    public DbSet<UserNotification> UserNotifications { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

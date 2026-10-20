@@ -73,7 +73,7 @@ public class MonthlyReviewReminderJob
         {
             var deviceTokens = await _context.DeviceTokens
                 .Where(x => x.UserId == coach.CoachUserId)
-                .Select(x => new PushRecipient(x.Token, x.Language))
+                .Select(x => new PushRecipient(x.Token, x.Language, x.UserId))
                 .ToListAsync();
 
             await _notificationService.SendLocalized(deviceTokens,

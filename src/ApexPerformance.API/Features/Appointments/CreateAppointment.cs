@@ -226,7 +226,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         var newClientDeviceTokens = await _context.DeviceTokens
             .Where(x => newClientUserIds.Contains(x.UserId))
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
         await _notificationService.SendLocalized(newClientDeviceTokens,
@@ -282,12 +282,12 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => clientUserIds.Contains(x.UserId))
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
         await _notificationService.SendLocalized(coachDeviceTokens, PushTexts.AppointmentRequested,

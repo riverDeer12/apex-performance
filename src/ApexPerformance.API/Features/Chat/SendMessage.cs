@@ -132,7 +132,7 @@ public class SendMessageEndpoint : Endpoint<SendMessageRequest, ChatMessageRespo
     {
         var recipients = await _context.DeviceTokens
             .Where(x => x.UserId == recipientUserId)
-            .Select(x => new PushRecipient(x.Token, x.Language))
+            .Select(x => new PushRecipient(x.Token, x.Language, x.UserId))
             .ToListAsync();
 
         var data = PushNotificationTypes.Data(PushNotificationTypes.ChatMessage);

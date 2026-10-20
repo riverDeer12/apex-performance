@@ -28,7 +28,7 @@ public class TrainingNotificationJob
     {
         var deviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(x => new PushRecipient(x.Token, x.Language))
+            .Select(x => new PushRecipient(x.Token, x.Language, x.UserId))
             .ToListAsync();
 
         var data = PushNotificationTypes.Data(PushNotificationTypes.Training);

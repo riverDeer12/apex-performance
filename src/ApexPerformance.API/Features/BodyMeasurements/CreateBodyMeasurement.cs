@@ -109,7 +109,7 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
     {
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
         await _notificationService.SendLocalized(clientDeviceTokens, PushTexts.BodyMeasurement,

@@ -93,7 +93,7 @@ public class CancelAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
 
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => clientUserIds.Contains(x.UserId))
-            .Select(t => new PushRecipient(t.Token, t.Language))
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
         
         await _notificationService.SendLocalized(clientDeviceTokens,

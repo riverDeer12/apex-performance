@@ -4,9 +4,10 @@ using ApexPerformance.API.Database.Entities;
 namespace ApexPerformance.API.Constants;
 
 /// <summary>
-/// Device token that gets a push, with the language of the app on it.
+/// Device token that gets a push, with the language of the app on it and
+/// its user, who also gets the notification in the app's list.
 /// </summary>
-public record PushRecipient(string Token, string? Language);
+public record PushRecipient(string Token, string? Language, Guid? UserId = null);
 
 /// <summary>
 /// Title and body of a push notification.
