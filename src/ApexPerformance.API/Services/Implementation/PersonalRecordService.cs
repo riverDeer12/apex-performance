@@ -37,14 +37,22 @@ public partial class PersonalRecordService : IPersonalRecordService
 
     public async Task CalculateMissingRecordsAsync()
     {
-        if (await _context.PersonalRecords.AnyAsync())
-            return;
+        var completed = _context.Trainings.Where(x => x.IsCompleted);
 
-        var clientIds = await _context.Trainings
-            .Where(x => x.IsCompleted)
-            .Select(x => x.ClientId)
-            .Distinct()
-            .ToListAsync();
+        // Records came after trainings: all clients. Durations came after records: clients
+        // with timed sets and no duration record yet. Both happen only once.
+        var clientIds = await _context.PersonalRecords.AnyAsync()
+            ? await completed
+                .Where(x => x.Exercises.Any(exercise => exercise.Sets.Any(set => set.DurationSeconds > 0)))
+                .Where(x => !_context.PersonalRecords.Any(record =>
+                    record.ClientId == x.ClientId && record.Type == PersonalRecordTypes.LongestDuration))
+                .Select(x => x.ClientId)
+                .Distinct()
+                .ToListAsync()
+            : await completed
+                .Select(x => x.ClientId)
+                .Distinct()
+                .ToListAsync();
 
         await RecalculateForClientsAsync(clientIds);
     }
@@ -86,9 +94,23 @@ public partial class PersonalRecordService : IPersonalRecordService
 
         foreach (var training in trainings)
         {
+            // Sets done for a time (e.g. plank) count by how long they lasted, with or without weight.
+            var timedSets = training.Exercises
+                .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
+                .Where(x => x.Set.DurationSeconds is > 0)
+                .ToList();
+
+            foreach (var workoutSets in timedSets.GroupBy(x => x.WorkoutId))
+            {
+                var longest = workoutSets.MaxBy(x => x.Set.DurationSeconds)!.Set;
+                AddRecordIfBetter(workoutSets.Key, PersonalRecordTypes.LongestDuration, longest.DurationSeconds!.Value,
+                    longest.Weight ?? 0, ParseReps(longest.Reps));
+            }
+
             var sets = training.Exercises
                 .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
-                .Where(x => x.Set.Weight is > 0)
+                // Timed sets have their own record, their weight isn't a lifting record.
+                .Where(x => x.Set.Weight is > 0 && x.Set.DurationSeconds is null or 0)
                 .Select(x => (x.WorkoutId, Weight: x.Set.Weight!.Value, Reps: ParseReps(x.Set.Reps),
                     HasReps: !string.IsNullOrWhiteSpace(x.Set.Reps)))
                 // Sets with text that is not repetitions (like "30 s") are not counted.
@@ -98,34 +120,35 @@ public partial class PersonalRecordService : IPersonalRecordService
             foreach (var workoutSets in sets.GroupBy(x => x.WorkoutId))
             {
                 var heaviest = workoutSets.MaxBy(x => x.Weight);
-                AddIfBetter(PersonalRecordTypes.MaxWeight, heaviest.Weight, heaviest.Weight, heaviest.Reps);
+                AddRecordIfBetter(workoutSets.Key, PersonalRecordTypes.MaxWeight, heaviest.Weight, heaviest.Weight,
+                    heaviest.Reps);
 
                 var strongest = workoutSets.MaxBy(x => EstimatedOneRepMax(x.Weight, x.Reps));
-                AddIfBetter(PersonalRecordTypes.EstimatedOneRepMax,
+                AddRecordIfBetter(workoutSets.Key, PersonalRecordTypes.EstimatedOneRepMax,
                     Math.Round(EstimatedOneRepMax(strongest.Weight, strongest.Reps), 2),
                     strongest.Weight, strongest.Reps);
+            }
 
-                void AddIfBetter(string type, decimal value, decimal weight, decimal? reps)
+            void AddRecordIfBetter(Guid workoutId, string type, decimal value, decimal weight, decimal? reps)
+            {
+                var key = (workoutId, type);
+
+                if (best.TryGetValue(key, out var current) && value <= current)
+                    return;
+
+                best[key] = value;
+
+                records.Add(new PersonalRecord
                 {
-                    var key = (workoutSets.Key, type);
-
-                    if (best.TryGetValue(key, out var current) && value <= current)
-                        return;
-
-                    best[key] = value;
-
-                    records.Add(new PersonalRecord
-                    {
-                        ClientId = clientId,
-                        WorkoutId = workoutSets.Key,
-                        TrainingId = training.Id,
-                        Type = type,
-                        Value = value,
-                        Weight = weight,
-                        Reps = reps,
-                        AchievedAt = training.Date
-                    });
-                }
+                    ClientId = clientId,
+                    WorkoutId = workoutId,
+                    TrainingId = training.Id,
+                    Type = type,
+                    Value = value,
+                    Weight = weight,
+                    Reps = reps,
+                    AchievedAt = training.Date
+                });
             }
         }
 

@@ -36,3 +36,9 @@ current value; new workouts default to `false`).
   { "reps": null, "weight": 10, "isDropSet": false, "durationSeconds": 45 }
 ]
 ```
+
+## Personal records of timed workouts
+
+`GET /personal-records` also returns records of type `LongestDuration` for workouts done for a time: `value`
+is the longest set in seconds (show it as min:s), `weight` the weight of that set (0 without weight). Timed sets
+don't count for `MaxWeight` and `EstimatedOneRepMax`.

@@ -27,7 +27,7 @@ public class PersonalRecord
     // One of PersonalRecordTypes.
     public required string Type { get; set; }
 
-    // Weight for max weight, estimated one rep max for the other type.
+    // Weight for max weight, estimated one rep max, or seconds for the longest duration.
     public decimal Value { get; set; }
 
     // The set the record was set with.
