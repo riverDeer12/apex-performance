@@ -4,6 +4,9 @@ Clients with individual trainings (plan `PrivateCoaching`) accept the "Pravila s
 treninge" in the app. Each acceptance is kept as a record: client, user, version, time, IP address and
 device (user agent). A new version of the rules has to be accepted again.
 
+Until the rules are published (`"Rules": { "Published": true }` in the server settings, after the legal review),
+`isRequired` is `false` for everyone on production, so the apps don't ask for them. On test they are asked for.
+
 Base URL: `https://apex-performance.fit/api` (test: `https://test.apex-performance.fit/api`).
 Authentication: `Authorization: Bearer <login token>`.
 

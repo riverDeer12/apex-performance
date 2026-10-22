@@ -18,7 +18,9 @@ public record GetWorkoutResponse(
     // Codes of WorkoutMuscles, for the body map: primary ones
     // doing most of the work and secondary ones helping.
     List<string> Muscles,
-    List<string> SecondaryMuscles
+    List<string> SecondaryMuscles,
+    // Sets of the workout record a duration (e.g. plank).
+    bool IsTimed
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -63,7 +65,7 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout))).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed)).ToList(),
             cancellation: cancellationToken);
     }
 }

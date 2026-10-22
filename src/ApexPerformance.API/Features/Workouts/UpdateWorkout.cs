@@ -20,7 +20,9 @@ public record UpdateWorkoutRequest(
     // Codes of WorkoutMuscles, primary and secondary. Null keeps the
     // current ones (guessed from the name for a new workout).
     List<string>? Muscles = null,
-    List<string>? SecondaryMuscles = null
+    List<string>? SecondaryMuscles = null,
+    // Sets record a duration (e.g. plank). Null keeps the current value.
+    bool? IsTimed = null
 );
 
 public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutResponse>
@@ -78,6 +80,9 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
 
         WorkoutMuscles.Apply(workout, request.Muscles, request.SecondaryMuscles);
 
+        if (request.IsTimed is not null)
+            workout.IsTimed = request.IsTimed.Value;
+
         // Only relations that changed are removed or added
         // so unchanged ones are not deleted and re-inserted
         // with the same composite key.
@@ -111,7 +116,7 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout)),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed),
             cancellation: cancellationToken);
     }
 }

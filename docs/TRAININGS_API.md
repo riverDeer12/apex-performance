@@ -21,3 +21,18 @@ don't count them as separate sets.
 Each exercise has `workoutId`, so tapping it in a training opens that workout with its description, video and
 muscles: `GET /workouts/{id}` returns one workout (same as an item of `GET /workouts`). Clients get the workouts
 their plan includes and also the ones in their own trainings; others give `404`.
+
+## Duration of a set
+
+Sets also have `durationSeconds` (optional, 1–86400): how long the set lasted, for exercises done for a time
+such as a plank. Workouts (`GET /workouts`, `GET /workouts/{id}`) have `isTimed`; for those apps show a
+duration input (min:s) instead of repetitions, and show the duration in the training (e.g. `1:30`, or
+`1:30 · 10 kg` with weight). `POST /workouts` and `PUT /workouts/{id}` take `isTimed` (omit it to keep the
+current value; new workouts default to `false`).
+
+```json
+"sets": [
+  { "reps": null, "weight": null, "isDropSet": false, "durationSeconds": 60 },
+  { "reps": null, "weight": 10, "isDropSet": false, "durationSeconds": 45 }
+]
+```

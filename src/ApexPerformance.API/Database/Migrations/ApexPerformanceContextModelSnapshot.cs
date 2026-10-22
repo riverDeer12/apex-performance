@@ -2055,6 +2055,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDropSet")
                         .HasColumnType("bit");
 
@@ -2152,6 +2155,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDropSet")
                         .HasColumnType("bit");
@@ -2397,6 +2403,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTimed")
                         .HasColumnType("bit");
 
                     b.Property<string>("Muscles")

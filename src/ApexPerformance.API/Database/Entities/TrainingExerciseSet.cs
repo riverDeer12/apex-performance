@@ -26,4 +26,7 @@ public class TrainingExerciseSet
     // Done right after the previous set without rest, the same
     // exercise with less weight (drop set).
     public bool IsDropSet { get; set; }
+
+    // How long the set lasted, for exercises done for a time (e.g. plank).
+    public int? DurationSeconds { get; set; }
 }

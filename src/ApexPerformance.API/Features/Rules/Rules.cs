@@ -47,7 +47,16 @@ internal static class RulesHelper
     public static string DocumentUrl(IConfiguration configuration)
         => (configuration["WebAppUrl"] ?? string.Empty).TrimEnd('/') + RulesDocuments.IndividualCoachingPath;
 
-    public static bool IsRequired(Client client) => client.Plan == ClientPlans.PrivateCoaching;
+    /// <summary>
+    /// Rules are asked for only once they are published ("Rules:Published" set to true, on production
+    /// after the legal review); on test and development right away, so they can be tried out.
+    /// </summary>
+    public static bool IsPublished(IConfiguration configuration, IHostEnvironment environment)
+        => configuration.GetValue<bool?>("Rules:Published") ??
+           (environment.IsDevelopment() || environment.IsEnvironment("Test"));
+
+    public static bool IsRequired(Client client, bool isPublished)
+        => isPublished && client.Plan == ClientPlans.PrivateCoaching;
 
     public static Task<RulesAcceptance?> LastAcceptance(ApexPerformanceContext context, Guid clientId,
         CancellationToken cancellationToken)
@@ -57,9 +66,10 @@ internal static class RulesHelper
             .OrderByDescending(x => x.AcceptedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public static RulesResponse ToResponse(Client client, RulesAcceptance? acceptance, IConfiguration configuration)
+    public static RulesResponse ToResponse(Client client, RulesAcceptance? acceptance, IConfiguration configuration,
+        IHostEnvironment environment)
         => new(RulesDocuments.IndividualCoaching, RulesDocuments.IndividualCoachingVersion,
-            DocumentUrl(configuration), IsRequired(client),
+            DocumentUrl(configuration), IsRequired(client, IsPublished(configuration, environment)),
             acceptance?.Version == RulesDocuments.IndividualCoachingVersion,
             acceptance?.Version, acceptance?.AcceptedAt);
 }
@@ -73,13 +83,15 @@ public class GetRulesEndpoint : EndpointWithoutRequest<RulesResponse>
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
     public GetRulesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
-        IConfiguration configuration)
+        IConfiguration configuration, IWebHostEnvironment environment)
     {
         _context = context;
         _currentUserService = currentUserService;
         _configuration = configuration;
+        _environment = environment;
     }
 
     public override void Configure()
@@ -100,7 +112,7 @@ public class GetRulesEndpoint : EndpointWithoutRequest<RulesResponse>
 
         var acceptance = await RulesHelper.LastAcceptance(_context, client.Id, cancellationToken);
 
-        await SendAsync(RulesHelper.ToResponse(client, acceptance, _configuration), cancellation: cancellationToken);
+        await SendAsync(RulesHelper.ToResponse(client, acceptance, _configuration, _environment), cancellation: cancellationToken);
     }
 }
 
@@ -114,13 +126,15 @@ public class AcceptRulesEndpoint : Endpoint<AcceptRulesRequest, RulesResponse>
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
     public AcceptRulesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
-        IConfiguration configuration)
+        IConfiguration configuration, IWebHostEnvironment environment)
     {
         _context = context;
         _currentUserService = currentUserService;
         _configuration = configuration;
+        _environment = environment;
     }
 
     public override void Configure()
@@ -168,7 +182,7 @@ public class AcceptRulesEndpoint : Endpoint<AcceptRulesRequest, RulesResponse>
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        await SendAsync(RulesHelper.ToResponse(client, acceptance, _configuration), cancellation: cancellationToken);
+        await SendAsync(RulesHelper.ToResponse(client, acceptance, _configuration, _environment), cancellation: cancellationToken);
     }
 }
 
@@ -189,11 +203,16 @@ public class GetRulesAcceptancesEndpoint : EndpointWithoutRequest<List<RulesAcce
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
-    public GetRulesAcceptancesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public GetRulesAcceptancesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IConfiguration configuration, IWebHostEnvironment environment)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _configuration = configuration;
+        _environment = environment;
     }
 
     public override void Configure()
@@ -224,12 +243,14 @@ public class GetRulesAcceptancesEndpoint : EndpointWithoutRequest<List<RulesAcce
             })
             .ToListAsync(cancellationToken);
 
+        var isPublished = RulesHelper.IsPublished(_configuration, _environment);
+
         await SendAsync(rows
                 .Select(x => new RulesAcceptanceResponse(
                     x.Client.Id,
                     x.Client.FullName,
                     x.Client.Plan,
-                    RulesHelper.IsRequired(x.Client),
+                    RulesHelper.IsRequired(x.Client, isPublished),
                     x.Acceptance?.Version,
                     x.Acceptance?.Version == RulesDocuments.IndividualCoachingVersion,
                     x.Acceptance?.AcceptedAt,

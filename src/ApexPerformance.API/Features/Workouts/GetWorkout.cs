@@ -71,5 +71,5 @@ public static class WorkoutMapper
             (workout.WorkoutTypes ?? []).Where(x => x.WorkoutType is not null)
                 .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
                 .ToList(),
-            WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout));
+            WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed);
 }

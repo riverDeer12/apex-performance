@@ -20,7 +20,9 @@ public record CreateWorkoutRequest(
     // Codes of WorkoutMuscles, primary and secondary. Null keeps the
     // current ones (guessed from the name for a new workout).
     List<string>? Muscles = null,
-    List<string>? SecondaryMuscles = null
+    List<string>? SecondaryMuscles = null,
+    // Sets record a duration (e.g. plank). Null keeps the current value.
+    bool? IsTimed = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -75,6 +77,8 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
             }).ToList()
         };
 
+        workout.IsTimed = request.IsTimed ?? false;
+
         if (request.Muscles is null)
             WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name));
         else
@@ -92,7 +96,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout)),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed),
             cancellation: cancellationToken);
     }
 }

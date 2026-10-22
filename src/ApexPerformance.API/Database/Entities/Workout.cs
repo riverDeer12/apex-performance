@@ -13,6 +13,8 @@ public class Workout : BaseEntity
     public string? Muscles { get; set; }
     // Muscles that help, same codes; null until set or guessed.
     public string? SecondaryMuscles { get; set; }
+    // Done for a time (e.g. plank): sets record how long it lasted instead of repetitions.
+    public bool IsTimed { get; set; }
     public ICollection<WorkoutWorkoutType> WorkoutTypes { get; set; } = null!;
     
 }
