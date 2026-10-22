@@ -94,6 +94,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<UserNotification> UserNotifications { get; set; }
 
+    public DbSet<RulesAcceptance> RulesAcceptances { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

@@ -1898,6 +1898,53 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.RulesAcceptance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AcceptedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Document")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("GuardianName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IndependentTravelApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId", "Document", "AcceptedAt");
+
+                    b.ToTable("RulesAcceptances", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2876,6 +2923,17 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.RulesAcceptance", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
