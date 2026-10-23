@@ -16,6 +16,7 @@ using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
 using Serilog;
 using Stripe;
@@ -54,7 +55,10 @@ builder.Services
 builder.Services.AddDbContext<ApexPerformanceContext>(options =>
     options
         .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
-        .EnableSensitiveDataLogging());
+        .EnableSensitiveDataLogging()
+        // A client leaving while the connection opens is logged by EF as a connection error and
+        // would send an alert email. Real outages still log errors: the request fails with 500.
+        .ConfigureWarnings(warnings => warnings.Log((RelationalEventId.ConnectionError, LogLevel.Warning))));
 
 // Business Services
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
