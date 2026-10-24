@@ -80,7 +80,8 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
         workout.IsTimed = request.IsTimed ?? false;
 
         if (request.Muscles is null)
-            WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name));
+            WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name,
+                workoutTypes.Any(x => WorkoutMuscles.IsFullBodyType(x.Name))));
         else
             WorkoutMuscles.Apply(workout, request.Muscles, request.SecondaryMuscles ?? []);
 

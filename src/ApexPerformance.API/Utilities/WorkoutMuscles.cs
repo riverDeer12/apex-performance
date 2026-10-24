@@ -97,20 +97,48 @@ public static class WorkoutMuscles
         new(@"burpee|thruster|power clean|hang clean|\bclean\b|snatch|kettlebell swing|\bswings?\b|zamah", [Glutes, Hamstrings, Quads], [Shoulders])
     ];
 
+    // Exercises of the whole body, used only for workouts with a full body
+    // type: they add the rest of the muscles the general rules leave out.
+    private static readonly Rule[] FullBodyRules =
+    [
+        new(@"burpee|burpi", [Chest, Quads, Glutes], [Shoulders, Triceps, Abs, Hamstrings, Calves]),
+        new(@"thruster|wall ?ball|squat (to|and|&) press|cucanj (s|i) potisk", [Quads, Glutes, Shoulders], [Triceps, Abs, UpperBack]),
+        new(@"\bclean\b|nabacaj|jerk|izbacaj", [Hamstrings, Glutes, Quads, Traps], [UpperBack, LowerBack, Shoulders, Forearms]),
+        new(@"snatch|trzaj", [Glutes, Hamstrings, Shoulders, Traps], [Quads, UpperBack, LowerBack]),
+        new(@"kettlebell swing|\bswings?\b|zamah", [Glutes, Hamstrings], [LowerBack, Shoulders, Abs, Forearms]),
+        new(@"get ?-?up|turski", [Shoulders, Abs, Glutes], [Obliques, Quads, Triceps]),
+        new(@"mountain climber|penjac", [Abs, Shoulders], [Quads, Obliques, Chest]),
+        new(@"bear crawl|crawl|medvjed|puzanj", [Shoulders, Abs, Quads], [Chest, Triceps]),
+        new(@"man ?-?maker", [Chest, Shoulders, Quads, Glutes, UpperBack], [Triceps, Abs, Biceps]),
+        new(@"jumping jack|jump(ing)? rope|skipping|\bskip\b|vijac|preskakanj|poskoc", [Calves, Quads], [Shoulders, Glutes]),
+        new(@"box jump|jump squat|broad jump|\bjumps?\b|skok", [Quads, Glutes, Calves], [Hamstrings]),
+        new(@"\brower\b|\berg(ometer)?\b|ergometar|veslack", [Lats, UpperBack, Quads], [Glutes, Hamstrings, Biceps]),
+        new(@"sled|prowler|sanjk|guranj", [Quads, Glutes], [Calves, Hamstrings, Shoulders]),
+        new(@"\bcarry\b|farmer.?s? walk|nosenj", [Forearms, Traps], [Abs, Glutes]),
+        new(@"battle rope|\bropes?\b|\buzad|\buze\b", [Shoulders], [Abs, Forearms], Unless: @"jump|skip|vijac|preskak"),
+        new(@"sprint|running|\brun\b|trcanj", [Quads, Hamstrings, Glutes, Calves], []),
+        new(@"\bbike\b|cycling|assault|bicikl", [Quads, Glutes], [Hamstrings, Calves])
+    ];
+
+    // When nothing in the name is known, a full body exercise works the big muscles.
+    private static readonly Guessed FullBodyDefault = new(
+        [Chest, Shoulders, UpperBack, Lats, Abs, Glutes, Quads, Hamstrings],
+        [Biceps, Triceps, LowerBack, Calves]);
+
     public sealed record Guessed(List<string> Primary, List<string> Secondary);
 
     /// <summary>
     /// Muscles guessed from the workout's names (stored JSON of translations).
     /// A muscle primary in one matching rule isn't secondary.
     /// </summary>
-    public static Guessed Guess(string localizedNameJson)
+    public static Guessed Guess(string localizedNameJson, bool isFullBody = false)
     {
         var name = new LocalizedProperty(localizedNameJson);
         var text = Normalize($"{name.Get(Language.HR)} {name.Get(Language.EN)}");
         var primary = new HashSet<string>();
         var secondary = new HashSet<string>();
 
-        foreach (var rule in Rules)
+        foreach (var rule in isFullBody ? Rules.Concat(FullBodyRules) : Rules)
         {
             if (!Regex.IsMatch(text, rule.Pattern)) continue;
             if (rule.Unless is not null && Regex.IsMatch(text, rule.Unless)) continue;
@@ -118,9 +146,23 @@ public static class WorkoutMuscles
             secondary.UnionWith(rule.Secondary);
         }
 
+        if (isFullBody && primary.Count == 0)
+            return new Guessed(FullBodyDefault.Primary.ToList(), FullBodyDefault.Secondary.ToList());
+
         return new Guessed(
             All.Where(primary.Contains).ToList(),
             All.Where(x => secondary.Contains(x) && !primary.Contains(x)).ToList());
+    }
+
+    /// <summary>
+    /// A workout type for exercises of the whole body, by its name
+    /// (stored JSON of translations), e.g. "Full body" or "Cijelo tijelo".
+    /// </summary>
+    public static bool IsFullBodyType(string localizedNameJson)
+    {
+        var name = new LocalizedProperty(localizedNameJson);
+        var text = Normalize(string.Join(' ', Enum.GetValues<Language>().Select(name.Get)));
+        return Regex.IsMatch(text, @"full ?-?body|total ?-?body|whole body|cijel\w* tijel|corpo intero|total body");
     }
 
     /// <summary>

@@ -80,4 +80,59 @@ public class WorkoutMusclesTests
         Assert.Equal("chest,triceps", workout.Muscles);
         Assert.Equal("shoulders", workout.SecondaryMuscles);
     }
+
+    private static WorkoutMuscles.Guessed GuessFullBody(string hr, string en = "")
+        => WorkoutMuscles.Guess(new LocalizedProperty
+        {
+            Translations = { [Language.HR] = hr, [Language.EN] = en }
+        }.ToJsonString(), isFullBody: true);
+
+    [Fact]
+    public void Full_body_burpee_works_upper_and_lower_body()
+    {
+        var muscles = GuessFullBody("Burpee", "Burpee");
+        Assert.Contains(WorkoutMuscles.Chest, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Quads, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Shoulders, muscles.Secondary);
+        Assert.Contains(WorkoutMuscles.Abs, muscles.Secondary);
+    }
+
+    [Fact]
+    public void Full_body_rules_are_used_only_for_full_body_workouts()
+    {
+        Assert.DoesNotContain(WorkoutMuscles.Chest, Guess("Burpee").Primary);
+        Assert.Empty(Guess("Mountain climber").Primary);
+        Assert.Contains(WorkoutMuscles.Abs, GuessFullBody("Penjač", "Mountain climber").Primary);
+    }
+
+    [Fact]
+    public void Unknown_full_body_exercise_works_the_big_muscles()
+    {
+        var muscles = GuessFullBody("Kompleks s bučicama", "Dumbbell complex");
+        Assert.Contains(WorkoutMuscles.Chest, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Quads, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Lats, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Calves, muscles.Secondary);
+    }
+
+    [Fact]
+    public void Full_body_guess_keeps_the_general_rules()
+    {
+        var muscles = GuessFullBody("Čučanj s potiskom", "Thruster");
+        Assert.Contains(WorkoutMuscles.Shoulders, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Quads, muscles.Primary);
+        Assert.Contains(WorkoutMuscles.Glutes, muscles.Primary);
+    }
+
+    [Theory]
+    [InlineData("Full body", "Full body", true)]
+    [InlineData("Cijelo tijelo", "Whole body", true)]
+    [InlineData("Vježbe za cijelo tijelo", "", true)]
+    [InlineData("Snaga", "Strength", false)]
+    [InlineData("Gornji dio tijela", "Upper body", false)]
+    public void Full_body_type_by_name(string hr, string en, bool isFullBody)
+        => Assert.Equal(isFullBody, WorkoutMuscles.IsFullBodyType(new LocalizedProperty
+        {
+            Translations = { [Language.HR] = hr, [Language.EN] = en }
+        }.ToJsonString()));
 }
