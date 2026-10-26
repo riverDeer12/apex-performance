@@ -20,7 +20,9 @@ public record GetWorkoutResponse(
     List<string> Muscles,
     List<string> SecondaryMuscles,
     // Sets of the workout record a duration (e.g. plank).
-    bool IsTimed
+    bool IsTimed,
+    // WorkoutCategories, for filtering the list.
+    string Category
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -65,7 +67,8 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed)).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
+                workout.Category)).ToList(),
             cancellation: cancellationToken);
     }
 }

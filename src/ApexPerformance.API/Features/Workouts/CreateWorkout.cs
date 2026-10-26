@@ -22,7 +22,10 @@ public record CreateWorkoutRequest(
     List<string>? Muscles = null,
     List<string>? SecondaryMuscles = null,
     // Sets record a duration (e.g. plank). Null keeps the current value.
-    bool? IsTimed = null
+    bool? IsTimed = null,
+    // WorkoutCategories. Null keeps the current one (from the workout
+    // types for a new workout).
+    string? Category = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -78,6 +81,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
         };
 
         workout.IsTimed = request.IsTimed ?? false;
+        workout.Category = request.Category ?? WorkoutPlanAccess.CategoryOf(workoutTypes);
 
         if (request.Muscles is null)
             WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name,
@@ -97,7 +101,8 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
+                workout.Category),
             cancellation: cancellationToken);
     }
 }
@@ -107,6 +112,8 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
     public CreateWorkoutValidator()
     {
         RuleForEach(x => x.Muscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Category).Must(WorkoutCategories.IsValid).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Category is not null);
         RuleForEach(x => x.SecondaryMuscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)

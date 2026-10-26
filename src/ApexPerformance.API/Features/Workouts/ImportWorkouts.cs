@@ -320,6 +320,7 @@ public class ImportWorkouts : Endpoint<ImportWorkoutsRequest, ImportWorkoutsResp
             VideoUrl = excelRow.VideoUrl,
             Muscles = WorkoutMuscles.Serialize(guessed.Primary),
             SecondaryMuscles = WorkoutMuscles.Serialize(guessed.Secondary),
+            Category = WorkoutPlanAccess.CategoryOf(rowWorkoutTypes),
             // There is no logged user in background job,
             // so audit fields are set to user that started import.
             CreatedBy = userId,
