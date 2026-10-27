@@ -17,6 +17,7 @@ public static class RateLimiting
     public const string PasswordReset = "password-reset";
     public const string ChatMessages = "chat-messages";
     public const string ChatReports = "chat-reports";
+    public const string ShopCheckout = "shop-checkout";
 
     private const string RegistrationPath = "/api/users/register";
 
@@ -41,6 +42,10 @@ public static class RateLimiting
             // Every report sends an email to the administrator.
             options.AddPolicy(ChatReports, context =>
                 FixedWindowPerIp(context, permits: 10, window: TimeSpan.FromHours(1)));
+
+            // Every checkout saves an order and opens a Stripe Checkout.
+            options.AddPolicy(ShopCheckout, context =>
+                FixedWindowPerIp(context, permits: 20, window: TimeSpan.FromMinutes(10)));
 
             // Many addresses (a botnet) can't flood registration either.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>

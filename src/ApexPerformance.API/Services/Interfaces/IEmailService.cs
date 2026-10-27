@@ -149,4 +149,16 @@ public interface IEmailService
     /// <param name="subject">Subject of the email.</param>
     /// <param name="htmlBody">HTML with the list of errors.</param>
     void SendErrorAlertEmail(string to, string subject, string htmlBody);
+
+    /// <summary>
+    /// Send an email of the webshop: an order confirmation to the customer,
+    /// a new order or a BoxNow label to the shop.
+    /// </summary>
+    /// <param name="to">Email address of the customer or the shop.</param>
+    /// <param name="subject">Subject of the email.</param>
+    /// <param name="htmlBody">HTML of the email.</param>
+    /// <param name="replyTo">Address replies go to, the shop's for customers.</param>
+    /// <param name="attachment">Optional file, e.g. the BoxNow label PDF.</param>
+    void SendShopEmail(string to, string subject, string htmlBody, string? replyTo = null,
+        (string FileName, byte[] Data, string ContentType)? attachment = null);
 }

@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Shop;
 using ApexPerformance.API;
 using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Database;
@@ -73,6 +74,8 @@ builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentSer
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
+builder.Services.AddSingleton<ShopSettings>();
+builder.Services.AddScoped<ShopOrderService>();
 builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
 
 builder.Services.AddSignalR();
@@ -85,6 +88,7 @@ builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
 builder.Services.AddScoped<MonthlyReviewReminderJob>();
 builder.Services.AddScoped<ErrorAlertJob>();
+builder.Services.AddScoped<ShopOrderSyncJob>();
 builder.Services.AddScoped<TrainingNotificationJob>();
 
 builder.Host.UseSerilog((context, config)
@@ -190,6 +194,7 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
 ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
+ShopOrderSyncJob.ScheduleJob();
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());

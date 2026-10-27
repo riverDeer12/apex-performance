@@ -25,6 +25,8 @@ public static class ErrorCodes
     public const string AlreadyExists = "1300";
     public const string UsernameAlreadyExists = "1301";
     public const string EmailAlreadyExists = "1302";
+    // Less in stock than ordered.
+    public const string OutOfStock = "1303";
 
     // System / Infrastructure (1400–1499)
     public const string SavingError = "1400";

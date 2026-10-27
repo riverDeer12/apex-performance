@@ -561,6 +561,31 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendShopEmail(string to, string subject, string htmlBody, string? replyTo = null,
+        (string FileName, byte[] Data, string ContentType)? attachment = null)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress("Apex Performance Shop",
+            _configuration["MailConfiguration:FromAddress"]));
+
+        message.To.Add(MailboxAddress.Parse(to));
+
+        if (!string.IsNullOrEmpty(replyTo))
+            message.ReplyTo.Add(MailboxAddress.Parse(replyTo));
+
+        message.Subject = subject;
+
+        var builder = new BodyBuilder { HtmlBody = htmlBody };
+
+        if (attachment is { } file)
+            builder.Attachments.Add(file.FileName, file.Data, ContentType.Parse(file.ContentType));
+
+        message.Body = builder.ToMessageBody();
+
+        ConnectToMailServer(message);
+    }
+
     private void ConnectToMailServer(MimeMessage message)
     {
         using var smtpClient = new SmtpClient();

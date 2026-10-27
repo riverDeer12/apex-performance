@@ -96,6 +96,16 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<RulesAcceptance> RulesAcceptances { get; set; }
 
+    public DbSet<ShopProduct> ShopProducts { get; set; }
+
+    public DbSet<ShopProductVariant> ShopProductVariants { get; set; }
+
+    public DbSet<ShopProductImage> ShopProductImages { get; set; }
+
+    public DbSet<ShopOrder> ShopOrders { get; set; }
+
+    public DbSet<ShopOrderItem> ShopOrderItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
