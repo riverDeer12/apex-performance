@@ -18,6 +18,7 @@ public static class RateLimiting
     public const string ChatMessages = "chat-messages";
     public const string ChatReports = "chat-reports";
     public const string ShopCheckout = "shop-checkout";
+    public const string ShopPromoCheck = "shop-promo-check";
 
     private const string RegistrationPath = "/api/users/register";
 
@@ -45,6 +46,10 @@ public static class RateLimiting
 
             // Every checkout saves an order and opens a Stripe Checkout.
             options.AddPolicy(ShopCheckout, context =>
+                FixedWindowPerIp(context, permits: 20, window: TimeSpan.FromMinutes(10)));
+
+            // Makes guessing promo codes slow.
+            options.AddPolicy(ShopPromoCheck, context =>
                 FixedWindowPerIp(context, permits: 20, window: TimeSpan.FromMinutes(10)));
 
             // Many addresses (a botnet) can't flood registration either.

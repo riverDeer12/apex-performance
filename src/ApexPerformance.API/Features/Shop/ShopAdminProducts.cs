@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Features.Profile;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -71,7 +72,7 @@ internal static class ShopAdmin
     /// request are only marked removed, past orders keep pointing to them.
     /// </summary>
     public static async Task<string?> Apply(ApexPerformanceContext context, ShopProduct product,
-        SaveShopProductRequest request, CancellationToken cancellationToken)
+        SaveShopProductRequest request, Guid userId, CancellationToken cancellationToken)
     {
         var slug = ShopSettings.ToSlug(string.IsNullOrWhiteSpace(request.Slug) ? request.Name : request.Slug);
 
@@ -113,10 +114,16 @@ internal static class ShopAdmin
                 kept.Add(variant.Id);
             }
 
+            var stockBefore = existing.Contains(variant) ? variant.Stock : 0;
+
             variant.Size = Clean(dto.Size);
             variant.Color = Clean(dto.Color);
             variant.Stock = dto.Stock;
             variant.SortOrder = i;
+
+            // Stock changed in the product form, the warehouse shows it as a correction.
+            ShopStock.Record(context, variant, dto.Stock - stockBefore,
+                existing.Contains(variant) ? ShopStockReasons.Correction : ShopStockReasons.Initial, userId: userId);
         }
 
         foreach (var removed in existing.Where(x => !kept.Contains(x.Id)))
@@ -181,10 +188,12 @@ public class GetShopAdminProductsEndpoint : EndpointWithoutRequest<List<ShopAdmi
 public class CreateShopProductEndpoint : Endpoint<SaveShopProductRequest, ShopAdminProductResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateShopProductEndpoint(ApexPerformanceContext context)
+    public CreateShopProductEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -198,7 +207,7 @@ public class CreateShopProductEndpoint : Endpoint<SaveShopProductRequest, ShopAd
     {
         var product = new ShopProduct { Name = "", Slug = "", Description = "", Category = "" };
 
-        var error = await ShopAdmin.Apply(_context, product, request, cancellationToken);
+        var error = await ShopAdmin.Apply(_context, product, request, _currentUserService.UserId, cancellationToken);
 
         if (error is not null)
             ThrowError(error);
@@ -213,10 +222,12 @@ public class CreateShopProductEndpoint : Endpoint<SaveShopProductRequest, ShopAd
 public class UpdateShopProductEndpoint : Endpoint<SaveShopProductRequest, ShopAdminProductResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UpdateShopProductEndpoint(ApexPerformanceContext context)
+    public UpdateShopProductEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -237,7 +248,7 @@ public class UpdateShopProductEndpoint : Endpoint<SaveShopProductRequest, ShopAd
         if (product is null)
             ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        var error = await ShopAdmin.Apply(_context, product, request, cancellationToken);
+        var error = await ShopAdmin.Apply(_context, product, request, _currentUserService.UserId, cancellationToken);
 
         if (error is not null)
             ThrowError(error);

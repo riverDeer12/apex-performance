@@ -1,6 +1,7 @@
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -52,10 +53,12 @@ public class GetShopAdminOrdersEndpoint : EndpointWithoutRequest<List<ShopOrderR
 public class SetShopOrderStatusEndpoint : Endpoint<SetShopOrderStatusRequest, ShopOrderResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public SetShopOrderStatusEndpoint(ApexPerformanceContext context)
+    public SetShopOrderStatusEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -83,7 +86,11 @@ public class SetShopOrderStatusEndpoint : Endpoint<SetShopOrderStatusRequest, Sh
         if (request.Status == ShopOrderStatuses.Cancelled && order.Status == ShopOrderStatuses.Paid)
         {
             foreach (var item in order.Items)
+            {
                 item.Variant.Stock += item.Quantity;
+                ShopStock.Record(_context, item.Variant, item.Quantity, ShopStockReasons.Return, note: order.Number,
+                    orderId: order.Id, userId: _currentUserService.UserId);
+            }
         }
 
         order.Status = request.Status;

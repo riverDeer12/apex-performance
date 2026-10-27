@@ -82,7 +82,11 @@ public class ShopOrderService
             if (item.Variant.Stock < item.Quantity)
                 paid.HasStockIssue = true;
 
-            item.Variant.Stock = Math.Max(0, item.Variant.Stock - item.Quantity);
+            var before = item.Variant.Stock;
+            item.Variant.Stock = Math.Max(0, before - item.Quantity);
+
+            ShopStock.Record(_context, item.Variant, item.Variant.Stock - before, ShopStockReasons.Sale,
+                note: paid.Number, orderId: paid.Id);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -159,7 +163,7 @@ public class ShopOrderService
                 order.BoxNowLockerId),
             Items: order.Items.Select(x => new Item(x.Id.ToString(),
                     string.IsNullOrEmpty(x.VariantName) ? x.ProductName : $"{x.ProductName} ({x.VariantName})",
-                    (x.UnitPrice * x.Quantity).ToString("0.00", CultureInfo.InvariantCulture), 0, 1))
+                    ((x.UnitPrice - x.UnitDiscount) * x.Quantity).ToString("0.00", CultureInfo.InvariantCulture), 0, 1))
                 .ToList());
 
         var json = JsonSerializer.Serialize(request, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
@@ -239,7 +243,7 @@ internal static class ShopEmails
                         (string.IsNullOrEmpty(item.VariantName) ? "" : $"<br><span style=\"color:#5b6475;font-size:13px\">{E(item.VariantName)}</span>") +
                         "</td>" +
                         $"<td style=\"padding:8px;border-bottom:1px solid #e3e7ef;text-align:center\">{item.Quantity}</td>" +
-                        $"<td style=\"padding:8px 0;border-bottom:1px solid #e3e7ef;text-align:right;white-space:nowrap\">{ShopSettings.FormatPrice(item.UnitPrice * item.Quantity)}</td>" +
+                        $"<td style=\"padding:8px 0;border-bottom:1px solid #e3e7ef;text-align:right;white-space:nowrap\">{ShopSettings.FormatPrice((item.UnitPrice - item.UnitDiscount) * item.Quantity)}</td>" +
                         "</tr>");
         }
 
@@ -250,6 +254,7 @@ internal static class ShopEmails
         return "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"border-collapse:collapse;font-size:15px\">" +
                rows +
                Row("Proizvodi", order.Subtotal) +
+               (order.Discount > 0 ? Row($"Promo kod {E(order.PromoCode)}", -order.Discount) : "") +
                Row("Dostava (BoxNow paketomat)", order.ShippingPrice) +
                Row("Ukupno", order.Total, bold: true) +
                "</table>";

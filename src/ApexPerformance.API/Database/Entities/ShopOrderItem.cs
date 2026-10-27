@@ -24,6 +24,10 @@ public class ShopOrderItem
     // Size and color, e.g. "M / Crna", empty for products without variants.
     public string? VariantName { get; set; }
 
+    // Price of the product, before the promo code.
     public decimal UnitPrice { get; set; }
+
+    // Promo code discount per piece.
+    public decimal UnitDiscount { get; set; }
     public int Quantity { get; set; }
 }

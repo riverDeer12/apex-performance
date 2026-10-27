@@ -31,7 +31,12 @@ public class ShopOrder : BaseEntity
     public string? CustomerEmail { get; set; }
     public string? CustomerPhone { get; set; }
 
+    // Before the promo code discount.
     public decimal Subtotal { get; set; }
+
+    public string? PromoCode { get; set; }
+    public decimal Discount { get; set; }
+
     public decimal ShippingPrice { get; set; }
     public decimal Total { get; set; }
 

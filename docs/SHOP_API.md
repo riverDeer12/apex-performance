@@ -23,7 +23,25 @@ Public: `GET /api/shop/products`, `GET /api/shop/products/{slug}`, `GET /api/sho
 
 Administrators: `GET|POST /api/shop/admin/products`, `PUT|DELETE /api/shop/admin/products/{id}`,
 `POST|PUT /api/shop/admin/products/{id}/images`, `DELETE /api/shop/admin/products/{id}/images/{imageId}`,
-`GET /api/shop/admin/orders`, `PUT /api/shop/admin/orders/{id}/status`.
+`GET /api/shop/admin/orders`, `PUT /api/shop/admin/orders/{id}/status`,
+`GET|POST /api/shop/admin/promo-codes`, `PUT|DELETE /api/shop/admin/promo-codes/{id}`,
+`GET /api/shop/admin/stock`, `POST /api/shop/admin/stock/{variantId}`, `GET /api/shop/admin/stock/{variantId}/movements`.
+
+Public promo check (rate limited): `POST /api/shop/promo-codes/check` with `{ code, items }`.
+
+## Promo codes
+
+A percent or an amount off each piece of the chosen products (all products when none is chosen), with optional
+dates and a limit of paid orders. The cart checks a code with `/promo-codes/check`; the checkout checks it again
+and sends Stripe the discounted price of each piece, so the eRačuni receipt shows what was paid. Free delivery
+counts the products after the discount. Errors: `1304` unknown, inactive, expired or used up; `1305` not for any
+product in the cart. A code used by an order can't be renamed.
+
+## Warehouse
+
+Every change of a variant's stock is a `ShopStockMovements` row: `Initial` (new variant), `Receipt` (goods received),
+`Correction` (counted, or changed in the product form), `WriteOff`, `Sale` (paid order) and `Return` (paid order
+cancelled).
 
 ## Order flow
 

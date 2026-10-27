@@ -73,6 +73,8 @@ public class ShopOrderConfiguration : IEntityTypeConfiguration<ShopOrder>
         builder.Property(e => e.Subtotal).HasPrecision(10, 2);
         builder.Property(e => e.ShippingPrice).HasPrecision(10, 2);
         builder.Property(e => e.Total).HasPrecision(10, 2);
+        builder.Property(e => e.Discount).HasPrecision(10, 2);
+        builder.Property(e => e.PromoCode).HasMaxLength(40);
         builder.Property(e => e.StripeSessionId).HasMaxLength(200);
         builder.Property(e => e.StripePaymentIntentId).HasMaxLength(200);
         builder.Property(e => e.BoxNowLockerId).HasMaxLength(50);
@@ -101,6 +103,7 @@ public class ShopOrderItemConfiguration : IEntityTypeConfiguration<ShopOrderItem
         builder.Property(e => e.ProductName).HasMaxLength(200);
         builder.Property(e => e.VariantName).HasMaxLength(110);
         builder.Property(e => e.UnitPrice).HasPrecision(10, 2);
+        builder.Property(e => e.UnitDiscount).HasPrecision(10, 2);
 
         builder.HasOne(e => e.Variant)
             .WithMany()
@@ -108,5 +111,62 @@ public class ShopOrderItemConfiguration : IEntityTypeConfiguration<ShopOrderItem
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("ShopOrderItems");
+    }
+}
+
+public class ShopPromoCodeConfiguration : IEntityTypeConfiguration<ShopPromoCode>
+{
+    public void Configure(EntityTypeBuilder<ShopPromoCode> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Code).HasMaxLength(40);
+        builder.Property(e => e.DiscountType).HasMaxLength(20);
+        builder.Property(e => e.DiscountValue).HasPrecision(10, 2);
+        builder.Property(e => e.Note).HasMaxLength(500);
+
+        builder.HasMany(e => e.Products)
+            .WithOne(e => e.PromoCode)
+            .HasForeignKey(e => e.PromoCodeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => e.Code);
+
+        builder.ToTable("ShopPromoCodes");
+    }
+}
+
+public class ShopPromoCodeProductConfiguration : IEntityTypeConfiguration<ShopPromoCodeProduct>
+{
+    public void Configure(EntityTypeBuilder<ShopPromoCodeProduct> builder)
+    {
+        builder.HasKey(e => new { e.PromoCodeId, e.ProductId });
+
+        builder.HasOne(e => e.Product)
+            .WithMany()
+            .HasForeignKey(e => e.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.ToTable("ShopPromoCodeProducts");
+    }
+}
+
+public class ShopStockMovementConfiguration : IEntityTypeConfiguration<ShopStockMovement>
+{
+    public void Configure(EntityTypeBuilder<ShopStockMovement> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Reason).HasMaxLength(20);
+        builder.Property(e => e.Note).HasMaxLength(300);
+
+        builder.HasOne(e => e.Variant)
+            .WithMany()
+            .HasForeignKey(e => e.VariantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => new { e.VariantId, e.CreatedAt });
+
+        builder.ToTable("ShopStockMovements");
     }
 }

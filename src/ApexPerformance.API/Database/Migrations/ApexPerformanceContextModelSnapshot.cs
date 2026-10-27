@@ -1991,6 +1991,10 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<decimal>("Discount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.Property<bool>("HasStockIssue")
                         .HasColumnType("bit");
 
@@ -2004,6 +2008,10 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.Property<DateTimeOffset?>("PaidAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PromoCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTimeOffset?>("ShippedAt")
                         .HasColumnType("datetimeoffset");
@@ -2065,6 +2073,10 @@ namespace ApexPerformance.API.Database.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("UnitDiscount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(10, 2)
@@ -2210,6 +2222,122 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ShopProductVariants", (string)null);
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopPromoCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DiscountType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ValidFrom")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("ValidUntil")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.ToTable("ShopPromoCodes", (string)null);
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopPromoCodeProduct", b =>
+                {
+                    b.Property<Guid>("PromoCodeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PromoCodeId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ShopPromoCodeProducts", (string)null);
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Change")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StockAfter")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VariantId", "CreatedAt");
+
+                    b.ToTable("ShopStockMovements", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
@@ -3260,6 +3388,36 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopPromoCodeProduct", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.ShopProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.ShopPromoCode", "PromoCode")
+                        .WithMany("Products")
+                        .HasForeignKey("PromoCodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PromoCode");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockMovement", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.ShopProductVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Variant");
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
                 {
                     b.HasOne("ApexPerformance.API.Database.Entities.Client", "Client")
@@ -3534,6 +3692,11 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopPromoCode", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>

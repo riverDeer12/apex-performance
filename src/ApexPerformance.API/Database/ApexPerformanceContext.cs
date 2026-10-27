@@ -106,6 +106,12 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<ShopOrderItem> ShopOrderItems { get; set; }
 
+    public DbSet<ShopPromoCode> ShopPromoCodes { get; set; }
+
+    public DbSet<ShopPromoCodeProduct> ShopPromoCodeProducts { get; set; }
+
+    public DbSet<ShopStockMovement> ShopStockMovements { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
