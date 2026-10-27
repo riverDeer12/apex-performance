@@ -29,4 +29,7 @@ public class TrainingExerciseSet
 
     // How long the set lasted, for exercises done for a time (e.g. plank).
     public int? DurationSeconds { get; set; }
+
+    // Distance covered in the set, for workouts with a pace type (e.g. rowing 2000 m).
+    public int? DistanceMeters { get; set; }
 }

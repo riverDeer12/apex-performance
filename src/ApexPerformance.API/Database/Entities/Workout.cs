@@ -15,6 +15,9 @@ public class Workout : BaseEntity
     public string? SecondaryMuscles { get; set; }
     // Done for a time (e.g. plank): sets record how long it lasted instead of repetitions.
     public bool IsTimed { get; set; }
+    // WorkoutPaceTypes for workouts done over a distance (walking, rowing, cycling): sets record
+    // the distance too and the pace is shown from distance and duration. Null records no distance.
+    public string? PaceType { get; set; }
     // WorkoutCategories: mobility and flexibility or strength and conditioning.
     public string Category { get; set; } = Constants.WorkoutCategories.StrengthConditioning;
     public ICollection<WorkoutWorkoutType> WorkoutTypes { get; set; } = null!;

@@ -25,7 +25,10 @@ public record CreateWorkoutRequest(
     bool? IsTimed = null,
     // WorkoutCategories. Null keeps the current one (from the workout
     // types for a new workout).
-    string? Category = null
+    string? Category = null,
+    // WorkoutPaceTypes, sets then record a distance. Null keeps the current value,
+    // "" records no distance.
+    string? PaceType = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -81,6 +84,9 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
         };
 
         workout.IsTimed = request.IsTimed ?? false;
+        workout.PaceType = string.IsNullOrEmpty(request.PaceType) ? null : request.PaceType;
+        // Pace comes from distance and duration, so these sets record a duration too.
+        if (workout.PaceType is not null) workout.IsTimed = true;
         workout.Category = request.Category ?? WorkoutPlanAccess.CategoryOf(workoutTypes);
 
         if (request.Muscles is null)
@@ -102,7 +108,7 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
                 WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
-                workout.Category),
+                workout.Category, workout.PaceType),
             cancellation: cancellationToken);
     }
 }
@@ -114,6 +120,8 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
         RuleForEach(x => x.Muscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Category).Must(WorkoutCategories.IsValid).WithMessage(ErrorCodes.NotValid)
             .When(x => x.Category is not null);
+        RuleFor(x => x.PaceType).Must(x => x == "" || WorkoutPaceTypes.All.Contains(x)).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.PaceType is not null);
         RuleForEach(x => x.SecondaryMuscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)

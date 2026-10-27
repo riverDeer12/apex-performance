@@ -72,5 +72,5 @@ public static class WorkoutMapper
                 .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
                 .ToList(),
             WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
-            workout.Category);
+            workout.Category, workout.PaceType);
 }

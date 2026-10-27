@@ -2486,6 +2486,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("DistanceMeters")
+                        .HasColumnType("int");
+
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("int");
 
@@ -2586,6 +2589,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("DistanceMeters")
+                        .HasColumnType("int");
 
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("int");
@@ -2853,6 +2859,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PaceType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("PeriodEnd")
                         .ValueGeneratedOnAddOrUpdate()

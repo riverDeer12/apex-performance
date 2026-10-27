@@ -94,10 +94,32 @@ public partial class PersonalRecordService : IPersonalRecordService
 
         foreach (var training in trainings)
         {
+            // Sets over a distance (e.g. rowing) count by how far and how fast, not how long.
+            var distanceSets = training.Exercises
+                .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
+                .Where(x => x.Set.DistanceMeters is > 0)
+                .ToList();
+
+            foreach (var workoutSets in distanceSets.GroupBy(x => x.WorkoutId))
+            {
+                var farthest = workoutSets.MaxBy(x => x.Set.DistanceMeters)!.Set;
+                AddRecordIfBetter(workoutSets.Key, PersonalRecordTypes.LongestDistance, farthest.DistanceMeters!.Value,
+                    0, null);
+
+                var paced = workoutSets.Where(x => x.Set.DurationSeconds is > 0).ToList();
+
+                if (paced.Count > 0)
+                {
+                    var fastest = paced.MaxBy(x => Speed(x.Set))!.Set;
+                    AddRecordIfBetter(workoutSets.Key, PersonalRecordTypes.FastestPace, Math.Round(Speed(fastest), 2),
+                        0, null);
+                }
+            }
+
             // Sets done for a time (e.g. plank) count by how long they lasted, with or without weight.
             var timedSets = training.Exercises
                 .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
-                .Where(x => x.Set.DurationSeconds is > 0)
+                .Where(x => x.Set.DurationSeconds is > 0 && x.Set.DistanceMeters is null or 0)
                 .ToList();
 
             foreach (var workoutSets in timedSets.GroupBy(x => x.WorkoutId))
@@ -154,6 +176,10 @@ public partial class PersonalRecordService : IPersonalRecordService
 
         return records;
     }
+
+    // Average speed of a set over a distance, in metres per minute.
+    private static decimal Speed(TrainingExerciseSet set)
+        => set.DistanceMeters!.Value * 60m / set.DurationSeconds!.Value;
 
     // Epley formula, same as the progress charts in the web application.
     private static decimal EstimatedOneRepMax(decimal weight, decimal? reps)

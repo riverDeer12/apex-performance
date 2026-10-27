@@ -11,7 +11,9 @@ public record TrainingExerciseSetResponse(
     // Done right after the previous set (drop set).
     bool IsDropSet,
     // How long the set lasted, in seconds (e.g. plank).
-    int? DurationSeconds
+    int? DurationSeconds,
+    // Distance covered, in metres, for workouts with a pace type.
+    int? DistanceMeters
 );
 
 public record TrainingExerciseResponse(
@@ -44,7 +46,9 @@ public record TrainingExerciseSetRequest(
     // Optional, set is done right after the previous one (drop set).
     bool IsDropSet = false,
     // Optional, how long the set lasted in seconds (e.g. plank).
-    int? DurationSeconds = null
+    int? DurationSeconds = null,
+    // Optional, distance covered in metres (e.g. rowing 2000 m).
+    int? DistanceMeters = null
 );
 
 public record TrainingExerciseRequest(
@@ -72,7 +76,7 @@ public static class TrainingMapper
                 x.Sets
                     .OrderBy(set => set.Order)
                     .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight,
-                        set.IsDropSet, set.DurationSeconds))
+                        set.IsDropSet, set.DurationSeconds, set.DistanceMeters))
                     .ToList(),
                 x.IsSupersetWithPrevious))
             .ToList(),
@@ -97,7 +101,8 @@ public static class TrainingMapper
                 Weight = set.Weight,
                 // First set has no previous one to drop from.
                 IsDropSet = setIndex > 0 && set.IsDropSet,
-                DurationSeconds = set.DurationSeconds
+                DurationSeconds = set.DurationSeconds,
+                DistanceMeters = set.DistanceMeters
             }).ToList()
         }).ToList();
 }
