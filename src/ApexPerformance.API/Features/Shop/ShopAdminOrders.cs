@@ -79,8 +79,8 @@ public class SetShopOrderStatusEndpoint : Endpoint<SetShopOrderStatusRequest, Sh
         if (order is null)
             ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        // Unpaid orders follow Stripe, cancelled ones stay cancelled.
-        if (order.Status is ShopOrderStatuses.Pending or ShopOrderStatuses.Cancelled)
+        // Unpaid orders follow Stripe, cancelled and refunded ones stay so.
+        if (order.Status is ShopOrderStatuses.Pending or ShopOrderStatuses.Cancelled or ShopOrderStatuses.Refunded)
             ThrowError(ErrorCodes.AlreadyChanged, StatusCodes.Status409Conflict);
 
         if (request.Status == ShopOrderStatuses.Cancelled && order.Status == ShopOrderStatuses.Paid)

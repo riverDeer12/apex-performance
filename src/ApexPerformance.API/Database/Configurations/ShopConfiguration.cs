@@ -75,6 +75,8 @@ public class ShopOrderConfiguration : IEntityTypeConfiguration<ShopOrder>
         builder.Property(e => e.Total).HasPrecision(10, 2);
         builder.Property(e => e.Discount).HasPrecision(10, 2);
         builder.Property(e => e.PromoCode).HasMaxLength(40);
+        builder.Property(e => e.RefundedAmount).HasPrecision(10, 2);
+        builder.Property(e => e.DisputeStatus).HasMaxLength(40);
         builder.Property(e => e.StripeSessionId).HasMaxLength(200);
         builder.Property(e => e.StripePaymentIntentId).HasMaxLength(200);
         builder.Property(e => e.BoxNowLockerId).HasMaxLength(50);
@@ -168,5 +170,18 @@ public class ShopStockMovementConfiguration : IEntityTypeConfiguration<ShopStock
         builder.HasIndex(e => new { e.VariantId, e.CreatedAt });
 
         builder.ToTable("ShopStockMovements");
+    }
+}
+
+public class ShopStripeEventConfiguration : IEntityTypeConfiguration<ShopStripeEvent>
+{
+    public void Configure(EntityTypeBuilder<ShopStripeEvent> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Id).HasMaxLength(100);
+        builder.Property(e => e.Type).HasMaxLength(100);
+
+        builder.ToTable("ShopStripeEvents");
     }
 }

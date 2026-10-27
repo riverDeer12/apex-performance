@@ -76,6 +76,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
 builder.Services.AddSingleton<ShopSettings>();
 builder.Services.AddScoped<ShopOrderService>();
+builder.Services.AddScoped<ShopPaymentEvents>();
 builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
 
 builder.Services.AddSignalR();

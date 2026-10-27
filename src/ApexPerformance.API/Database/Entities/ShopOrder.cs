@@ -10,8 +10,10 @@ public static class ShopOrderStatuses
     public const string Shipped = "Shipped";
     // Not paid in time, or cancelled by the shop.
     public const string Cancelled = "Cancelled";
+    // All the money returned in Stripe.
+    public const string Refunded = "Refunded";
 
-    public static readonly string[] All = [Pending, Paid, Shipped, Cancelled];
+    public static readonly string[] All = [Pending, Paid, Shipped, Cancelled, Refunded];
 }
 
 /// <summary>
@@ -55,6 +57,17 @@ public class ShopOrder : BaseEntity
 
     public DateTimeOffset? PaidAt { get; set; }
     public DateTimeOffset? ShippedAt { get; set; }
+
+    // Returned in Stripe, all or part of the total (from the charge.refunded webhook).
+    public decimal RefundedAmount { get; set; }
+    public DateTimeOffset? RefundedAt { get; set; }
+
+    // Stripe status of a dispute (chargeback) of the payment, e.g. "needs_response", "won", "lost".
+    public string? DisputeStatus { get; set; }
+    public DateTimeOffset? DisputedAt { get; set; }
+
+    // The card's bank reported the payment as likely fraud, don't ship before checking.
+    public bool HasFraudWarning { get; set; }
 
     public ICollection<ShopOrderItem> Items { get; set; } = new List<ShopOrderItem>();
 }

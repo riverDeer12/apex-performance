@@ -10,6 +10,7 @@ fiscalized receipt.
 | Key | Default | Notes |
 |---|---|---|
 | `Stripe:ApexPerformance:SecretKey` | – | Required for checkout. Test keys on test, live keys of the Apex Performance Stripe account on production. |
+| `Stripe:ApexPerformance:WebhookSecret` | – | Signing secret (`whsec_...`) of the webhook endpoint added in the Stripe dashboard. Without it webhooks are refused with 503 and only the 5-minute check confirms payments. |
 | `Shop:Url` | `https://shop.apex-performance.fit` / `https://test.shop.apex-performance.fit` | Stripe returns the customer here. |
 | `Shop:ShippingPrice` | `3.50` | BoxNow delivery in EUR. |
 | `Shop:FreeShippingFrom` | `50` | Free delivery from this subtotal on. |
@@ -55,3 +56,18 @@ cancelled).
    the shop.
 4. The shop marks the order `Shipped` in the administration. Cancelling a paid order returns the pieces to stock;
    the refund is made in Stripe.
+
+## Stripe webhooks
+
+Endpoint `POST /api/shop/stripe/webhook` (test: `https://test.apex-performance.fit/api/shop/stripe/webhook`), added
+in Stripe under Developers → Webhooks with these events:
+
+| Event | What happens |
+|---|---|
+| `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` | The order is confirmed (or cancelled) right away, the same way as when the customer returns. |
+| `charge.refunded` | `RefundedAmount` is saved. A full refund marks the order `Refunded`; an order not shipped yet gets its pieces back in stock. The shop gets an email. |
+| `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.closed` | `DisputeStatus` is saved, the shop gets an email when the dispute opens (with the deadline) and when it closes. |
+| `radar.early_fraud_warning.created` | `HasFraudWarning` is set and the shop gets an email not to ship. |
+
+Every request's signature is checked; each event is handled once (`ShopStripeEvents`). Events of payments that are
+not shop orders (other sites on the same Stripe account) are ignored.

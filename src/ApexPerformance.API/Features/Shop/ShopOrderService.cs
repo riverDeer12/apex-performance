@@ -293,6 +293,8 @@ internal static class ShopEmails
             Items(order) +
             "<p>BoxNow pošiljka se kreira automatski, naljepnica stiže u posebnom e-mailu.</p>");
 
+    public static string Alert(string title, string body) => Layout(title, body);
+
     public static string Label(ShopOrder order)
         => Layout($"BoxNow naljepnica – {order.Number}",
             $"<p>Naljepnica za pošiljku <b>{E(order.BoxNowParcelId)}</b> je u privitku. " +

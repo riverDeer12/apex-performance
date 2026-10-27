@@ -112,6 +112,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<ShopStockMovement> ShopStockMovements { get; set; }
 
+    public DbSet<ShopStripeEvent> ShopStripeEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);

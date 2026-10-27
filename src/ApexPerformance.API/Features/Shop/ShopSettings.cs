@@ -37,6 +37,9 @@ public class ShopSettings
 
     public string? StripeSecretKey => _configuration["Stripe:ApexPerformance:SecretKey"];
 
+    // Signing secret of the webhook endpoint added in the Stripe dashboard ("whsec_...").
+    public string? StripeWebhookSecret => _configuration["Stripe:ApexPerformance:WebhookSecret"];
+
     /// <summary>
     /// BoxNow settings of Apex Performance. Until it has its own, test and
     /// development use the ReViv Plus ones (the test BoxNow API is the same

@@ -58,6 +58,11 @@ public record ShopOrderResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset? PaidAt,
     DateTimeOffset? ShippedAt,
+    decimal RefundedAmount,
+    DateTimeOffset? RefundedAt,
+    string? DisputeStatus,
+    DateTimeOffset? DisputedAt,
+    bool HasFraudWarning,
     List<ShopOrderItemResponse> Items);
 
 internal static class ShopOrders
@@ -66,7 +71,8 @@ internal static class ShopOrders
         => new(order.Id, order.Number, order.Status, order.CustomerName, order.CustomerEmail, order.CustomerPhone,
             order.Subtotal, order.PromoCode, order.Discount, order.ShippingPrice, order.Total, order.BoxNowLockerId, order.BoxNowLockerAddress,
             order.BoxNowLockerPostalCode, order.BoxNowParcelId, order.HasStockIssue, order.CreatedAt, order.PaidAt,
-            order.ShippedAt,
+            order.ShippedAt, order.RefundedAmount, order.RefundedAt, order.DisputeStatus, order.DisputedAt,
+            order.HasFraudWarning,
             order.Items.Select(x => new ShopOrderItemResponse(x.ProductName, x.VariantName, x.UnitPrice, x.UnitDiscount,
                     x.Quantity))
                 .ToList());

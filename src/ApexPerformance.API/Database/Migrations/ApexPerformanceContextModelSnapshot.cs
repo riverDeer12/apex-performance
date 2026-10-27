@@ -1995,6 +1995,16 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<string>("DisputeStatus")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset?>("DisputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("HasFraudWarning")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasStockIssue")
                         .HasColumnType("bit");
 
@@ -2012,6 +2022,13 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<string>("PromoCode")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<decimal>("RefundedAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTimeOffset?>("RefundedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("ShippedAt")
                         .HasColumnType("datetimeoffset");
@@ -2338,6 +2355,25 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasIndex("VariantId", "CreatedAt");
 
                     b.ToTable("ShopStockMovements", (string)null);
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStripeEvent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShopStripeEvents", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
