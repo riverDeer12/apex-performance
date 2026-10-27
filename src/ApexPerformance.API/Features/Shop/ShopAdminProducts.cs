@@ -94,12 +94,14 @@ internal static class ShopAdmin
         product.IsActive = request.IsActive;
         product.SortOrder = request.SortOrder;
 
+        // Variants saved before, new ones can already have an id assigned by EF.
+        var existing = product.Variants.Where(x => !x.IsDeleted).ToList();
         var kept = new HashSet<Guid>();
 
         for (var i = 0; i < request.Variants.Count; i++)
         {
             var dto = request.Variants[i];
-            var variant = dto.Id is { } id ? product.Variants.FirstOrDefault(x => x.Id == id && !x.IsDeleted) : null;
+            var variant = dto.Id is { } id ? existing.FirstOrDefault(x => x.Id == id) : null;
 
             if (variant is null)
             {
@@ -117,7 +119,7 @@ internal static class ShopAdmin
             variant.SortOrder = i;
         }
 
-        foreach (var removed in product.Variants.Where(x => x.Id != Guid.Empty && !kept.Contains(x.Id)))
+        foreach (var removed in existing.Where(x => !kept.Contains(x.Id)))
             removed.IsDeleted = true;
 
         return null;

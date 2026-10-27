@@ -271,7 +271,15 @@ public class GetShopOrderEndpoint : EndpointWithoutRequest<ShopOrderResponse>
         if (!exists)
             ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        await _orderService.ConfirmAsync(id, cancellationToken);
+        try
+        {
+            await _orderService.ConfirmAsync(id, cancellationToken);
+        }
+        catch (StripeException ex)
+        {
+            // The order is shown as pending, ShopOrderSyncJob confirms it a bit later.
+            Logger.LogWarning(ex, "Shop order {OrderId} could not be checked with Stripe.", id);
+        }
 
         var order = await _context.ShopOrders
             .AsNoTracking()
