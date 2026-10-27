@@ -24,7 +24,9 @@ public record TrainingExerciseResponse(
     int Order,
     string? Note,
     List<TrainingExerciseSetResponse> Sets,
-    bool IsSupersetWithPrevious
+    bool IsSupersetWithPrevious,
+    // WorkoutPaceTypes of the workout, sets with a distance show this pace.
+    string? PaceType = null
 );
 
 public record TrainingResponse(
@@ -78,7 +80,7 @@ public static class TrainingMapper
                     .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight,
                         set.IsDropSet, set.DurationSeconds, set.DistanceMeters))
                     .ToList(),
-                x.IsSupersetWithPrevious))
+                x.IsSupersetWithPrevious, x.Workout.PaceType))
             .ToList(),
         training.CreatedAt,
         training.UpdatedAt);

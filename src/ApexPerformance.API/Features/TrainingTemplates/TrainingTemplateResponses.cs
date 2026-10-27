@@ -68,7 +68,7 @@ public static class TrainingTemplateMapper
                         .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight,
                             set.IsDropSet, set.DurationSeconds, set.DistanceMeters))
                         .ToList(),
-                    x.IsSupersetWithPrevious))
+                    x.IsSupersetWithPrevious, x.Workout.PaceType))
                 .ToList(),
             authorName,
             canEdit,
