@@ -36,6 +36,10 @@ public class ErrorAlertJob
     private static readonly string[] CancellationExceptions =
         ["System.Threading.Tasks.TaskCanceledException", "System.OperationCanceledException"];
 
+    // IIS writing a response to a connection the client already closed
+    // (ERROR_CONNECTION_INVALID), logged by the server as an unhandled exception.
+    private const string ClosedConnectionError = "0x800704CD";
+
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
@@ -108,7 +112,8 @@ public class ErrorAlertJob
             errors.AddRange(entries
                 .Where(x => AlertLevels.Contains(x.Level, StringComparer.OrdinalIgnoreCase))
                 .Where(x => x.Exception is null ||
-                            !CancellationExceptions.Any(name => x.Exception.StartsWith(name, StringComparison.Ordinal)))
+                            (!CancellationExceptions.Any(name => x.Exception.StartsWith(name, StringComparison.Ordinal)) &&
+                             !x.Exception.Contains(ClosedConnectionError, StringComparison.Ordinal)))
                 .Where(x => x.Timestamp > from && x.Timestamp <= to)
                 .Select(x => (file.Name, x)));
         }

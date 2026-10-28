@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Events;
 using Stripe;
 using ApexPerformance.API.Utilities;
 
@@ -181,7 +182,17 @@ app.UseStaticFiles(staticFileOptions);
 
 app.MapFallbackToFile("index.html", staticFileOptions);
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    // A request the client gave up on (left the screen, lost the connection) ends with
+    // a 500 nobody sees; it is a warning, not an error of the application.
+    options.GetLevel = (httpContext, _, exception) =>
+        httpContext.RequestAborted.IsCancellationRequested
+            ? LogEventLevel.Warning
+            : exception is not null || httpContext.Response.StatusCode > 499
+                ? LogEventLevel.Error
+                : LogEventLevel.Information;
+});
 
 app.UseMiddleware<AdditionalRequestLogging>();
 
