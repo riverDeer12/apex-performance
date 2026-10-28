@@ -188,7 +188,8 @@ public static class WorkoutMuscles
         return Parse(workout.SecondaryMuscles).Where(x => !primary.Contains(x)).ToList();
     }
 
-    private static string Normalize(string value)
+    // Lower case without diacritics, for matching names in any language.
+    public static string Normalize(string value)
     {
         var decomposed = value.ToLowerInvariant().Replace('đ', 'd').Normalize(NormalizationForm.FormD);
         var builder = new StringBuilder(decomposed.Length);
