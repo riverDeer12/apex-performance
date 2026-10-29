@@ -71,3 +71,27 @@ in Stripe under Developers → Webhooks with these events:
 
 Every request's signature is checked; each event is handled once (`ShopStripeEvents`). Events of payments that are
 not shop orders (other sites on the same Stripe account) are ignored.
+
+## Accounts, client discount and settings
+
+- `POST /api/shop/login` `{ username, password }` (username or email of the app account) returns a token. It opens a
+  session of its own (`UserSessions.Channel = "Shop"`): the app's login doesn't end it and it doesn't end the app's.
+  `GET /api/shop/me` returns the name, email, whether the user is a client and the client discount;
+  `GET /api/shop/my-orders` lists their paid orders. Log out with `POST /api/authentication/logout`.
+- The checkout reads the token when one is sent: a client of the studio gets `ClientDiscountPercent` (set in the
+  administration) off every product. Per product the bigger of it and a promo code counts, they don't add up.
+- `GET|PUT /api/shop/admin/settings`: delivery price, free delivery from, client discount, email for notifications.
+  Empty values use the server settings above.
+
+## Notifications
+
+- Marking an order shipped emails the customer once (with the BoxNow parcel number).
+- `POST /api/shop/stock-alerts` `{ variantId, email }`: one email when the size/color is back in stock (a minute
+  after the stock change). Requests are deleted after 180 days.
+
+## Sharing, search and visits
+
+- `GET /api/shop/share/{slug}`: page with Open Graph tags for link previews that sends people on to the product.
+- `GET /api/shop/sitemap.xml`, listed in the production shop's robots.txt.
+- `POST /api/shop/visits` `{ path }`: counts a page view per day and page, nothing about the visitor (no cookies).
+  `GET /api/shop/admin/stats?days=30` returns visits and sales per day and per product.

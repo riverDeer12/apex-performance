@@ -123,6 +123,54 @@ public class ShopOrderService
             ShopEmails.NewOrder(order));
     }
 
+    public async Task SendShippedEmail(Guid orderId)
+    {
+        var order = await _context.ShopOrders
+            .AsNoTracking()
+            .Include(x => x.Items)
+            .FirstAsync(x => x.Id == orderId);
+
+        if (string.IsNullOrEmpty(order.CustomerEmail))
+            return;
+
+        _emailService.SendShopEmail(order.CustomerEmail, $"Narudžba {order.Number} je poslana",
+            ShopEmails.Shipped(order, _settings.ShopUrl), replyTo: _settings.NotificationEmail);
+    }
+
+    /// <summary>
+    /// Emails customers waiting for a size or color that is in stock again,
+    /// each once. A minute after the stock change, so it is saved by then;
+    /// nothing is sent when the stock is gone again or the product is hidden.
+    /// </summary>
+    public async Task SendBackInStockEmails(Guid variantId)
+    {
+        var variant = await _context.ShopProductVariants
+            .AsNoTracking()
+            .Include(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == variantId);
+
+        if (variant is null || variant.IsDeleted || variant.Stock <= 0 || !variant.Product.IsActive ||
+            variant.Product.IsDeleted)
+            return;
+
+        var alerts = await _context.ShopStockAlerts
+            .Where(x => x.VariantId == variantId && x.NotifiedAt == null)
+            .ToListAsync();
+
+        foreach (var alert in alerts)
+        {
+            _emailService.SendShopEmail(alert.Email, $"{variant.Product.Name} je ponovno na zalihi",
+                ShopEmails.BackInStock(variant, _settings.ShopUrl), replyTo: _settings.NotificationEmail);
+            alert.NotifiedAt = DateTimeOffset.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+
+        if (alerts.Count > 0)
+            _logger.LogInformation("{Count} customers told that {Product} ({Variant}) is back in stock.", alerts.Count,
+                variant.Product.Name, ShopSettings.VariantName(variant));
+    }
+
     /// <summary>
     /// Creates the BoxNow parcel to the chosen locker and emails its label to the shop.
     /// Retried by Hangfire when BoxNow fails; an order already sent is skipped.
@@ -232,6 +280,8 @@ internal static class ShopEmails
 
     private static string E(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
 
+    private static string Capitalize(string value) => value.Length == 0 ? value : char.ToUpper(value[0]) + value[1..];
+
     private static string Items(ShopOrder order)
     {
         var rows = new StringBuilder();
@@ -254,7 +304,7 @@ internal static class ShopEmails
         return "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"border-collapse:collapse;font-size:15px\">" +
                rows +
                Row("Proizvodi", order.Subtotal) +
-               (order.Discount > 0 ? Row($"Promo kod {E(order.PromoCode)}", -order.Discount) : "") +
+               (order.Discount > 0 ? Row(E(Capitalize(ShopOrders.DiscountLabel(order))), -order.Discount) : "") +
                Row("Dostava (BoxNow paketomat)", order.ShippingPrice) +
                Row("Ukupno", order.Total, bold: true) +
                "</table>";
@@ -294,6 +344,31 @@ internal static class ShopEmails
             "<p>BoxNow pošiljka se kreira automatski, naljepnica stiže u posebnom e-mailu.</p>");
 
     public static string Alert(string title, string body) => Layout(title, body);
+
+    public static string Shipped(ShopOrder order, string shopUrl)
+        => Layout($"Vaša narudžba je na putu, {order.CustomerName}!",
+            $"<p>Narudžbu <b>{E(order.Number)}</b> poslali smo u BoxNow paketomat " +
+            $"<b>{E(order.BoxNowLockerAddress)}, {E(order.BoxNowLockerPostalCode)}</b>.</p>" +
+            (order.BoxNowParcelId is null ? "" : $"<p>Broj pošiljke: <b>{E(order.BoxNowParcelId)}</b></p>") +
+            "<p>Kad paket stigne u paketomat, BoxNow vam šalje poruku s kodom za otvaranje. " +
+            "Pošiljku možete pratiti i u BoxNow aplikaciji.</p>" +
+            Items(order) +
+            $"<p style=\"margin-top:24px\">Pitanja? Samo odgovorite na ovaj e-mail.<br>" +
+            $"<a href=\"{E(shopUrl)}\" style=\"color:{Blue}\">{E(shopUrl.Replace("https://", ""))}</a></p>");
+
+    public static string BackInStock(ShopProductVariant variant, string shopUrl)
+    {
+        var name = ShopSettings.VariantName(variant);
+        var url = $"{shopUrl}/proizvod/{variant.Product.Slug}";
+
+        return Layout($"{variant.Product.Name} je ponovno na zalihi",
+            $"<p>Javili ste nam da želite znati kad <b>{E(variant.Product.Name)}</b>" +
+            (name.Length > 0 ? $" ({E(name)})" : "") + " ponovno bude dostupan. Sada je!</p>" +
+            $"<p><a href=\"{E(url)}\" style=\"display:inline-block;background:{Blue};color:#fff;padding:12px 20px;" +
+            "border-radius:8px;text-decoration:none;font-weight:bold\">Pogledaj u shopu</a></p>" +
+            "<p style=\"color:#5b6475;font-size:13px\">Ovo je jedina poruka koju šaljemo za ovu prijavu; " +
+            "vašu e-mail adresu nakon toga ne koristimo.</p>");
+    }
 
     public static string Label(ShopOrder order)
         => Layout($"BoxNow naljepnica – {order.Number}",

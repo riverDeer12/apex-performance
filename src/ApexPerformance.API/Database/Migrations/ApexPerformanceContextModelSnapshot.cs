@@ -1945,6 +1945,35 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("RulesAcceptances", (string)null);
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ClientDiscountPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("FreeShippingFrom")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("NotificationEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("ShippingPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShopConfigs", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1970,6 +1999,10 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<decimal?>("ClientDiscountPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1987,6 +2020,9 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<string>("CustomerPhone")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CustomerUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
@@ -2065,6 +2101,8 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerUserId");
 
                     b.HasIndex("Number")
                         .IsUnique();
@@ -2317,6 +2355,33 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("ShopPromoCodeProducts", (string)null);
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("NotifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VariantId", "NotifiedAt");
+
+                    b.ToTable("ShopStockAlerts", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockMovement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2374,6 +2439,23 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ShopStripeEvents", (string)null);
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopVisitDay", b =>
+                {
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Path")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.HasKey("Date", "Path");
+
+                    b.ToTable("ShopVisitDays", (string)null);
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.Training", b =>
@@ -2770,6 +2852,10 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -3450,6 +3536,17 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PromoCode");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockAlert", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.ShopProductVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Variant");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopStockMovement", b =>

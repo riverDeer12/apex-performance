@@ -3,6 +3,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
+using Hangfire;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -93,10 +94,16 @@ public class SetShopOrderStatusEndpoint : Endpoint<SetShopOrderStatusRequest, Sh
             }
         }
 
+        var isShipping = request.Status == ShopOrderStatuses.Shipped && order.Status != ShopOrderStatuses.Shipped;
+
         order.Status = request.Status;
-        order.ShippedAt = request.Status == ShopOrderStatuses.Shipped ? DateTimeOffset.UtcNow : null;
+        order.ShippedAt = request.Status == ShopOrderStatuses.Shipped ? order.ShippedAt ?? DateTimeOffset.UtcNow : null;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // The customer hears once that the parcel is on its way.
+        if (isShipping && order.ShippedAt is { } shippedAt && shippedAt > DateTimeOffset.UtcNow.AddMinutes(-1))
+            BackgroundJob.Enqueue<ShopOrderService>(service => service.SendShippedEmail(order.Id));
 
         await SendAsync(ShopOrders.ToResponse(order), cancellation: cancellationToken);
     }

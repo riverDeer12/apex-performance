@@ -1,5 +1,6 @@
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using Hangfire;
 
 namespace ApexPerformance.API.Features.Shop;
 
@@ -26,5 +27,13 @@ internal static class ShopStock
             CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = userId is { } id && id != Guid.Empty ? id : null
         });
+
+        // Back in stock: customers waiting for it get an email once the change is saved.
+        if (variant.Stock > 0 && variant.Stock - change <= 0 && variant.Id != Guid.Empty)
+        {
+            var variantId = variant.Id;
+            BackgroundJob.Schedule<ShopOrderService>(service => service.SendBackInStockEmails(variantId),
+                TimeSpan.FromMinutes(1));
+        }
     }
 }

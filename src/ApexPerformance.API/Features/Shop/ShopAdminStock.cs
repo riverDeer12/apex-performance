@@ -21,7 +21,9 @@ public record ShopStockRowResponse(
     Guid? ImageId,
     // Pieces sold in the last 30 days, to see what runs out.
     int SoldLast30Days,
-    DateTimeOffset? LastMovementAt);
+    DateTimeOffset? LastMovementAt,
+    // Customers waiting for an email when it is back in stock.
+    int WaitingAlerts = 0);
 
 public record AdjustShopStockRequest(
     // Receipt (+quantity), WriteOff (-quantity) or Correction (stock counted = quantity).
@@ -81,7 +83,8 @@ public class GetShopStockEndpoint : EndpointWithoutRequest<List<ShopStockRowResp
                     .Sum(m => (int?)m.Change) ?? 0,
                 _context.ShopStockMovements
                     .Where(m => m.VariantId == x.Id)
-                    .Max(m => (DateTimeOffset?)m.CreatedAt)))
+                    .Max(m => (DateTimeOffset?)m.CreatedAt),
+                _context.ShopStockAlerts.Count(a => a.VariantId == x.Id && a.NotifiedAt == null)))
             .ToListAsync(cancellationToken);
 
         await SendAsync(rows

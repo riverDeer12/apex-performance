@@ -28,7 +28,9 @@ public record ShopProductResponse(
 public record ShopSettingsResponse(
     decimal ShippingPrice,
     decimal FreeShippingFrom,
-    string? BoxNowPartnerId);
+    string? BoxNowPartnerId,
+    // Shown to everyone, given to clients of the studio logged in to the shop.
+    decimal ClientDiscountPercent = 0);
 
 internal static class ShopCatalog
 {
@@ -216,5 +218,5 @@ public class GetShopSettingsEndpoint : EndpointWithoutRequest<ShopSettingsRespon
 
     public override Task HandleAsync(CancellationToken cancellationToken)
         => SendAsync(new ShopSettingsResponse(_settings.ShippingPrice, _settings.FreeShippingFrom,
-            _settings.BoxNowPartnerId), cancellation: cancellationToken);
+            _settings.BoxNowPartnerId, _settings.ClientDiscountPercent), cancellation: cancellationToken);
 }

@@ -76,6 +76,8 @@ public class ShopOrderConfiguration : IEntityTypeConfiguration<ShopOrder>
         builder.Property(e => e.Discount).HasPrecision(10, 2);
         builder.Property(e => e.PromoCode).HasMaxLength(40);
         builder.Property(e => e.RefundedAmount).HasPrecision(10, 2);
+        builder.Property(e => e.ClientDiscountPercent).HasPrecision(5, 2);
+        builder.HasIndex(e => e.CustomerUserId);
         builder.Property(e => e.DisputeStatus).HasMaxLength(40);
         builder.Property(e => e.StripeSessionId).HasMaxLength(200);
         builder.Property(e => e.StripePaymentIntentId).HasMaxLength(200);
@@ -183,5 +185,52 @@ public class ShopStripeEventConfiguration : IEntityTypeConfiguration<ShopStripeE
         builder.Property(e => e.Type).HasMaxLength(100);
 
         builder.ToTable("ShopStripeEvents");
+    }
+}
+
+public class ShopConfigConfiguration : IEntityTypeConfiguration<ShopConfig>
+{
+    public void Configure(EntityTypeBuilder<ShopConfig> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Id).ValueGeneratedNever();
+        builder.Property(e => e.ShippingPrice).HasPrecision(10, 2);
+        builder.Property(e => e.FreeShippingFrom).HasPrecision(10, 2);
+        builder.Property(e => e.ClientDiscountPercent).HasPrecision(5, 2);
+        builder.Property(e => e.NotificationEmail).HasMaxLength(200);
+
+        builder.ToTable("ShopConfigs");
+    }
+}
+
+public class ShopStockAlertConfiguration : IEntityTypeConfiguration<ShopStockAlert>
+{
+    public void Configure(EntityTypeBuilder<ShopStockAlert> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Email).HasMaxLength(200);
+
+        builder.HasOne(e => e.Variant)
+            .WithMany()
+            .HasForeignKey(e => e.VariantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => new { e.VariantId, e.NotifiedAt });
+
+        builder.ToTable("ShopStockAlerts");
+    }
+}
+
+public class ShopVisitDayConfiguration : IEntityTypeConfiguration<ShopVisitDay>
+{
+    public void Configure(EntityTypeBuilder<ShopVisitDay> builder)
+    {
+        builder.HasKey(e => new { e.Date, e.Path });
+
+        builder.Property(e => e.Path).HasMaxLength(200);
+
+        builder.ToTable("ShopVisitDays");
     }
 }

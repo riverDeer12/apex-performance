@@ -67,7 +67,8 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         var now = DateTimeOffset.UtcNow;
 
         await _context.UserSessions
-            .Where(x => x.UserId == userId && x.RevokedAt == null && x.ExpiresAt > now)
+            // The webshop has its own sessions, logging in here doesn't end them.
+            .Where(x => x.UserId == userId && x.Channel == null && x.RevokedAt == null && x.ExpiresAt > now)
             .ExecuteUpdateAsync(x => x
                     .SetProperty(session => session.RevokedAt, now)
                     .SetProperty(session => session.RevokeReason, SessionRevokeReasons.NewLogin)

@@ -39,6 +39,12 @@ public class ShopOrder : BaseEntity
     public string? PromoCode { get; set; }
     public decimal Discount { get; set; }
 
+    // User logged in to the shop when ordering, their orders are listed in the shop.
+    public Guid? CustomerUserId { get; set; }
+
+    // Client discount used on some products (the bigger of it and the promo code counts).
+    public decimal? ClientDiscountPercent { get; set; }
+
     public decimal ShippingPrice { get; set; }
     public decimal Total { get; set; }
 

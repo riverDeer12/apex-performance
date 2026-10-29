@@ -41,6 +41,10 @@ internal static class ShopPromo
         return (promo, null);
     }
 
+    // Client discount on one piece, in cents like the promo codes.
+    public static decimal ClientUnitDiscount(decimal percent, decimal price)
+        => percent <= 0 ? 0 : Math.Min(price, Math.Round(price * percent / 100, 2, MidpointRounding.AwayFromZero));
+
     // Discount on one piece of the product, 0 when the code is not for it.
     public static decimal UnitDiscount(ShopPromoCode promo, Guid productId, decimal price)
     {

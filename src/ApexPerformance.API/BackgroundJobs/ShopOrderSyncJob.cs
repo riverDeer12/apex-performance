@@ -33,10 +33,19 @@ public class ShopOrderSyncJob
     public static void ScheduleJob()
         => RecurringJob.AddOrUpdate<ShopOrderSyncJob>(JobId, job => job.Run(CancellationToken.None), Schedule);
 
+    // Emails of "back in stock" requests are not kept longer than this.
+    private static readonly TimeSpan KeepStockAlerts = TimeSpan.FromDays(180);
+
     [AutomaticRetry(Attempts = 0)]
     [DisableConcurrentExecution(timeoutInSeconds: 120)]
     public async Task Run(CancellationToken cancellationToken)
     {
+        var alertsBefore = DateTimeOffset.UtcNow - KeepStockAlerts;
+
+        await _context.ShopStockAlerts
+            .Where(x => x.CreatedAt < alertsBefore)
+            .ExecuteDeleteAsync(cancellationToken);
+
         var pending = await _context.ShopOrders
             .AsNoTracking()
             .Where(x => x.Status == ShopOrderStatuses.Pending)

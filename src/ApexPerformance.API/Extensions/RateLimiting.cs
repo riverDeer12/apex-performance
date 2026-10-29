@@ -19,6 +19,7 @@ public static class RateLimiting
     public const string ChatReports = "chat-reports";
     public const string ShopCheckout = "shop-checkout";
     public const string ShopPromoCheck = "shop-promo-check";
+    public const string ShopVisits = "shop-visits";
 
     private const string RegistrationPath = "/api/users/register";
 
@@ -51,6 +52,10 @@ public static class RateLimiting
             // Makes guessing promo codes slow.
             options.AddPolicy(ShopPromoCheck, context =>
                 FixedWindowPerIp(context, permits: 20, window: TimeSpan.FromMinutes(10)));
+
+            // One per page the shop opens, a script can't inflate the counts much.
+            options.AddPolicy(ShopVisits, context =>
+                FixedWindowPerIp(context, permits: 60, window: TimeSpan.FromMinutes(1)));
 
             // Many addresses (a botnet) can't flood registration either.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>

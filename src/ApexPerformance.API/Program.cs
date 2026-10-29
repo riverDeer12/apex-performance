@@ -75,7 +75,7 @@ builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentSer
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
-builder.Services.AddSingleton<ShopSettings>();
+builder.Services.AddScoped<ShopSettings>();
 builder.Services.AddScoped<ShopOrderService>();
 builder.Services.AddScoped<ShopPaymentEvents>();
 builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();

@@ -1,23 +1,35 @@
 using System.Globalization;
 using System.Text;
+using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Shop;
 
 /// <summary>
-/// Settings of the webshop. Everything has a default, so the shop works on
-/// test without extra settings; production sets its own in the server settings.
+/// Settings of the webshop: the ones changed in the administration (ShopConfig),
+/// then the server settings, then defaults, so the shop works on test without
+/// extra settings. One per request, the administration's row is read once.
 /// </summary>
 public class ShopSettings
 {
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
+    private readonly ApexPerformanceContext _context;
+    private ShopConfig? _config;
 
-    public ShopSettings(IConfiguration configuration, IHostEnvironment environment)
+    public ShopSettings(IConfiguration configuration, IHostEnvironment environment, ApexPerformanceContext context)
     {
         _configuration = configuration;
         _environment = environment;
+        _context = context;
     }
+
+    // Row of the administration, an empty one until it is first saved.
+    public ShopConfig Config => _config ??=
+        _context.ShopConfigs.AsNoTracking().FirstOrDefault() ?? new ShopConfig();
+
+    public decimal ClientDiscountPercent => Config.ClientDiscountPercent;
 
     private bool IsProduction => _environment.IsProduction();
 
@@ -28,12 +40,17 @@ public class ShopSettings
                                   "https://test.shop.apex-performance.fit")).TrimEnd('/');
 
     // BoxNow delivery, free from FreeShippingFrom on.
-    public decimal ShippingPrice => _configuration.GetValue<decimal?>("Shop:ShippingPrice") ?? 3.50m;
-    public decimal FreeShippingFrom => _configuration.GetValue<decimal?>("Shop:FreeShippingFrom") ?? 50m;
+    public decimal ShippingPrice => Config.ShippingPrice ?? DefaultShippingPrice;
+    public decimal FreeShippingFrom => Config.FreeShippingFrom ?? DefaultFreeShippingFrom;
+
+    public decimal DefaultShippingPrice => _configuration.GetValue<decimal?>("Shop:ShippingPrice") ?? 3.50m;
+    public decimal DefaultFreeShippingFrom => _configuration.GetValue<decimal?>("Shop:FreeShippingFrom") ?? 50m;
 
     // New orders and BoxNow labels are sent here.
-    public string NotificationEmail => _configuration["Shop:NotificationEmail"] ??
-                                       (IsProduction ? "gabriel@apex-performance.fit" : "info@rdd.software");
+    public string NotificationEmail => Config.NotificationEmail ?? DefaultNotificationEmail;
+
+    public string DefaultNotificationEmail => _configuration["Shop:NotificationEmail"] ??
+                                              (IsProduction ? "gabriel@apex-performance.fit" : "info@rdd.software");
 
     public string? StripeSecretKey => _configuration["Stripe:ApexPerformance:SecretKey"];
 

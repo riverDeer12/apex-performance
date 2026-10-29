@@ -2,6 +2,7 @@ using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Extensions;
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +64,8 @@ public record ShopOrderResponse(
     string? DisputeStatus,
     DateTimeOffset? DisputedAt,
     bool HasFraudWarning,
-    List<ShopOrderItemResponse> Items);
+    List<ShopOrderItemResponse> Items,
+    decimal? ClientDiscountPercent = null);
 
 internal static class ShopOrders
 {
@@ -75,7 +77,17 @@ internal static class ShopOrders
             order.HasFraudWarning,
             order.Items.Select(x => new ShopOrderItemResponse(x.ProductName, x.VariantName, x.UnitPrice, x.UnitDiscount,
                     x.Quantity))
-                .ToList());
+                .ToList(), order.ClientDiscountPercent);
+
+    // What the discount was, for emails and the Stripe line names.
+    public static string DiscountLabel(ShopOrder order)
+        => (order.PromoCode, order.ClientDiscountPercent) switch
+        {
+            ({ } code, { } percent) => $"promo kod {code} i popust za klijente {percent:0.##} %",
+            ({ } code, null) => $"promo kod {code}",
+            (null, { } percent) => $"popust za klijente {percent:0.##} %",
+            _ => "popust"
+        };
 
     // "AP-261027-4821": date and a random part, short enough to read on the phone.
     public static async Task<string> NewNumber(ApexPerformanceContext context, CancellationToken cancellationToken)
@@ -104,12 +116,15 @@ public class ShopCheckoutEndpoint : Endpoint<ShopCheckoutRequest, ShopCheckoutRe
     private readonly ShopSettings _settings;
     private readonly ILogger<ShopCheckoutEndpoint> _logger;
 
+    private readonly ICurrentUserService _currentUserService;
+
     public ShopCheckoutEndpoint(ApexPerformanceContext context, ShopSettings settings,
-        ILogger<ShopCheckoutEndpoint> logger)
+        ILogger<ShopCheckoutEndpoint> logger, ICurrentUserService currentUserService)
     {
         _context = context;
         _settings = settings;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -152,9 +167,15 @@ public class ShopCheckoutEndpoint : Endpoint<ShopCheckoutRequest, ShopCheckoutRe
                 ThrowError(promoError);
         }
 
+        // Anyone can buy; a client of the studio logged in to the shop gets the client discount.
+        var userId = _currentUserService.UserId;
+        var client = await ShopAccounts.CurrentClient(_context, userId, cancellationToken);
+        var clientPercent = client is null ? 0 : _settings.ClientDiscountPercent;
+
         var order = new ShopOrder
         {
             Number = await ShopOrders.NewNumber(_context, cancellationToken),
+            CustomerUserId = userId == Guid.Empty ? null : userId,
             Status = ShopOrderStatuses.Pending,
             BoxNowLockerId = request.BoxNowLockerId.Trim(),
             BoxNowLockerAddress = request.BoxNowLockerAddress.Trim(),
@@ -172,18 +193,32 @@ public class ShopCheckoutEndpoint : Endpoint<ShopCheckoutRequest, ShopCheckoutRe
                 ProductName = variant.Product.Name,
                 VariantName = variantName.Length == 0 ? null : variantName,
                 UnitPrice = variant.Product.Price,
-                UnitDiscount = promo is null ? 0 : ShopPromo.UnitDiscount(promo, variant.ProductId, variant.Product.Price),
+                UnitDiscount = 0,
                 Quantity = item.Quantity
             });
         }
 
-        if (promo is not null)
-        {
-            if (order.Items.All(x => x.UnitDiscount == 0))
-                ThrowError(ErrorCodes.PromoCodeNotApplicable);
+        // The bigger of the promo code and the client discount counts for each product, they don't add up.
+        var promoUsed = false;
+        var clientUsed = false;
 
-            order.PromoCode = promo.Code;
+        foreach (var item in order.Items)
+        {
+            var productId = variants[item.VariantId].ProductId;
+            var promoDiscount = promo is null ? 0 : ShopPromo.UnitDiscount(promo, productId, item.UnitPrice);
+            var clientDiscount = ShopPromo.ClientUnitDiscount(clientPercent, item.UnitPrice);
+
+            item.UnitDiscount = Math.Max(promoDiscount, clientDiscount);
+            promoUsed |= promoDiscount > 0 && promoDiscount >= clientDiscount;
+            clientUsed |= clientDiscount > 0 && clientDiscount > promoDiscount;
         }
+
+        if (promo is not null && !promoUsed &&
+            order.Items.All(x => ShopPromo.UnitDiscount(promo, variants[x.VariantId].ProductId, x.UnitPrice) == 0))
+            ThrowError(ErrorCodes.PromoCodeNotApplicable);
+
+        order.PromoCode = promoUsed ? promo!.Code : null;
+        order.ClientDiscountPercent = clientUsed ? clientPercent : null;
 
         order.Subtotal = order.Items.Sum(x => x.UnitPrice * x.Quantity);
         order.Discount = order.Items.Sum(x => x.UnitDiscount * x.Quantity);
@@ -219,7 +254,7 @@ public class ShopCheckoutEndpoint : Endpoint<ShopCheckoutRequest, ShopCheckoutRe
                         Name = (string.IsNullOrEmpty(item.VariantName)
                                    ? item.ProductName
                                    : $"{item.ProductName} ({item.VariantName})") +
-                               (item.UnitDiscount > 0 ? $" – promo kod {order.PromoCode}" : "")
+                               (item.UnitDiscount > 0 ? $" – {ShopOrders.DiscountLabel(order)}" : "")
                     },
                     // The receipt shows the price the customer pays.
                     UnitAmount = ToCents(item.UnitPrice - item.UnitDiscount)

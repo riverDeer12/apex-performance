@@ -24,6 +24,8 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
         // Last login per user is looked up by user and time.
         builder.HasIndex(e => new { e.UserId, e.CreatedAt });
 
+        builder.Property(e => e.Channel).HasMaxLength(20);
+
         builder.ToTable("UserSessions");
     }
 }
