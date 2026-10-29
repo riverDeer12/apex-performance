@@ -23,7 +23,9 @@ public record ShopProductResponse(
     decimal Price,
     // Picture ids, the first is the main picture: GET /api/shop/images/{id}.
     List<Guid> ImageIds,
-    List<ShopVariantResponse> Variants);
+    List<ShopVariantResponse> Variants,
+    // For sorting the shop by newest.
+    DateTimeOffset? CreatedAt = null);
 
 public record ShopSettingsResponse(
     decimal ShippingPrice,
@@ -49,7 +51,8 @@ internal static class ShopCatalog
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new ShopVariantResponse(x.Id, x.Size, x.Color, x.Stock > 0,
                     x.Stock is > 0 and <= FewLeftLimit ? x.Stock : null))
-                .ToList());
+                .ToList(),
+            product.CreatedAt);
 }
 
 /// <summary>
