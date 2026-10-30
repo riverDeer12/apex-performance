@@ -29,10 +29,11 @@ public static class TrainingAccess
             return context.Trainings.Where(x => clientIds.Contains(x.ClientId));
         }
 
-        // Clients only see trainings their coach marked as completed,
-        // planned trainings are for the coach.
+        // Clients see trainings in progress (started by the coach) and completed
+        // ones, planned trainings are for the coach.
         if (currentUserService.LoggedUserHasRole(UserRoles.Client))
-            return context.Trainings.Where(x => x.Client.UserId == currentUserService.UserId && x.IsCompleted);
+            return context.Trainings.Where(x => x.Client.UserId == currentUserService.UserId &&
+                                                (x.IsCompleted || x.StartedAt != null));
 
         return context.Trainings.Where(_ => false);
     }

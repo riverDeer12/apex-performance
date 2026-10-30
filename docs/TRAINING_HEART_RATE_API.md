@@ -18,8 +18,16 @@ Trainings (`GET /trainings`, `POST`, `PUT /trainings/{id}`) now also have:
 
 | Method | Path | Body | Response | Notes |
 |---|---|---|---|---|
-| PUT | `/trainings/{id}/times` | `{ "startedAt": "…" \| null, "endedAt": "…" \| null }` | `{ id, startedAt, endedAt, heartRate }` | Staff. "Start" sends `startedAt` = now and `endedAt` = null, "End" keeps `startedAt` and sends `endedAt` = now. Both null clears them. `endedAt` must be after `startedAt` and at most 6 h later (else `400`, code `1001`). Changed times clear the heart rate. |
+| PUT | `/trainings/{id}/times` | `{ "startedAt": "…" \| null, "endedAt": "…" \| null }` | `{ id, startedAt, endedAt, heartRate, isCompleted, completedAt }` | Staff. "Start" sends `startedAt` = now and `endedAt` = null, "End" keeps `startedAt` and sends `endedAt` = now. Both null clears them. `endedAt` must be after `startedAt` and at most 6 h later (else `400`, code `1001`). Changed times clear the heart rate. An end also marks the training as completed (`completedAt` = `endedAt`). |
 | PUT | `/trainings/{id}/heart-rate` | `{ "min": 72, "max": 168, "average": 124 }` | `{ min, max, average }` | **Client only**, own completed training with both times (else `400`, code `1001`). Values 25–250, `min ≤ average ≤ max`. |
+
+## Statuses
+
+- **Planned**: not completed, no `startedAt`. Only staff see it.
+- **In progress**: not completed, `startedAt` set. **Clients see it too** (`GET /trainings`), so they can follow the
+  training while it happens.
+- **Completed**: `isCompleted`. "End" completes the training; staff can still change it with
+  `PUT /trainings/{id}/completion`.
 
 ## Suggested app behaviour (as in the apps)
 

@@ -11,22 +11,27 @@ namespace ApexPerformance.API.Features.Trainings;
 public record ChangeTrainingTimesRequest(DateTimeOffset? StartedAt, DateTimeOffset? EndedAt);
 
 public record ChangeTrainingTimesResponse(Guid Id, DateTimeOffset? StartedAt, DateTimeOffset? EndedAt,
-    TrainingHeartRateResponse? HeartRate);
+    TrainingHeartRateResponse? HeartRate, bool IsCompleted, DateTimeOffset? CompletedAt);
 
 /// <summary>
 /// When the training really started and ended, marked by the coach in the
 /// apps ("Start" and "End"). The client's phone then reads the heart rate
 /// in between from Apple Health. Changed times clear the heart rate.
+/// Clients see a started training (in progress); ending it also marks it
+/// as completed.
 /// </summary>
 public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, ChangeTrainingTimesResponse>
 {
     private readonly ApexPerformanceContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPersonalRecordService _personalRecordService;
 
-    public ChangeTrainingTimesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
+    public ChangeTrainingTimesEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService,
+        IPersonalRecordService personalRecordService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _personalRecordService = personalRecordService;
     }
 
     public override void Configure()
@@ -55,14 +60,25 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
             training.HeartRateMax = null;
             training.HeartRateAverage = null;
 
+            var completes = training.EndedAt is not null && !training.IsCompleted;
+            if (completes)
+            {
+                training.IsCompleted = true;
+                training.CompletedAt = training.EndedAt;
+            }
+
             var result = await _context.SaveChangesAsync(cancellationToken);
 
             if (result == 0)
                 ThrowError(ErrorCodes.SavingError);
+
+            if (completes)
+                await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
         }
 
         await SendAsync(new ChangeTrainingTimesResponse(training.Id, training.StartedAt, training.EndedAt,
-            TrainingMapper.HeartRateOf(training)), cancellation: cancellationToken);
+            TrainingMapper.HeartRateOf(training), training.IsCompleted, training.CompletedAt),
+            cancellation: cancellationToken);
     }
 }
 
