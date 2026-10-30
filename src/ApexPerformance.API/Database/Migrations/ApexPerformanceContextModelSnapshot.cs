@@ -2482,6 +2482,18 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("HeartRateAverage")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HeartRateMax")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HeartRateMin")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
 
@@ -2506,6 +2518,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
                         .HasColumnName("PeriodStart");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");

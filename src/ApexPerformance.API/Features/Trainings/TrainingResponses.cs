@@ -39,8 +39,15 @@ public record TrainingResponse(
     PersonDataDto Client,
     List<TrainingExerciseResponse> Exercises,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt
+    DateTimeOffset UpdatedAt,
+    // When the training really started and ended (null until marked).
+    DateTimeOffset? StartedAt = null,
+    DateTimeOffset? EndedAt = null,
+    // Client's heart rate in between, beats per minute (null until the client's phone sends it).
+    TrainingHeartRateResponse? HeartRate = null
 );
+
+public record TrainingHeartRateResponse(int Min, int Max, int Average);
 
 public record TrainingExerciseSetRequest(
     string? Reps,
@@ -83,7 +90,15 @@ public static class TrainingMapper
                 x.IsSupersetWithPrevious, x.Workout.PaceType))
             .ToList(),
         training.CreatedAt,
-        training.UpdatedAt);
+        training.UpdatedAt,
+        training.StartedAt,
+        training.EndedAt,
+        HeartRateOf(training));
+
+    public static TrainingHeartRateResponse? HeartRateOf(Training training)
+        => training is { HeartRateMin: { } min, HeartRateMax: { } max, HeartRateAverage: { } average }
+            ? new TrainingHeartRateResponse(min, max, average)
+            : null;
 
     /// <summary>
     /// Exercises and their sets in the order they are given.
