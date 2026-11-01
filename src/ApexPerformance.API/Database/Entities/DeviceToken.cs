@@ -10,7 +10,7 @@ public class DeviceToken : BaseEntity
     public string? BuildNumber { get; set; }
     public string? OsVersion { get; set; }
     public string? DeviceModel { get; set; }
-    // Language of the app on the device ("hr", "en", "it"), for push texts.
+    // Language of the app on the device ("hr", "en", "it", "de"), for push texts.
     public string? Language { get; set; }
     public User? User { get; set; }
     public Guid UserId { get; set; }
