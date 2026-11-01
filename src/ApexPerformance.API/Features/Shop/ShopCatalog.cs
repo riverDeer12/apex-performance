@@ -25,7 +25,11 @@ public record ShopProductResponse(
     List<Guid> ImageIds,
     List<ShopVariantResponse> Variants,
     // For sorting the shop by newest.
-    DateTimeOffset? CreatedAt = null);
+    DateTimeOffset? CreatedAt = null,
+    // Words customers filter by.
+    List<string>? Keywords = null,
+    // Products picked to go with this one; inactive ones are missing from the catalog.
+    List<Guid>? RelatedProductIds = null);
 
 public record ShopSettingsResponse(
     decimal ShippingPrice,
@@ -52,7 +56,9 @@ internal static class ShopCatalog
                 .Select(x => new ShopVariantResponse(x.Id, x.Size, x.Color, x.Stock > 0,
                     x.Stock is > 0 and <= FewLeftLimit ? x.Stock : null))
                 .ToList(),
-            product.CreatedAt);
+            product.CreatedAt,
+            product.Keywords,
+            product.RelatedProductIds);
 }
 
 /// <summary>

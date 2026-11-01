@@ -26,7 +26,9 @@ public record ShopAdminProductResponse(
     bool IsActive,
     int SortOrder,
     List<Guid> ImageIds,
-    List<ShopAdminVariantDto> Variants);
+    List<ShopAdminVariantDto> Variants,
+    List<string> Keywords,
+    List<Guid> RelatedProductIds);
 
 public record SaveShopProductRequest(
     string Name,
@@ -38,7 +40,11 @@ public record SaveShopProductRequest(
     bool IsActive,
     int SortOrder,
     // Full list in the shown order: variants left out are removed.
-    List<ShopAdminVariantDto> Variants);
+    List<ShopAdminVariantDto> Variants,
+    // Left as they are when missing.
+    List<string>? Keywords = null,
+    // Products that go with this one, in the shown order; left as they are when missing.
+    List<Guid>? RelatedProductIds = null);
 
 public record ReorderShopImagesRequest(List<Guid> ImageIds);
 
@@ -54,7 +60,9 @@ internal static class ShopAdmin
                 .Where(x => !x.IsDeleted)
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new ShopAdminVariantDto(x.Id, x.Size, x.Color, x.Stock))
-                .ToList());
+                .ToList(),
+            product.Keywords,
+            product.RelatedProductIds);
 
     public static async Task<ShopAdminProductResponse> Load(ApexPerformanceContext context, Guid id,
         CancellationToken cancellationToken)
@@ -94,6 +102,23 @@ internal static class ShopAdmin
         product.Price = request.Price;
         product.IsActive = request.IsActive;
         product.SortOrder = request.SortOrder;
+
+        if (request.Keywords is not null)
+            product.Keywords = request.Keywords
+                .Select(x => x.Trim().ToLowerInvariant())
+                .Where(x => x.Length > 0)
+                .Distinct()
+                .ToList();
+
+        if (request.RelatedProductIds is not null)
+        {
+            var related = request.RelatedProductIds.Where(x => x != product.Id).Distinct().ToList();
+            var known = await context.ShopProducts
+                .Where(x => related.Contains(x.Id) && !x.IsDeleted)
+                .Select(x => x.Id)
+                .ToListAsync(cancellationToken);
+            product.RelatedProductIds = related.Where(known.Contains).ToList();
+        }
 
         // Variants saved before, new ones can already have an id assigned by EF.
         var existing = product.Variants.Where(x => !x.IsDeleted).ToList();
@@ -143,6 +168,9 @@ public sealed class SaveShopProductValidator : Validator<SaveShopProductRequest>
         RuleFor(x => x.Category).NotEmpty().WithMessage(ErrorCodes.Required).MaximumLength(100).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Price).GreaterThan(0).WithMessage(ErrorCodes.NotValid).LessThan(100000).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Variants).NotEmpty().WithMessage(ErrorCodes.Required);
+        RuleFor(x => x.Keywords).Must(x => x is null || x.Count <= 20).WithMessage(ErrorCodes.NotValid);
+        RuleForEach(x => x.Keywords).MaximumLength(40).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.RelatedProductIds).Must(x => x is null || x.Count <= 12).WithMessage(ErrorCodes.NotValid);
         RuleForEach(x => x.Variants).ChildRules(variant =>
         {
             variant.RuleFor(x => x.Size).MaximumLength(50).WithMessage(ErrorCodes.NotValid);

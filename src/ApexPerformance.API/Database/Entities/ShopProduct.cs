@@ -25,6 +25,13 @@ public class ShopProduct : BaseEntity
 
     public int SortOrder { get; set; }
 
+    // Words customers filter and search by, e.g. "trening", "pamuk", "ljeto".
+    public List<string> Keywords { get; set; } = [];
+
+    // Products picked in the administration that go with this one, in the shown order;
+    // the shop fills up the rest of its suggestions itself.
+    public List<Guid> RelatedProductIds { get; set; } = [];
+
     public ICollection<ShopProductVariant> Variants { get; set; } = new List<ShopProductVariant>();
 
     public ICollection<ShopProductImage> Images { get; set; } = new List<ShopProductImage>();
