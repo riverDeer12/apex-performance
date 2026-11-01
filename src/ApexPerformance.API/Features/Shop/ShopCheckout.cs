@@ -83,9 +83,9 @@ internal static class ShopOrders
     public static string DiscountLabel(ShopOrder order)
         => (order.PromoCode, order.ClientDiscountPercent) switch
         {
-            ({ } code, { } percent) => $"promo kod {code} i popust za klijente {percent:0.##} %",
+            ({ } code, { } percent) => $"promo kod {code} i popust za članove {percent:0.##} %",
             ({ } code, null) => $"promo kod {code}",
-            (null, { } percent) => $"popust za klijente {percent:0.##} %",
+            (null, { } percent) => $"popust za članove {percent:0.##} %",
             _ => "popust"
         };
 
