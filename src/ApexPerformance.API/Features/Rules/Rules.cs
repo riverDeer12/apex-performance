@@ -14,14 +14,17 @@ public record RulesResponse(
     string Document,
     // Version the client has to accept.
     string Version,
-    // PDF of the rules, to open or download.
+    // PDF of the rules, to open or download (Croatian, the binding version).
     string DocumentUrl,
     // Only clients with individual trainings have to accept these rules.
     bool IsRequired,
     // The current version is accepted.
     bool IsAccepted,
     string? AcceptedVersion,
-    DateTimeOffset? AcceptedAt);
+    DateTimeOffset? AcceptedAt,
+    // PDF by language ("hr", "en", "it", "de"); the app opens the one in its language,
+    // DocumentUrl when its language is missing.
+    IReadOnlyDictionary<string, string> DocumentUrls);
 
 public record AcceptRulesRequest(
     // Version shown to the client, it must be the current one.
@@ -45,7 +48,18 @@ public record RulesAcceptanceResponse(
 internal static class RulesHelper
 {
     public static string DocumentUrl(IConfiguration configuration)
-        => (configuration["WebAppUrl"] ?? string.Empty).TrimEnd('/') + RulesDocuments.IndividualCoachingPath;
+        => WebAppUrl(configuration) + RulesDocuments.IndividualCoachingPath;
+
+    public static IReadOnlyDictionary<string, string> DocumentUrls(IConfiguration configuration)
+    {
+        var urls = new Dictionary<string, string> { ["hr"] = DocumentUrl(configuration) };
+        foreach (var (language, path) in RulesDocuments.IndividualCoachingTranslations)
+            urls[language] = WebAppUrl(configuration) + path;
+        return urls;
+    }
+
+    private static string WebAppUrl(IConfiguration configuration)
+        => (configuration["WebAppUrl"] ?? string.Empty).TrimEnd('/');
 
     /// <summary>
     /// Rules are asked for only once they are published ("Rules:Published" set to true, on production
@@ -71,7 +85,7 @@ internal static class RulesHelper
         => new(RulesDocuments.IndividualCoaching, RulesDocuments.IndividualCoachingVersion,
             DocumentUrl(configuration), IsRequired(client, IsPublished(configuration, environment)),
             acceptance?.Version == RulesDocuments.IndividualCoachingVersion,
-            acceptance?.Version, acceptance?.AcceptedAt);
+            acceptance?.Version, acceptance?.AcceptedAt, DocumentUrls(configuration));
 }
 
 /// <summary>
