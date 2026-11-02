@@ -40,6 +40,10 @@ public class ErrorAlertJob
     // (ERROR_CONNECTION_INVALID), logged by the server as an unhandled exception.
     private const string ClosedConnectionError = "0x800704CD";
 
+    // SQL Server stopping a query because the client's request was cancelled; EF wraps it
+    // in an InvalidOperationException ("transient failure"), so it is matched by its text.
+    private const string CancelledQueryError = "Operation cancelled by user.";
+
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
@@ -113,7 +117,8 @@ public class ErrorAlertJob
                 .Where(x => AlertLevels.Contains(x.Level, StringComparer.OrdinalIgnoreCase))
                 .Where(x => x.Exception is null ||
                             (!CancellationExceptions.Any(name => x.Exception.StartsWith(name, StringComparison.Ordinal)) &&
-                             !x.Exception.Contains(ClosedConnectionError, StringComparison.Ordinal)))
+                             !x.Exception.Contains(ClosedConnectionError, StringComparison.Ordinal) &&
+                             !x.Exception.Contains(CancelledQueryError, StringComparison.Ordinal)))
                 .Where(x => x.Timestamp > from && x.Timestamp <= to)
                 .Select(x => (file.Name, x)));
         }

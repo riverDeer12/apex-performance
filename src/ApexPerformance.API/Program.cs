@@ -144,6 +144,9 @@ app.UseCors(corsPolicyBuilder => corsPolicyBuilder
 
 app.UseRateLimiter();
 
+// Before the endpoints, so requests the client cancelled are not logged as errors.
+app.UseMiddleware<CancelledRequests>();
+
 app.UseFastEndpoints();
 
 app.UseAuthentication();
