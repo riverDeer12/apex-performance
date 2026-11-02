@@ -21,15 +21,17 @@ public record PriceListRow(
 
 /// <summary>
 /// Builds the price list CSV and its file name. Columns follow the format
-/// used by retail chains since 2025; final columns and file name scheme
-/// must be checked against the notice from the client's accountant.
+/// used by retail chains since 2025. The anchor price is called "bazna cijena"
+/// in the latest draft of the regulation. File name elements (type, address,
+/// shop code, storage number) are set in the prefix, e.g.
+/// PRODAVAONICA_VLAŠKA68_ZAGREB_P1_01_01102026_0750.CSV.
 /// </summary>
 public static class PriceListCsv
 {
     private const char Separator = ';';
 
     public static string BuildFileName(string prefix, DateTimeOffset publishedAtLocal)
-        => $"{prefix}_{publishedAtLocal:ddMMyyyy}_{publishedAtLocal:HHmm}.csv";
+        => $"{prefix}_{publishedAtLocal:ddMMyyyy}_{publishedAtLocal:HHmm}.CSV";
 
     public static string Build(IEnumerable<PriceListRow> rows, string anchorDate)
     {
@@ -45,7 +47,7 @@ public static class PriceListCsv
             "CIJENA ZA JEDINICU MJERE",
             "MPC ZA VRIJEME POSEBNOG OBLIKA PRODAJE",
             "NAJNIŽA CIJENA U POSLJEDNIH 30 DANA",
-            $"SIDRENA CIJENA NA {anchorDate}",
+            $"BAZNA CIJENA ({anchorDate})",
             "BARKOD",
             "KATEGORIJA PROIZVODA");
 

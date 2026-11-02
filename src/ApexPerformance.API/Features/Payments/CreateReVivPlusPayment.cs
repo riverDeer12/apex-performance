@@ -46,7 +46,7 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
             }, cancellationToken: cancellationToken);
 
             if (anchorPrices.TryGetValue(item.ProductId, out var anchorPrice))
-                anchorPriceLines.Add($"{product.Name}: {anchorPrice:0.00} €");
+                anchorPriceLines.Add($"{product.Name} – {anchorPrice:0.00} €");
 
             var priceId = product.DefaultPriceId;
             if (string.IsNullOrEmpty(priceId))
@@ -94,7 +94,7 @@ public class CreateReVivPlusPayment : Endpoint<CreateReVivPlusPaymentRequest, Cr
                 {
                     Submit = new SessionCustomTextSubmitOptions
                     {
-                        Message = $"Sidrena cijena na {_priceListService.AnchorDate} " +
+                        Message = $"Bazna cijena ({_priceListService.AnchorDate}): " +
                                   string.Join(", ", anchorPriceLines.Distinct())
                     }
                 },

@@ -15,7 +15,7 @@ public class PriceListCsvTests
 
         var header = csv.Split("\r\n")[0];
 
-        Assert.Contains("SIDRENA CIJENA NA 10.9.2026.", header);
+        Assert.Contains("BAZNA CIJENA (10.9.2026.)", header);
         Assert.Equal(12, header.Split(';').Length);
     }
 
@@ -42,7 +42,7 @@ public class PriceListCsvTests
     {
         var publishedAt = new DateTimeOffset(2026, 11, 1, 7, 30, 0, TimeSpan.FromHours(1));
 
-        Assert.Equal("INTERNET_TRGOVINA_REVIVPLUS_01112026_0730.csv",
+        Assert.Equal("INTERNET_TRGOVINA_REVIVPLUS_01112026_0730.CSV",
             PriceListCsv.BuildFileName("INTERNET_TRGOVINA_REVIVPLUS", publishedAt));
     }
 }
