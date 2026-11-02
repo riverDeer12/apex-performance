@@ -67,7 +67,15 @@ jobs:
           # Stopping a pool that is already stopped is an error, and a pool that is still
           # stopping keeps the DLLs locked: stop it if needed and wait until it really stopped.
           if ((Get-WebAppPoolState -Name $name).Value -ne "Stopped") { Stop-WebAppPool -Name $name -ErrorAction SilentlyContinue }
-          for ($i = 0; $i -lt 60 -and (Get-WebAppPoolState -Name $name).Value -ne "Stopped"; $i++) { Start-Sleep -Seconds 1 }
+          # Open live connections and background jobs can keep the old worker shutting down
+          # for minutes; give it three, then end the pool's worker process.
+          for ($i = 0; $i -lt 180 -and (Get-WebAppPoolState -Name $name).Value -ne "Stopped"; $i++) { Start-Sleep -Seconds 1 }
+          if ((Get-WebAppPoolState -Name $name).Value -ne "Stopped") {
+            Get-CimInstance Win32_Process -Filter "Name='w3wp.exe'" |
+              Where-Object { $_.CommandLine -like "*-ap ""$name""*" } |
+              ForEach-Object { Write-Host "Ending worker $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force }
+            for ($i = 0; $i -lt 30 -and (Get-WebAppPoolState -Name $name).Value -ne "Stopped"; $i++) { Start-Sleep -Seconds 1 }
+          }
           $state = (Get-WebAppPoolState -Name $name).Value
           Write-Host "App pool state: $state"
           if ($state -ne "Stopped") { throw "App pool did not stop" }
