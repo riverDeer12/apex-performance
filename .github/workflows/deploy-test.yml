@@ -63,8 +63,15 @@ jobs:
         shell: powershell
         run: |
           Import-Module WebAdministration
-          Stop-WebAppPool -Name "${{ env.APP_POOL_NAME }}"
-          Start-Sleep -Seconds 5
+          $name = "${{ env.APP_POOL_NAME }}"
+          # Stopping a pool that is already stopped is an error, and a pool that is still
+          # stopping keeps the DLLs locked: stop it if needed and wait until it really stopped.
+          if ((Get-WebAppPoolState -Name $name).Value -ne "Stopped") { Stop-WebAppPool -Name $name -ErrorAction SilentlyContinue }
+          for ($i = 0; $i -lt 60 -and (Get-WebAppPoolState -Name $name).Value -ne "Stopped"; $i++) { Start-Sleep -Seconds 1 }
+          $state = (Get-WebAppPoolState -Name $name).Value
+          Write-Host "App pool state: $state"
+          if ($state -ne "Stopped") { throw "App pool did not stop" }
+          Start-Sleep -Seconds 2
 
       - name: Sync published files (preserve appsettings, web.config, wwwroot, Logs, firebase key)
         shell: cmd
@@ -78,9 +85,16 @@ jobs:
         shell: powershell
         run: |
           Import-Module WebAdministration
-          Start-WebAppPool -Name "${{ env.APP_POOL_NAME }}"
-          Start-Sleep -Seconds 5
-          $state = (Get-WebAppPoolState -Name "${{ env.APP_POOL_NAME }}").Value
+          $name = "${{ env.APP_POOL_NAME }}"
+          # A pool that is still stopping can't be started yet ("cannot accept control
+          # messages"), so keep trying for a minute.
+          for ($i = 0; $i -lt 30; $i++) {
+            $state = (Get-WebAppPoolState -Name $name).Value
+            if ($state -eq "Started") { break }
+            if ($state -eq "Stopped") { Start-WebAppPool -Name $name -ErrorAction SilentlyContinue }
+            Start-Sleep -Seconds 2
+          }
+          $state = (Get-WebAppPoolState -Name $name).Value
           Write-Host "App pool state: $state"
           if ($state -ne "Started") { throw "App pool did not start" }
 
