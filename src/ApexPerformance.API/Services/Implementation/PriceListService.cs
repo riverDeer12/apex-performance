@@ -17,8 +17,9 @@ public class PriceListService : IPriceListService
 {
     public const int RetentionDays = 30;
 
-    private const string DefaultFileNamePrefix = "INTERNET_TRGOVINA_REVIVPLUS";
-    private const string DefaultAnchorDate = "10.9.2026.";
+    private const string DefaultFileNamePrefix = "INTERNET_TRGOVINA_KORZO38_RIJEKA_W1_01";
+    // ReViv Plus products are food (dietary supplements), so the base price is the one on 2.5.2025.
+    private const string DefaultAnchorDate = "2.5.2025.";
 
     private readonly ApexPerformanceContext _context;
     private readonly IConfiguration _configuration;
