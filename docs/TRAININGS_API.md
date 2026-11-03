@@ -24,11 +24,10 @@ their plan includes and also the ones in their own trainings; others give `404`.
 
 ## Duration of a set
 
-Sets also have `durationSeconds` (optional, 1–86400): how long the set lasted, for exercises done for a time
-such as a plank. Workouts (`GET /workouts`, `GET /workouts/{id}`) have `isTimed`; for those apps show a
-duration input (min:s) instead of repetitions, and show the duration in the training (e.g. `1:30`, or
-`1:30 · 10 kg` with weight). `POST /workouts` and `PUT /workouts/{id}` take `isTimed` (omit it to keep the
-current value; new workouts default to `false`).
+Every set can have `durationSeconds` (optional, 1–86400): how long the set lasted, for any exercise. The apps
+show a duration input (min:s) next to repetitions and weight on every set, none of them required, and show the
+duration in the training (e.g. `8 × 60 kg · 0:45`, `1:30`, or `1:30 · 10 kg`). Whether a workout is "timed"
+no longer matters: `isTimed` is still returned and accepted for older apps, the current apps ignore it.
 
 ```json
 "sets": [
@@ -37,8 +36,9 @@ current value; new workouts default to `false`).
 ]
 ```
 
-## Personal records of timed workouts
+## Personal records of held sets
 
-`GET /personal-records` also returns records of type `LongestDuration` for workouts done for a time: `value`
-is the longest set in seconds (show it as min:s), `weight` the weight of that set (0 without weight). Timed sets
-don't count for `MaxWeight` and `EstimatedOneRepMax`.
+`GET /personal-records` also returns records of type `LongestDuration` for sets held for a time without
+repetitions (e.g. a plank): `value` is the longest such set in seconds (show it as min:s), `weight` the weight of
+that set (0 without weight). These held sets don't count for `MaxWeight` and `EstimatedOneRepMax`; sets with
+repetitions count for them whether or not they have a duration.
