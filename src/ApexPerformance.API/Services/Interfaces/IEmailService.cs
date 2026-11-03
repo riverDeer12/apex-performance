@@ -161,4 +161,12 @@ public interface IEmailService
     /// <param name="attachment">Optional file, e.g. the BoxNow label PDF.</param>
     void SendShopEmail(string to, string subject, string htmlBody, string? replyTo = null,
         (string FileName, byte[] Data, string ContentType)? attachment = null);
+
+    /// <summary>
+    /// Send alert email when the ReViv Plus
+    /// price list was not published on time.
+    /// </summary>
+    /// <param name="contactEmail">Contact Email.</param>
+    /// <param name="alertMessage">What went wrong.</param>
+    void SendPriceListAlertEmail(string contactEmail, string alertMessage);
 }

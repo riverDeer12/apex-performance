@@ -69,6 +69,8 @@ public class ApexPerformanceContext : DbContext
     public DbSet<TrainingTemplateExercise> TrainingTemplateExercises { get; set; }
     public DbSet<TrainingTemplateExerciseSet> TrainingTemplateExerciseSets { get; set; }
     public DbSet<PersonalRecord> PersonalRecords { get; set; }
+    public DbSet<PriceListFile> PriceListFiles { get; set; }
+    public DbSet<PriceListProduct> PriceListProducts { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     

@@ -75,6 +75,7 @@ builder.Services.AddScoped<IRecurringAppointmentService, RecurringAppointmentSer
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
+builder.Services.AddScoped<IPriceListService, PriceListService>();
 builder.Services.AddScoped<ShopSettings>();
 builder.Services.AddScoped<ShopOrderService>();
 builder.Services.AddScoped<ShopPaymentEvents>();
@@ -92,6 +93,7 @@ builder.Services.AddScoped<MonthlyReviewReminderJob>();
 builder.Services.AddScoped<ErrorAlertJob>();
 builder.Services.AddScoped<ShopOrderSyncJob>();
 builder.Services.AddScoped<TrainingNotificationJob>();
+builder.Services.AddScoped<PriceListJob>();
 
 builder.Host.UseSerilog((context, config)
     => config.ReadFrom.Configuration(context.Configuration));
@@ -210,6 +212,7 @@ DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
 ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
 ShopOrderSyncJob.ScheduleJob();
+PriceListJob.Schedule();
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());

@@ -1,3 +1,4 @@
+using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
 using Stripe;
 using Stripe.Checkout;
@@ -32,16 +33,20 @@ public record LineItem(
     string Amount,
     string? UnitAmount,
     string? AmountSubtotal,
-    string? AmountTotal
+    string? AmountTotal,
+    string? AnchorPrice = null,
+    string? AnchorDate = null
 );
 
 public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSessionResponse>
 {
     private readonly IConfiguration _configuration;
+    private readonly IPriceListService _priceListService;
 
-    public GetCheckoutSessionEndpoint(IConfiguration configuration)
+    public GetCheckoutSessionEndpoint(IConfiguration configuration, IPriceListService priceListService)
     {
         _configuration = configuration;
+        _priceListService = priceListService;
     }
 
     public override void Configure()
@@ -86,6 +91,8 @@ public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSess
             },
             cancellationToken: cancellationToken);
         
+        var anchorPrices = await _priceListService.GetAnchorPricesAsync(cancellationToken);
+
         var items = lineItems.Data.Select(li => new LineItem
         (
             (li.Description ?? li.Price?.Nickname ?? li.Price?.Product?.ToString())!,
@@ -94,7 +101,13 @@ public class GetCheckoutSessionEndpoint : EndpointWithoutRequest<GetCheckoutSess
             $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00}",
             $"{(li.Price?.UnitAmount ?? 0) / 100m:0.00} €",
             $"{(li.AmountSubtotal) / 100m:0.00} €",
-            $"{(li.AmountTotal) / 100m:0.00} €"
+            $"{(li.AmountTotal) / 100m:0.00} €",
+            li.Price?.ProductId is not null && anchorPrices.TryGetValue(li.Price.ProductId, out var anchorPrice)
+                ? $"{anchorPrice:0.00} €"
+                : null,
+            li.Price?.ProductId is not null && anchorPrices.ContainsKey(li.Price.ProductId)
+                ? _priceListService.AnchorDate
+                : null
         )).ToList();
 
         var summary = new GetCheckoutSessionResponse

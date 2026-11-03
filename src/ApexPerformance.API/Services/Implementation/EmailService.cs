@@ -414,6 +414,22 @@ public class EmailService : IEmailService
         ConnectToMailServer(message);
     }
 
+    public void SendPriceListAlertEmail(string contactEmail, string alertMessage)
+    {
+        var message = new MimeMessage();
+
+        message.From.Add(new MailboxAddress("ReViv Plus",
+            _configuration["MailConfiguration:FromAddress"]));
+
+        message.To.Add(new MailboxAddress(contactEmail, contactEmail));
+
+        message.Subject = "Upozorenje: cjenik za reviv-plus.com nije objavljen";
+
+        message.Body = new TextPart("plain") { Text = alertMessage };
+
+        ConnectToMailServer(message);
+    }
+
     public void SendFiscalizationReminderEmail(string contactEmail, Session checkoutSession)
     {
         var message = new MimeMessage();
