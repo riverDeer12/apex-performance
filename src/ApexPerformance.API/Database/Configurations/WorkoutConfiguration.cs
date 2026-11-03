@@ -13,6 +13,9 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
         
         // Contains JSON with name in all languages.
         builder.Property(e => e.Name).HasMaxLength(500);
+
+        builder.Property(e => e.Category).HasMaxLength(50)
+            .HasDefaultValue(Constants.WorkoutCategories.StrengthConditioning);
         
         builder.HasQueryFilter(x => !x.IsDeleted);
         

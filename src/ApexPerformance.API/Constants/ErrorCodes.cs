@@ -25,8 +25,17 @@ public static class ErrorCodes
     public const string AlreadyExists = "1300";
     public const string UsernameAlreadyExists = "1301";
     public const string EmailAlreadyExists = "1302";
+    // Less in stock than ordered.
+    public const string OutOfStock = "1303";
+    // Promo code unknown, inactive, expired or used up.
+    public const string PromoCodeInvalid = "1304";
+    // Promo code is not for any product in the cart.
+    public const string PromoCodeNotApplicable = "1305";
 
     // System / Infrastructure (1400–1499)
     public const string SavingError = "1400";
     public const string ErrorSendingEmail = "1401";
+
+    // Limits (1500–1599)
+    public const string TooManyRequests = "1500";
 }

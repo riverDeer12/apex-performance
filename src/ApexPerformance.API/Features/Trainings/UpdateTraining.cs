@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -13,7 +14,9 @@ public record UpdateTrainingRequest(
     DateTimeOffset Date,
     string? Note,
     bool IsCompleted,
-    List<TrainingExerciseRequest>? Exercises
+    List<TrainingExerciseRequest>? Exercises,
+    // Push notification to the client, only sent when true.
+    bool? NotifyClient = null
 );
 
 public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingResponse>
@@ -84,6 +87,9 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
             ThrowError(ErrorCodes.SavingError);
 
         await _personalRecordService.RecalculateForClientsAsync([previousClientId, client.Id], cancellationToken);
+
+        if (request.NotifyClient == true)
+            TrainingNotificationJob.Enqueue(client.UserId, training.Id, training.Name, isNew: false);
 
         await _context.Entry(training).Collection(x => x.Exercises).Query()
             .Include(x => x.Workout)

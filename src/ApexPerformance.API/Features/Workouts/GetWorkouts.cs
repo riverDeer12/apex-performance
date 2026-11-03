@@ -1,5 +1,6 @@
 ﻿using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities.Localization;
 using FastEndpoints;
@@ -13,7 +14,17 @@ public record GetWorkoutResponse(
     LocalizedProperty Description,
     string ThumbnailUrl,
     string VideoUrl,
-    List<CatalogDataDto> WorkoutTypes
+    List<CatalogDataDto> WorkoutTypes,
+    // Codes of WorkoutMuscles, for the body map: primary ones
+    // doing most of the work and secondary ones helping.
+    List<string> Muscles,
+    List<string> SecondaryMuscles,
+    // Sets of the workout record a duration (e.g. plank).
+    bool IsTimed,
+    // WorkoutCategories, for filtering the list.
+    string Category,
+    // WorkoutPaceTypes: sets record a distance and show a pace. Null for other workouts.
+    string? PaceType = null
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -57,7 +68,9 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
-                        workoutTypeRelation.WorkoutType.Description)).ToList())).ToList(),
+                        workoutTypeRelation.WorkoutType.Description)).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
+                workout.Category, workout.PaceType)).ToList(),
             cancellation: cancellationToken);
     }
 }

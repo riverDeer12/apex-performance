@@ -1,4 +1,5 @@
 using ApexPerformance.API.BackgroundJobs;
+using ApexPerformance.API.Constants;
 using FastEndpoints;
 using Hangfire;
 
@@ -9,7 +10,8 @@ public class RunTestEndpoint : EndpointWithoutRequest<string>
     public override void Configure()
     {
         Get("api/test");
-        AllowAnonymous();
+        // Schedules a job on every call, so it is not open to anyone.
+        Roles(UserRoles.SuperAdmin);
         Options(x => x.WithTags("Tests"));
     }
 

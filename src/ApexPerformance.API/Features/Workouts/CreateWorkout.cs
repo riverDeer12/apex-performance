@@ -16,7 +16,19 @@ public record CreateWorkoutRequest(
     string? ThumbnailUrl,
     // Optional, video can be added later.
     string? VideoUrl,
-    List<Guid> WorkoutTypes
+    List<Guid> WorkoutTypes,
+    // Codes of WorkoutMuscles, primary and secondary. Null keeps the
+    // current ones (guessed from the name for a new workout).
+    List<string>? Muscles = null,
+    List<string>? SecondaryMuscles = null,
+    // Sets record a duration (e.g. plank). Null keeps the current value.
+    bool? IsTimed = null,
+    // WorkoutCategories. Null keeps the current one (from the workout
+    // types for a new workout).
+    string? Category = null,
+    // WorkoutPaceTypes, sets then record a distance. Null keeps the current value,
+    // "" records no distance.
+    string? PaceType = null
 );
 
 public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutResponse>
@@ -71,6 +83,18 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
             }).ToList()
         };
 
+        workout.IsTimed = request.IsTimed ?? false;
+        workout.PaceType = string.IsNullOrEmpty(request.PaceType) ? null : request.PaceType;
+        // Pace comes from distance and duration, so these sets record a duration too.
+        if (workout.PaceType is not null) workout.IsTimed = true;
+        workout.Category = request.Category ?? WorkoutPlanAccess.CategoryOf(workoutTypes);
+
+        if (request.Muscles is null)
+            WorkoutMuscles.Apply(workout, WorkoutMuscles.Guess(workout.Name,
+                workoutTypes.Any(x => WorkoutMuscles.IsFullBodyType(x.Name))));
+        else
+            WorkoutMuscles.Apply(workout, request.Muscles, request.SecondaryMuscles ?? []);
+
         _context.Workouts.Add(workout);
 
         var result = await _context.SaveChangesAsync(cancellationToken);
@@ -82,7 +106,9 @@ public class CreateWorkoutEndpoint : Endpoint<CreateWorkoutRequest, GetWorkoutRe
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
-                        workoutTypeRelation.WorkoutType.Description)).ToList()),
+                        workoutTypeRelation.WorkoutType.Description)).ToList(),
+                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
+                workout.Category, workout.PaceType),
             cancellation: cancellationToken);
     }
 }
@@ -91,6 +117,12 @@ public sealed class CreateWorkoutValidator : Validator<CreateWorkoutRequest>
 {
     public CreateWorkoutValidator()
     {
+        RuleForEach(x => x.Muscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Category).Must(WorkoutCategories.IsValid).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.Category is not null);
+        RuleFor(x => x.PaceType).Must(x => x == "" || WorkoutPaceTypes.All.Contains(x)).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.PaceType is not null);
+        RuleForEach(x => x.SecondaryMuscles).Must(WorkoutMuscles.IsValid).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Name).NotEmpty().WithMessage(ErrorCodes.Required);
         RuleFor(x => x.Name.Get(Language.HR)).NotEmpty().WithMessage(ErrorCodes.Required)
             .When(x => x.Name is not null);

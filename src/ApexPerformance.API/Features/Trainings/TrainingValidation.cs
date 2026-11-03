@@ -13,6 +13,12 @@ public sealed class TrainingExerciseSetRequestValidator : AbstractValidator<Trai
         RuleFor(x => x.Reps).MaximumLength(50).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Weight).InclusiveBetween(0, 9999).WithMessage(ErrorCodes.NotValid)
             .When(x => x.Weight is not null);
+        // Up to 24 hours.
+        RuleFor(x => x.DurationSeconds).InclusiveBetween(1, 86400).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.DurationSeconds is not null);
+        // Up to 500 km, also fits the value of a personal record.
+        RuleFor(x => x.DistanceMeters).InclusiveBetween(1, 500_000).WithMessage(ErrorCodes.NotValid)
+            .When(x => x.DistanceMeters is not null);
     }
 }
 

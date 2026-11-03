@@ -20,3 +20,9 @@ public static class SessionRevokeReasons
     /// <summary>User logged out.</summary>
     public const string Logout = "Logout";
 }
+
+public static class UserSessionChannels
+{
+    /// <summary>Login in the webshop (shop.apex-performance.fit).</summary>
+    public const string Shop = "Shop";
+}

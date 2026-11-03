@@ -46,6 +46,18 @@ public static class WorkoutPlanAccess
     /// Workout types need to be loaded.
     /// </summary>
     public static bool IsMobilityOrStretching(Workout workout)
-        => workout.WorkoutTypes.Any(x => MobilityAndStretchingKeywords.Any(keyword =>
-            x.WorkoutType.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+        => workout.WorkoutTypes.Any(x => IsMobilityOrStretching(x.WorkoutType));
+
+    private static bool IsMobilityOrStretching(Database.Entities.Catalog.WorkoutType workoutType)
+        => MobilityAndStretchingKeywords.Any(keyword =>
+            workoutType.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Category of a workout without one picked: mobility and flexibility
+    /// when one of its types is for mobility or stretching.
+    /// </summary>
+    public static string CategoryOf(IEnumerable<Database.Entities.Catalog.WorkoutType> workoutTypes)
+        => workoutTypes.Any(IsMobilityOrStretching)
+            ? WorkoutCategories.MobilityFlexibility
+            : WorkoutCategories.StrengthConditioning;
 }

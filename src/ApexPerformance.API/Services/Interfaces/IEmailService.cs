@@ -142,6 +142,27 @@ public interface IEmailService
     void SendWorkoutsImportFinishedEmail(User user, WorkoutsImportResult result);
 
     /// <summary>
+    /// Send an alert about errors in the application
+    /// logs, a failed backup or a reported chat to the administrator.
+    /// </summary>
+    /// <param name="to">Email address that gets the alert.</param>
+    /// <param name="subject">Subject of the email.</param>
+    /// <param name="htmlBody">HTML with the list of errors.</param>
+    void SendErrorAlertEmail(string to, string subject, string htmlBody);
+
+    /// <summary>
+    /// Send an email of the webshop: an order confirmation to the customer,
+    /// a new order or a BoxNow label to the shop.
+    /// </summary>
+    /// <param name="to">Email address of the customer or the shop.</param>
+    /// <param name="subject">Subject of the email.</param>
+    /// <param name="htmlBody">HTML of the email.</param>
+    /// <param name="replyTo">Address replies go to, the shop's for customers.</param>
+    /// <param name="attachment">Optional file, e.g. the BoxNow label PDF.</param>
+    void SendShopEmail(string to, string subject, string htmlBody, string? replyTo = null,
+        (string FileName, byte[] Data, string ContentType)? attachment = null);
+
+    /// <summary>
     /// Send alert email when the ReViv Plus
     /// price list was not published on time.
     /// </summary>

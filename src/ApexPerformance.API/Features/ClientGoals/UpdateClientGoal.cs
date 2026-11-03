@@ -15,7 +15,9 @@ public record UpdateClientGoalRequest(
     string? CurrentBlock,
     string? Focus,
     string? NextAssessment,
-    DateTimeOffset? NextAssessmentDate
+    DateTimeOffset? NextAssessmentDate,
+    // Push notification to the client, sent unless false.
+    bool? NotifyClient = null
 );
 
 /// <summary>
@@ -71,7 +73,8 @@ public class UpdateClientGoalEndpoint : Endpoint<UpdateClientGoalRequest, Client
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        BackgroundJob.Enqueue(() => SendClientGoalNotification(client.UserId));
+        if (request.NotifyClient ?? true)
+            BackgroundJob.Enqueue(() => SendClientGoalNotification(client.UserId));
 
         await SendAsync(ClientGoalResponse.From(clientId, goal), cancellation: cancellationToken);
     }
@@ -83,12 +86,10 @@ public class UpdateClientGoalEndpoint : Endpoint<UpdateClientGoalRequest, Client
     {
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "Goal and plan",
-            "Your coach updated your goal and plan.",
+        await _notificationService.SendLocalized(clientDeviceTokens, PushTexts.ClientGoal,
             PushNotificationTypes.Data(PushNotificationTypes.ClientGoal));
     }
 }

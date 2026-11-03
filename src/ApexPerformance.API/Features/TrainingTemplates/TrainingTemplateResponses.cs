@@ -65,9 +65,10 @@ public static class TrainingTemplateMapper
                 .Select(x => new TrainingExerciseResponse(x.Id, x.WorkoutId, x.Workout.Name, x.Order, x.Note,
                     x.Sets
                         .OrderBy(set => set.Order)
-                        .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight))
+                        .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight,
+                            set.IsDropSet, set.DurationSeconds, set.DistanceMeters))
                         .ToList(),
-                    x.IsSupersetWithPrevious))
+                    x.IsSupersetWithPrevious, x.Workout.PaceType))
                 .ToList(),
             authorName,
             canEdit,
@@ -85,7 +86,10 @@ public static class TrainingTemplateMapper
             {
                 Order = set.Order,
                 Reps = set.Reps,
-                Weight = set.Weight
+                Weight = set.Weight,
+                IsDropSet = set.IsDropSet,
+                DurationSeconds = set.DurationSeconds,
+                DistanceMeters = set.DistanceMeters
             }).ToList()
         }).ToList();
 
@@ -103,7 +107,10 @@ public static class TrainingTemplateMapper
             {
                 Order = set.Order,
                 Reps = set.Reps,
-                Weight = set.Weight
+                Weight = set.Weight,
+                IsDropSet = set.IsDropSet,
+                DurationSeconds = set.DurationSeconds,
+                DistanceMeters = set.DistanceMeters
             }).ToList()
         }).ToList();
 

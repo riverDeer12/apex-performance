@@ -1,3 +1,4 @@
+using ApexPerformance.API.Extensions;
 using System.Linq.Expressions;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
@@ -31,7 +32,7 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
     {
         Post("api/authentication/login");
         AllowAnonymous();
-        Options(x => x.WithTags("Authentication"));
+        Options(x => x.WithTags("Authentication").RequireRateLimiting(RateLimiting.Login));
     }
 
     public override async Task HandleAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -66,7 +67,8 @@ public sealed class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         var now = DateTimeOffset.UtcNow;
 
         await _context.UserSessions
-            .Where(x => x.UserId == userId && x.RevokedAt == null && x.ExpiresAt > now)
+            // The webshop has its own sessions, logging in here doesn't end them.
+            .Where(x => x.UserId == userId && x.Channel == null && x.RevokedAt == null && x.ExpiresAt > now)
             .ExecuteUpdateAsync(x => x
                     .SetProperty(session => session.RevokedAt, now)
                     .SetProperty(session => session.RevokeReason, SessionRevokeReasons.NewLogin)

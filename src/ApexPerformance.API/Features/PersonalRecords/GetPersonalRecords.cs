@@ -20,7 +20,9 @@ public record PersonalRecordResponse(
     decimal Value,
     decimal Weight,
     decimal? Reps,
-    DateTimeOffset AchievedAt
+    DateTimeOffset AchievedAt,
+    // WorkoutPaceTypes of the workout, to show the fastest pace record as its pace.
+    string? PaceType = null
 );
 
 /// <summary>
@@ -77,7 +79,7 @@ public class GetPersonalRecordsEndpoint : Endpoint<GetPersonalRecordsRequest, Li
             .Where(x => x.ClientId == clientId)
             .OrderByDescending(x => x.AchievedAt)
             .Select(x => new PersonalRecordResponse(x.Id, x.ClientId, x.WorkoutId, x.Workout.Name, x.TrainingId,
-                x.Type, x.Value, x.Weight, x.Reps, x.AchievedAt))
+                x.Type, x.Value, x.Weight, x.Reps, x.AchievedAt, x.Workout.PaceType))
             .ToListAsync(cancellationToken);
 
         await SendAsync(records, cancellation: cancellationToken);

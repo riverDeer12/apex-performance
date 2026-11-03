@@ -17,6 +17,11 @@ public class UserSession : BaseEntity
     // When login token of this session expires.
     public DateTimeOffset? ExpiresAt { get; set; }
 
+    // Where the user logged in: null for the apps and the web administration,
+    // UserSessionChannels.Shop for the webshop. A login ends only the sessions
+    // of its own channel, so logging in to the shop keeps the app logged in.
+    public string? Channel { get; set; }
+
     public DateTimeOffset? RevokedAt { get; set; }
     public string? RevokeReason { get; set; }
 

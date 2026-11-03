@@ -21,7 +21,9 @@ public record CreateBodyMeasurementRequest(
     decimal Waist,
     decimal Thigh,
     decimal Calves,
-    decimal Glutes
+    decimal Glutes,
+    // Push notification to the client, sent unless false.
+    bool? NotifyClient = null
 );
 
 public record CreateBodyMeasurementResponse(
@@ -93,7 +95,8 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
 
-        BackgroundJob.Enqueue(() => SendBodyMeasurementFcmNotification(client.UserId));
+        if (request.NotifyClient ?? true)
+            BackgroundJob.Enqueue(() => SendBodyMeasurementFcmNotification(client.UserId));
 
         await SendAsync(
             new CreateBodyMeasurementResponse(
@@ -106,12 +109,10 @@ public class CreateBodyMeasurementEndpoint : Endpoint<CreateBodyMeasurementReque
     {
         var clientDeviceTokens = await _context.DeviceTokens
             .Where(x => x.UserId == clientUserId)
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(clientDeviceTokens,
-            "New body measurement",
-            "Your coach added a new body measurement.",
+        await _notificationService.SendLocalized(clientDeviceTokens, PushTexts.BodyMeasurement,
             PushNotificationTypes.Data(PushNotificationTypes.BodyMeasurement));
     }
 }

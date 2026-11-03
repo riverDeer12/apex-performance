@@ -1,7 +1,9 @@
+using ApexPerformance.API.Features.Shop;
 using ApexPerformance.API;
 using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Extensions;
+using ApexPerformance.API.Hubs;
 using ApexPerformance.API.Middlewares;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Implementation;
@@ -15,9 +17,12 @@ using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Events;
 using Stripe;
+using ApexPerformance.API.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +38,17 @@ builder.Services
             s.SigningKey = configuration["JWTSecretKey"],
         o => o.Events = new JwtBearerEvents
         {
+            // Browsers can't send headers on WebSocket connections,
+            // so the chat hub gets the token in the query string.
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query["access_token"];
+
+                if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments(ChatHub.Path))
+                    context.Token = token;
+
+                return Task.CompletedTask;
+            },
             OnTokenValidated = UserSessionTokenValidation.ValidateAsync
         })
     .AddAuthorization()
@@ -41,7 +57,10 @@ builder.Services
 builder.Services.AddDbContext<ApexPerformanceContext>(options =>
     options
         .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
-        .EnableSensitiveDataLogging());
+        .EnableSensitiveDataLogging()
+        // A client leaving while the connection opens is logged by EF as a connection error and
+        // would send an alert email. Real outages still log errors: the request fails with 500.
+        .ConfigureWarnings(warnings => warnings.Log((RelationalEventId.ConnectionError, LogLevel.Warning))));
 
 // Business Services
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
@@ -57,11 +76,23 @@ builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonalRecordService, PersonalRecordService>();
 builder.Services.AddScoped<IPriceListService, PriceListService>();
+builder.Services.AddScoped<ShopSettings>();
+builder.Services.AddScoped<ShopOrderService>();
+builder.Services.AddScoped<ShopPaymentEvents>();
+builder.Services.AddSingleton<IChatEncryptionService, ChatEncryptionService>();
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubClaimUserIdProvider>();
+
+builder.Services.AddApiRateLimiting();
 
 // Background Jobs
 builder.Services.AddScoped<IEmailJob, EmailJob>();
 builder.Services.AddScoped<DeclineExpiredRequestsJob>();
 builder.Services.AddScoped<MonthlyReviewReminderJob>();
+builder.Services.AddScoped<ErrorAlertJob>();
+builder.Services.AddScoped<ShopOrderSyncJob>();
+builder.Services.AddScoped<TrainingNotificationJob>();
 builder.Services.AddScoped<PriceListJob>();
 
 builder.Host.UseSerilog((context, config)
@@ -113,11 +144,18 @@ app.UseCors(corsPolicyBuilder => corsPolicyBuilder
     .AllowAnyMethod()
     .AllowAnyHeader());
 
+app.UseRateLimiter();
+
+// Before the endpoints, so requests the client cancelled are not logged as errors.
+app.UseMiddleware<CancelledRequests>();
+
 app.UseFastEndpoints();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapHub<ChatHub>(ChatHub.Path);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
 {
@@ -149,7 +187,17 @@ app.UseStaticFiles(staticFileOptions);
 
 app.MapFallbackToFile("index.html", staticFileOptions);
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    // A request the client gave up on (left the screen, lost the connection) ends with
+    // a 500 nobody sees; it is a warning, not an error of the application.
+    options.GetLevel = (httpContext, _, exception) =>
+        httpContext.RequestAborted.IsCancellationRequested
+            ? LogEventLevel.Warning
+            : exception is not null || httpContext.Response.StatusCode > 499
+                ? LogEventLevel.Error
+                : LogEventLevel.Information;
+});
 
 app.UseMiddleware<AdditionalRequestLogging>();
 
@@ -162,10 +210,15 @@ app.UseHangfireDashboard("/jobs", new DashboardOptions
 
 DeclineExpiredRequestsJob.Schedule();
 MonthlyReviewReminderJob.ScheduleJob();
+ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
+ShopOrderSyncJob.ScheduleJob();
 PriceListJob.Schedule();
 
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());
+
+// Muscles of workouts added before muscles existed, guessed from their names.
+BackgroundJob.Enqueue<WorkoutMusclesJob>(job => job.FillMissingAsync());
 
 app.Run();
 

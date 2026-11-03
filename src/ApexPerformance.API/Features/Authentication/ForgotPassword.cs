@@ -1,3 +1,4 @@
+using ApexPerformance.API.Extensions;
 ﻿using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services;
@@ -36,7 +37,7 @@ public class ForgotPasswordEndpoint : Endpoint<ForgotPasswordRequest, ForgotPass
     {
         Post("api/authentication/forgot-password");
         AllowAnonymous();
-        Options(x => x.WithTags("Authentication"));
+        Options(x => x.WithTags("Authentication").RequireRateLimiting(RateLimiting.PasswordReset));
     }
 
     public override async Task HandleAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)

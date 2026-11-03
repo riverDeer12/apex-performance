@@ -7,7 +7,13 @@ public record TrainingExerciseSetResponse(
     Guid Id,
     int Order,
     string? Reps,
-    decimal? Weight
+    decimal? Weight,
+    // Done right after the previous set (drop set).
+    bool IsDropSet,
+    // How long the set lasted, in seconds (e.g. plank).
+    int? DurationSeconds,
+    // Distance covered, in metres, for workouts with a pace type.
+    int? DistanceMeters
 );
 
 public record TrainingExerciseResponse(
@@ -18,7 +24,9 @@ public record TrainingExerciseResponse(
     int Order,
     string? Note,
     List<TrainingExerciseSetResponse> Sets,
-    bool IsSupersetWithPrevious
+    bool IsSupersetWithPrevious,
+    // WorkoutPaceTypes of the workout, sets with a distance show this pace.
+    string? PaceType = null
 );
 
 public record TrainingResponse(
@@ -31,12 +39,25 @@ public record TrainingResponse(
     PersonDataDto Client,
     List<TrainingExerciseResponse> Exercises,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt
+    DateTimeOffset UpdatedAt,
+    // When the training really started and ended (null until marked).
+    DateTimeOffset? StartedAt = null,
+    DateTimeOffset? EndedAt = null,
+    // Client's heart rate in between, beats per minute (null until the client's phone sends it).
+    TrainingHeartRateResponse? HeartRate = null
 );
+
+public record TrainingHeartRateResponse(int Min, int Max, int Average);
 
 public record TrainingExerciseSetRequest(
     string? Reps,
-    decimal? Weight
+    decimal? Weight,
+    // Optional, set is done right after the previous one (drop set).
+    bool IsDropSet = false,
+    // Optional, how long the set lasted in seconds (e.g. plank).
+    int? DurationSeconds = null,
+    // Optional, distance covered in metres (e.g. rowing 2000 m).
+    int? DistanceMeters = null
 );
 
 public record TrainingExerciseRequest(
@@ -63,12 +84,21 @@ public static class TrainingMapper
             .Select(x => new TrainingExerciseResponse(x.Id, x.WorkoutId, x.Workout.Name, x.Order, x.Note,
                 x.Sets
                     .OrderBy(set => set.Order)
-                    .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight))
+                    .Select(set => new TrainingExerciseSetResponse(set.Id, set.Order, set.Reps, set.Weight,
+                        set.IsDropSet, set.DurationSeconds, set.DistanceMeters))
                     .ToList(),
-                x.IsSupersetWithPrevious))
+                x.IsSupersetWithPrevious, x.Workout.PaceType))
             .ToList(),
         training.CreatedAt,
-        training.UpdatedAt);
+        training.UpdatedAt,
+        training.StartedAt,
+        training.EndedAt,
+        HeartRateOf(training));
+
+    public static TrainingHeartRateResponse? HeartRateOf(Training training)
+        => training is { HeartRateMin: { } min, HeartRateMax: { } max, HeartRateAverage: { } average }
+            ? new TrainingHeartRateResponse(min, max, average)
+            : null;
 
     /// <summary>
     /// Exercises and their sets in the order they are given.
@@ -85,7 +115,11 @@ public static class TrainingMapper
             {
                 Order = setIndex,
                 Reps = string.IsNullOrWhiteSpace(set.Reps) ? null : set.Reps.Trim(),
-                Weight = set.Weight
+                Weight = set.Weight,
+                // First set has no previous one to drop from.
+                IsDropSet = setIndex > 0 && set.IsDropSet,
+                DurationSeconds = set.DurationSeconds,
+                DistanceMeters = set.DistanceMeters
             }).ToList()
         }).ToList();
 }

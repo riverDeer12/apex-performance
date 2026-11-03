@@ -50,6 +50,19 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
         if (client is null)
             ThrowError("Client is not found.");
 
+        // A client already in the appointment, or already asking to join it,
+        // can't ask again.
+        var isInAppointment = await _context.ClientAppointments
+            .AnyAsync(x => x.AppointmentId == appointmentId && x.ClientId == client.Id, cancellationToken);
+
+        var hasPendingJoinRequest = await _context.AppointmentRequests
+            .AnyAsync(x => x.AppointmentId == appointmentId && x.ClientId == client.Id &&
+                           x.AppointmentRequestType.Name == nameof(BusinessActions.JoinRequest) &&
+                           x.AppointmentRequestStatus.Name == nameof(BusinessStatuses.Pending), cancellationToken);
+
+        if (isInAppointment || hasPendingJoinRequest)
+            ThrowError(ErrorCodes.AlreadyExists);
+
         var appointmentRequestType =
             await _context.AppointmentRequestTypes.FirstOrDefaultAsync(x =>
                 x.Name == nameof(BusinessActions.JoinRequest), cancellationToken: cancellationToken);
@@ -111,11 +124,11 @@ public class SendJoinRequestEndpoint : EndpointWithoutRequest<StatusResponse>
 
         var coachDeviceTokens = await _context.DeviceTokens
             .Where(x => coachUserIds.Contains(x.UserId))
-            .Select(t => t.Token)
+            .Select(t => new PushRecipient(t.Token, t.Language, t.UserId))
             .ToListAsync();
 
-        _ = await _notificationService.SendToMultipleDevices(coachDeviceTokens, "Appointment Request",
-            "You have new join request from " + client.FullName,
+        await _notificationService.SendLocalized(coachDeviceTokens,
+            language => PushTexts.JoinRequest(language, client.FullName),
             PushNotificationTypes.Data(PushNotificationTypes.AppointmentRequest));
     }
 

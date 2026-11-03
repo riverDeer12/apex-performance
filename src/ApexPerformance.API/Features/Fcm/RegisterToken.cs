@@ -1,4 +1,5 @@
-﻿using ApexPerformance.API.Database;
+﻿using ApexPerformance.API.Constants;
+using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
@@ -13,7 +14,12 @@ public record RegisterDeviceTokenRequest(
     string? AppVersion = null,
     string? BuildNumber = null,
     string? OsVersion = null,
-    string? DeviceModel = null);
+    string? DeviceModel = null,
+    // Language of the app, so pushes come in it.
+    string? Language = null,
+    // Token this app had before, when Firebase gave it a new one. Its row is
+    // removed, otherwise the device would get every push twice.
+    string? PreviousToken = null);
 
 public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
 {
@@ -49,6 +55,7 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
                 BuildNumber = request.BuildNumber,
                 OsVersion = request.OsVersion,
                 DeviceModel = request.DeviceModel,
+                Language = PushTexts.Normalize(request.Language),
                 CreatedAt = DateTimeOffset.UtcNow,
                 CreatedBy = userId,
                 UpdatedAt = DateTimeOffset.UtcNow,
@@ -63,12 +70,22 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
             existing.BuildNumber = request.BuildNumber;
             existing.OsVersion = request.OsVersion;
             existing.DeviceModel = request.DeviceModel;
+            existing.Language = PushTexts.Normalize(request.Language);
             existing.UpdatedAt = DateTimeOffset.UtcNow;
             existing.UpdatedBy = userId;
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        
+
+        // Deleted, not soft deleted, like tokens Firebase reports as invalid.
+        if (!string.IsNullOrWhiteSpace(request.PreviousToken) && request.PreviousToken != request.Token)
+        {
+            await _db.DeviceTokens
+                .IgnoreQueryFilters()
+                .Where(t => t.Token == request.PreviousToken)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
         await SendOkAsync(cancellationToken);
     }
 }
