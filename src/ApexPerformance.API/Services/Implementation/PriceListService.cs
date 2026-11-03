@@ -56,7 +56,8 @@ public class PriceListService : IPriceListService
         var now = DateTimeOffset.UtcNow;
         var localNow = TimeZoneInfo.ConvertTime(now, GetCroatianTimeZone());
 
-        var lowestPrices = await GetLowestPricesAsync(now, currentPrices);
+        var lowestPrices = await GetLowestPricesLast30DaysAsync(
+            currentPrices.ToDictionary(x => x.Key, x => x.Value.Price));
 
         var rows = products.Select(product =>
         {
@@ -179,17 +180,17 @@ public class PriceListService : IPriceListService
         return prices;
     }
 
-    private async Task<Dictionary<string, decimal>> GetLowestPricesAsync(DateTimeOffset now,
-        Dictionary<string, (string Name, decimal Price)> currentPrices)
+    public async Task<Dictionary<string, decimal>> GetLowestPricesLast30DaysAsync(
+        IDictionary<string, decimal> currentPrices, CancellationToken cancellationToken = default)
     {
-        var from = now.AddDays(-RetentionDays);
+        var from = DateTimeOffset.UtcNow.AddDays(-RetentionDays);
 
         var recentPrices = await _context.PriceListFiles
             .Where(x => x.PublishedAt >= from)
             .Select(x => x.PricesJson)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-        var lowest = currentPrices.ToDictionary(x => x.Key, x => x.Value.Price);
+        var lowest = new Dictionary<string, decimal>(currentPrices);
 
         foreach (var prices in recentPrices.Select(ReadPrices))
         foreach (var (productId, price) in prices)

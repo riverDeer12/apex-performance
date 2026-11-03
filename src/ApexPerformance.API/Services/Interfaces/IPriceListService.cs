@@ -26,6 +26,14 @@ public interface IPriceListService
     Task AlertIfNotPublishedTodayAsync();
 
     /// <summary>
+    /// Lowest price in the last 30 days by Stripe product id: the lowest of the given current
+    /// prices and the prices in price lists published in the last 30 days. Shown next to the
+    /// price because promo codes are advertised publicly.
+    /// </summary>
+    Task<Dictionary<string, decimal>> GetLowestPricesLast30DaysAsync(IDictionary<string, decimal> currentPrices,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Anchor prices by Stripe product id.
     /// </summary>
     Task<Dictionary<string, decimal>> GetAnchorPricesAsync(CancellationToken cancellationToken = default);
