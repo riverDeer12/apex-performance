@@ -116,10 +116,12 @@ public partial class PersonalRecordService : IPersonalRecordService
                 }
             }
 
-            // Sets done for a time (e.g. plank) count by how long they lasted, with or without weight.
+            // Sets held for a time without repetitions (e.g. plank) count by how long they lasted,
+            // with or without weight. Every set can have a duration, sets with repetitions are lifts.
             var timedSets = training.Exercises
                 .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
-                .Where(x => x.Set.DurationSeconds is > 0 && x.Set.DistanceMeters is null or 0)
+                .Where(x => x.Set.DurationSeconds is > 0 && x.Set.DistanceMeters is null or 0 &&
+                            string.IsNullOrWhiteSpace(x.Set.Reps))
                 .ToList();
 
             foreach (var workoutSets in timedSets.GroupBy(x => x.WorkoutId))
@@ -131,8 +133,10 @@ public partial class PersonalRecordService : IPersonalRecordService
 
             var sets = training.Exercises
                 .SelectMany(exercise => exercise.Sets.Select(set => (exercise.WorkoutId, Set: set)))
-                // Timed sets have their own record, their weight isn't a lifting record.
-                .Where(x => x.Set.Weight is > 0 && x.Set.DurationSeconds is null or 0)
+                // Held sets (a duration without repetitions) have their own record, their weight
+                // isn't a lifting record; a lift with a duration still is one.
+                .Where(x => x.Set.Weight is > 0 &&
+                            (x.Set.DurationSeconds is null or 0 || !string.IsNullOrWhiteSpace(x.Set.Reps)))
                 .Select(x => (x.WorkoutId, Weight: x.Set.Weight!.Value, Reps: ParseReps(x.Set.Reps),
                     HasReps: !string.IsNullOrWhiteSpace(x.Set.Reps)))
                 // Sets with text that is not repetitions (like "30 s") are not counted.
