@@ -40,8 +40,9 @@ public class PriceListService : IPriceListService
     private string FileNamePrefix =>
         _configuration["PriceList:ReVivPlus:FileNamePrefix"] ?? DefaultFileNamePrefix;
 
-    private string? AlertEmail =>
-        _configuration["PriceList:ReVivPlus:AlertEmail"] ?? _configuration["BoxNow:ReVivPlus:ContactEmail"];
+    // Alerts go only to the developer. No fallback to the shop's contact address, so a test
+    // server without this setting never emails the shop owner.
+    private string? AlertEmail => _configuration["PriceList:ReVivPlus:AlertEmail"];
 
     public async Task<PriceListFile> PublishAsync(string reason)
     {
