@@ -139,10 +139,6 @@ builder.Services.AddHangfireServer(options =>
 
 var app = builder.Build();
 
-// Sample products for the test shop (temporary, Test environment only).
-if (app.Environment.IsEnvironment("Test"))
-    _ = Task.Run(() => ApexPerformance.API.Database.Seed.ShopTestProducts.SeedAsync(app.Services));
-
 app.UseCors(corsPolicyBuilder => corsPolicyBuilder
     .AllowAnyOrigin()
     .AllowAnyMethod()
