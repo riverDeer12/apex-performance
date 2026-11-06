@@ -29,7 +29,9 @@ public record ShopProductResponse(
     // Words customers filter by.
     List<string>? Keywords = null,
     // Products picked to go with this one; inactive ones are missing from the catalog.
-    List<Guid>? RelatedProductIds = null);
+    List<Guid>? RelatedProductIds = null,
+    // ShopGenders value, null for products for everyone.
+    string? Gender = null);
 
 public record ShopSettingsResponse(
     decimal ShippingPrice,
@@ -58,7 +60,8 @@ internal static class ShopCatalog
                 .ToList(),
             product.CreatedAt,
             product.Keywords,
-            product.RelatedProductIds);
+            product.RelatedProductIds,
+            product.Gender);
 }
 
 /// <summary>

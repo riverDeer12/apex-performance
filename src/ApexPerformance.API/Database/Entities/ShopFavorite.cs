@@ -20,5 +20,9 @@ public class ShopFavorite
     public Guid ProductId { get; set; }
     public ShopProduct Product { get; set; } = null!;
 
+    // Size and color chosen when it was marked, if any.
+    public string? Size { get; set; }
+    public string? Color { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

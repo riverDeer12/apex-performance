@@ -14,6 +14,7 @@ public class ShopProductConfiguration : IEntityTypeConfiguration<ShopProduct>
         builder.Property(e => e.Slug).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(4000);
         builder.Property(e => e.Category).HasMaxLength(100);
+        builder.Property(e => e.Gender).HasMaxLength(20);
         builder.Property(e => e.Price).HasPrecision(10, 2);
 
         builder.HasMany(e => e.Variants)
@@ -250,6 +251,9 @@ public class ShopFavoriteConfiguration : IEntityTypeConfiguration<ShopFavorite>
             .WithMany()
             .HasForeignKey(e => e.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(e => e.Size).HasMaxLength(50);
+        builder.Property(e => e.Color).HasMaxLength(50);
 
         builder.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
 
