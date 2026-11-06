@@ -49,6 +49,10 @@
     <Content Update="wwwroot\**" CopyToPublishDirectory="Never" />
     <Content Update="web.config" CopyToPublishDirectory="Never" />
     <Content Update="ApexPerformanceCollection" CopyToPublishDirectory="Never" />
+    <!-- Sample products of the test shop (temporary). -->
+    <EmbeddedResource Include="Database\Seed\ShopTestProducts\*" LogicalName="ShopTestProducts/%(Filename)%(Extension)" />
+    <None Remove="Database\Seed\ShopTestProducts\*" />
+    <Content Remove="Database\Seed\ShopTestProducts\*" />
   </ItemGroup>
 
   <ItemGroup>
