@@ -2118,6 +2118,31 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("ShopConfigs", (string)null);
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopFavorite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("ShopFavorites", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3643,6 +3668,25 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopFavorite", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.ShopProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.ShopOrderItem", b =>

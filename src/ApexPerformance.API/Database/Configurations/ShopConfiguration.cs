@@ -234,3 +234,25 @@ public class ShopVisitDayConfiguration : IEntityTypeConfiguration<ShopVisitDay>
         builder.ToTable("ShopVisitDays");
     }
 }
+
+public class ShopFavoriteConfiguration : IEntityTypeConfiguration<ShopFavorite>
+{
+    public void Configure(EntityTypeBuilder<ShopFavorite> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Product)
+            .WithMany()
+            .HasForeignKey(e => e.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
+
+        builder.ToTable("ShopFavorites");
+    }
+}
