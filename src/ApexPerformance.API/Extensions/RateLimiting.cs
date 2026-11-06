@@ -20,6 +20,7 @@ public static class RateLimiting
     public const string ShopCheckout = "shop-checkout";
     public const string ShopPromoCheck = "shop-promo-check";
     public const string ShopVisits = "shop-visits";
+    public const string ShopContact = "shop-contact";
 
     private const string RegistrationPath = "/api/users/register";
 
@@ -56,6 +57,10 @@ public static class RateLimiting
             // One per page the shop opens, a script can't inflate the counts much.
             options.AddPolicy(ShopVisits, context =>
                 FixedWindowPerIp(context, permits: 60, window: TimeSpan.FromMinutes(1)));
+
+            // Every message of the contact form sends an email to the shop.
+            options.AddPolicy(ShopContact, context =>
+                FixedWindowPerIp(context, permits: 5, window: TimeSpan.FromHours(1)));
 
             // Many addresses (a botnet) can't flood registration either.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
