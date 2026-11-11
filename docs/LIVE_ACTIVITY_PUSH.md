@@ -22,7 +22,8 @@ token, which it registered before with `POST /fcm-tokens`; Firebase needs both t
 Table `LiveActivityTokens`: `Id`, `DeviceTokenId` (FK to `DeviceTokens`, cascade delete), `Kind`
 (`PushToStart` / `Update`), `TrainingId` (only for `Update`, no FK: trainings are soft deleted), `Token`,
 `UpdatedAt`. One push-to-start token per device and one update token per device and training: a new token
-replaces the previous one. Tokens go away with the device token (invalid FCM token, new FCM token, logout),
+replaces the previous one. Tokens go away with the device token (invalid FCM token, new FCM token), on logout,
+when another user logs in on the device (`POST /fcm-tokens` of the same FCM token),
 when Firebase reports them invalid, and the update tokens of a training once its activities were ended.
 
 | Method | Path | Body | Notes |
