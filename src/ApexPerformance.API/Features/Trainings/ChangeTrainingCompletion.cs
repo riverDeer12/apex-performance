@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -50,6 +51,7 @@ public class ChangeTrainingCompletionEndpoint
 
         if (training.IsCompleted != request.IsCompleted)
         {
+            var wasRunning = LiveActivityPushJob.IsRunning(training);
             training.IsCompleted = request.IsCompleted;
             training.CompletedAt = request.IsCompleted ? DateTimeOffset.UtcNow : null;
 
@@ -59,6 +61,10 @@ public class ChangeTrainingCompletionEndpoint
                 ThrowError(ErrorCodes.SavingError);
 
             await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
+
+            // A completed training leaves the lock screens.
+            if (training.StartedAt is not null)
+                LiveActivityPushJob.Enqueue(training.Id, wasRunning, training.StartedAt, _currentUserService.UserId);
         }
 
         await SendAsync(new ChangeTrainingCompletionResponse(training.Id, training.IsCompleted,

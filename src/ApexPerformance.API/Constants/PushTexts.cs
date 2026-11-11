@@ -15,6 +15,11 @@ public record PushRecipient(string Token, string? Language, Guid? UserId = null)
 public record PushText(string Title, string Body);
 
 /// <summary>
+/// "Training in progress", "Training ended" and "End training" of a Live Activity.
+/// </summary>
+public record LiveActivityText(string InProgress, string Ended, string End);
+
+/// <summary>
 /// Push notification texts in the languages of the mobile app. Each device
 /// gets them in the language its app runs in; tokens registered before the
 /// app sent its language get Croatian, the app's main language.
@@ -66,6 +71,18 @@ public static class PushTexts
         new("Training updated", $"Your coach updated your training: {name}"),
         new("Allenamento aggiornato", $"Il tuo coach ha aggiornato il tuo allenamento: {name}"),
         new("Training aktualisiert", $"Dein Coach hat dein Training aktualisiert: {name}"));
+
+    /// <summary>
+    /// Texts of a training's Live Activity, the same as the iOS app's
+    /// ("training_in_progress", "training_ended", "end_training").
+    /// </summary>
+    public static LiveActivityText LiveActivity(string language) => Normalize(language) switch
+    {
+        English => new("Training in progress", "End", "End training"),
+        Italian => new("Allenamento in corso", "Fine", "Termina allenamento"),
+        German => new("Training läuft", "Ende", "Training beenden"),
+        _ => new("Trening je u tijeku", "Kraj", "Završi trening")
+    };
 
     public static PushText MonthlyReview(string language) => Pick(language,
         new("Mjesečni review", "Trener je napisao review tvog mjeseca."),

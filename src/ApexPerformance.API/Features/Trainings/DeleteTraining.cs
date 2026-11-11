@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -48,6 +49,10 @@ public class DeleteTrainingEndpoint : EndpointWithoutRequest<DeleteTrainingRespo
             ThrowError(ErrorCodes.SavingError);
 
         await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
+
+        // A deleted training leaves the lock screens.
+        if (training.StartedAt is not null)
+            LiveActivityPushJob.Enqueue(training.Id, wasRunning: true, training.StartedAt);
 
         await SendAsync(new DeleteTrainingResponse(training.Id), cancellation: cancellationToken);
     }

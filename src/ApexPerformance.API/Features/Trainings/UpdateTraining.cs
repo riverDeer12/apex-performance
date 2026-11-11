@@ -65,6 +65,8 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
 
         // Records of both clients change when training is moved to another client.
         var previousClientId = training.ClientId;
+        var wasRunning = LiveActivityPushJob.IsRunning(training);
+        var previousName = training.Name;
 
         training.Name = request.Name.Trim();
         training.Date = request.Date;
@@ -90,6 +92,12 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
 
         if (request.NotifyClient == true)
             TrainingNotificationJob.Enqueue(client.UserId, training.Id, training.Name, isNew: false);
+
+        // Live Activities show the name and end once the training is completed.
+        // Not on every autosave of the form.
+        if (training.StartedAt is not null &&
+            (previousName != training.Name || wasRunning != LiveActivityPushJob.IsRunning(training)))
+            LiveActivityPushJob.Enqueue(training.Id, wasRunning, training.StartedAt, _currentUserService.UserId);
 
         await _context.Entry(training).Collection(x => x.Exercises).Query()
             .Include(x => x.Workout)

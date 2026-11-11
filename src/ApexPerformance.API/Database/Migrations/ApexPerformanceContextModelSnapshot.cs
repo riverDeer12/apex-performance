@@ -1270,6 +1270,40 @@ namespace ApexPerformance.API.Database.Migrations
                             }));
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.LiveActivityToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<Guid?>("TrainingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingId");
+
+                    b.HasIndex("DeviceTokenId", "Kind", "TrainingId");
+
+                    b.ToTable("LiveActivityTokens", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.MeasurementUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3473,6 +3507,17 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.LiveActivityToken", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.DeviceToken", "DeviceToken")
+                        .WithMany()
+                        .HasForeignKey("DeviceTokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DeviceToken");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.MonthlyReview", b =>

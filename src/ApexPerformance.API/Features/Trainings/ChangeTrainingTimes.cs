@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -8,7 +9,10 @@ using Microsoft.EntityFrameworkCore;
 namespace ApexPerformance.API.Features.Trainings;
 
 // Null clears the time, e.g. both null when the training was started by mistake.
-public record ChangeTrainingTimesRequest(DateTimeOffset? StartedAt, DateTimeOffset? EndedAt);
+// DeviceToken: FCM token of the iPhone that changes the times. It shows the
+// Live Activity itself, so it gets no push to start it.
+public record ChangeTrainingTimesRequest(DateTimeOffset? StartedAt, DateTimeOffset? EndedAt,
+    string? DeviceToken = null);
 
 public record ChangeTrainingTimesResponse(Guid Id, DateTimeOffset? StartedAt, DateTimeOffset? EndedAt,
     TrainingHeartRateResponse? HeartRate, bool IsCompleted, DateTimeOffset? CompletedAt);
@@ -54,6 +58,9 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
 
         if (training.StartedAt != request.StartedAt || training.EndedAt != request.EndedAt)
         {
+            var wasRunning = LiveActivityPushJob.IsRunning(training);
+            var previousStartedAt = training.StartedAt;
+
             training.StartedAt = request.StartedAt;
             training.EndedAt = request.EndedAt;
             training.HeartRateMin = null;
@@ -74,6 +81,10 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
 
             if (completes)
                 await _personalRecordService.RecalculateForClientsAsync([training.ClientId], cancellationToken);
+
+            // The training's Live Activity on the client's and the coach's iPhones.
+            LiveActivityPushJob.Enqueue(training.Id, wasRunning, previousStartedAt, _currentUserService.UserId,
+                string.IsNullOrWhiteSpace(request.DeviceToken) ? null : request.DeviceToken);
         }
 
         await SendAsync(new ChangeTrainingTimesResponse(training.Id, training.StartedAt, training.EndedAt,
