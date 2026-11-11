@@ -64,6 +64,15 @@ public class RegisterTokenEndpoint : Endpoint<RegisterDeviceTokenRequest>
         }
         else
         {
+            // Another user logged in on the device: Live Activities of the
+            // previous user's trainings don't come here any more.
+            if (existing.UserId != userId)
+            {
+                await _db.LiveActivityTokens
+                    .Where(x => x.DeviceTokenId == existing.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
             existing.UserId = userId;
             existing.Platform = request.Platform;
             existing.AppVersion = request.AppVersion;
