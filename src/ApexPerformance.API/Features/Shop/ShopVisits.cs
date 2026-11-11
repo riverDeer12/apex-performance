@@ -14,7 +14,30 @@ public record ShopVisitRequest(string Path);
 
 public record ShopStatsDayResponse(DateOnly Date, int Visits, int ProductViews, int Orders, decimal Revenue);
 
-public record ShopStatsProductResponse(string Slug, string Name, int Views, int SoldPieces);
+public record ShopStatsProductResponse(
+    string Slug,
+    string Name,
+    int Views,
+    int SoldPieces,
+    // Times it was put in the cart and marked with the heart in the period, by anyone.
+    int AddedToCart = 0,
+    int FavoriteAdds = 0,
+    // Members who have it in their saved favorites now.
+    int SavedFavorites = 0,
+    // People waiting for a sold out size or color of it now.
+    int Waiting = 0);
+
+// Sold out size or color people are waiting for, with the email they left.
+public record ShopStatsWaitingResponse(
+    string ProductName,
+    string Slug,
+    string? Size,
+    string? Color,
+    int Waiting,
+    DateTimeOffset Since,
+    // Above 0 while people still wait means their email was not sent:
+    // it goes out when the stock goes from 0 up.
+    int Stock);
 
 public record ShopStatsResponse(
     int Days,
@@ -24,7 +47,8 @@ public record ShopStatsResponse(
     int Orders,
     decimal Revenue,
     List<ShopStatsDayResponse> PerDay,
-    List<ShopStatsProductResponse> Products);
+    List<ShopStatsProductResponse> Products,
+    List<ShopStatsWaitingResponse>? WaitingList = null);
 
 internal static partial class ShopVisitPaths
 {
@@ -47,7 +71,14 @@ internal static partial class ShopVisitPaths
         return product.Success ? path : null;
     }
 
-    [GeneratedRegex("^/proizvod/[a-z0-9-]{1,200}$")]
+    // Not pages: a product put in the cart, or marked with the heart.
+    public const string AddedToCart = "/u-kosaricu/";
+    public const string Favorite = "/favorit/";
+
+    public static bool IsEvent(string path)
+        => path.StartsWith(AddedToCart, StringComparison.Ordinal) || path.StartsWith(Favorite, StringComparison.Ordinal);
+
+    [GeneratedRegex("^/(proizvod|u-kosaricu|favorit)/[a-z0-9-]{1,180}$")]
     private static partial Regex ProductPath();
 }
 
@@ -131,10 +162,13 @@ public class GetShopStatsEndpoint : EndpointWithoutRequest<ShopStatsResponse>
         var from = today.AddDays(1 - days);
         var fromUtc = new DateTimeOffset(from.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddDays(-1);
 
-        var visits = await _context.ShopVisitDays
+        var all = await _context.ShopVisitDays
             .AsNoTracking()
             .Where(x => x.Date >= from)
             .ToListAsync(cancellationToken);
+        // Page views; adding to the cart or favorites is counted apart.
+        var visits = all.Where(x => !ShopVisitPaths.IsEvent(x.Path)).ToList();
+        int Count(string prefix, string slug) => all.Where(x => x.Path == prefix + slug).Sum(x => x.Count);
 
         // Orders that were paid (refunded and cancelled ones don't count as sales).
         var orders = await _context.ShopOrders
@@ -166,11 +200,37 @@ public class GetShopStatsEndpoint : EndpointWithoutRequest<ShopStatsResponse>
             .Select(x => new { x.Id, x.Slug, x.Name })
             .ToListAsync(cancellationToken);
 
+        var savedFavorites = await _context.ShopFavorites
+            .AsNoTracking()
+            .GroupBy(x => x.ProductId)
+            .Select(x => new { ProductId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.ProductId, x => x.Count, cancellationToken);
+
+        // Open alerts are few (they are deleted after half a year), grouped here.
+        var waitingList = (await _context.ShopStockAlerts
+                .AsNoTracking()
+                .Where(x => x.NotifiedAt == null && !x.Variant.IsDeleted && !x.Variant.Product.IsDeleted)
+                .Select(x => new
+                {
+                    x.CreatedAt, ProductName = x.Variant.Product.Name, x.Variant.Product.Slug,
+                    x.Variant.Size, x.Variant.Color, x.Variant.Stock, x.VariantId
+                })
+                .ToListAsync(cancellationToken))
+            .GroupBy(x => x.VariantId)
+            .Select(x => new ShopStatsWaitingResponse(x.First().ProductName, x.First().Slug, x.First().Size,
+                x.First().Color, x.Count(), x.Min(y => y.CreatedAt), x.First().Stock))
+            .ToList();
+
         var productStats = products
             .Select(product => new ShopStatsProductResponse(product.Slug, product.Name,
-                visits.Where(x => x.Path == "/proizvod/" + product.Slug).Sum(x => x.Count),
-                paid.SelectMany(x => x.Order.Items).Where(x => x.Variant.ProductId == product.Id).Sum(x => x.Quantity)))
-            .Where(x => x.Views > 0 || x.SoldPieces > 0)
+                Count("/proizvod/", product.Slug),
+                paid.SelectMany(x => x.Order.Items).Where(x => x.Variant.ProductId == product.Id).Sum(x => x.Quantity),
+                Count(ShopVisitPaths.AddedToCart, product.Slug),
+                Count(ShopVisitPaths.Favorite, product.Slug),
+                savedFavorites.GetValueOrDefault(product.Id),
+                waitingList.Where(x => x.Slug == product.Slug).Sum(x => x.Waiting)))
+            .Where(x => x.Views > 0 || x.SoldPieces > 0 || x.AddedToCart > 0 || x.FavoriteAdds > 0 ||
+                        x.SavedFavorites > 0 || x.Waiting > 0)
             .OrderByDescending(x => x.Views)
             .ThenByDescending(x => x.SoldPieces)
             .ToList();
@@ -182,7 +242,8 @@ public class GetShopStatsEndpoint : EndpointWithoutRequest<ShopStatsResponse>
                 paid.Count,
                 paid.Sum(x => x.Order.Total),
                 perDay,
-                productStats),
+                productStats,
+                waitingList.OrderByDescending(x => x.Waiting).ThenBy(x => x.Since).ToList()),
             cancellation: cancellationToken);
     }
 }

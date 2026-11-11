@@ -18,6 +18,9 @@ public class ShopProduct : BaseEntity
     // Free text the shop groups products by, e.g. "Majice".
     public required string Category { get; set; }
 
+    // ShopGenders value; null for products that are for everyone (accessories).
+    public string? Gender { get; set; }
+
     public decimal Price { get; set; }
 
     // Only active products are shown in the shop.

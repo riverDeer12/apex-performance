@@ -14,6 +14,7 @@ public class ShopProductConfiguration : IEntityTypeConfiguration<ShopProduct>
         builder.Property(e => e.Slug).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(4000);
         builder.Property(e => e.Category).HasMaxLength(100);
+        builder.Property(e => e.Gender).HasMaxLength(20);
         builder.Property(e => e.Price).HasPrecision(10, 2);
 
         builder.HasMany(e => e.Variants)
@@ -232,5 +233,30 @@ public class ShopVisitDayConfiguration : IEntityTypeConfiguration<ShopVisitDay>
         builder.Property(e => e.Path).HasMaxLength(200);
 
         builder.ToTable("ShopVisitDays");
+    }
+}
+
+public class ShopFavoriteConfiguration : IEntityTypeConfiguration<ShopFavorite>
+{
+    public void Configure(EntityTypeBuilder<ShopFavorite> builder)
+    {
+        builder.HasKey(e => e.Id);
+
+        builder.HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Product)
+            .WithMany()
+            .HasForeignKey(e => e.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(e => e.Size).HasMaxLength(50);
+        builder.Property(e => e.Color).HasMaxLength(50);
+
+        builder.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
+
+        builder.ToTable("ShopFavorites");
     }
 }

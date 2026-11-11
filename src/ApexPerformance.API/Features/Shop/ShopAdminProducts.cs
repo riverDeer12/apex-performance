@@ -28,7 +28,8 @@ public record ShopAdminProductResponse(
     List<Guid> ImageIds,
     List<ShopAdminVariantDto> Variants,
     List<string> Keywords,
-    List<Guid> RelatedProductIds);
+    List<Guid> RelatedProductIds,
+    string? Gender);
 
 public record SaveShopProductRequest(
     string Name,
@@ -44,7 +45,9 @@ public record SaveShopProductRequest(
     // Left as they are when missing.
     List<string>? Keywords = null,
     // Products that go with this one, in the shown order; left as they are when missing.
-    List<Guid>? RelatedProductIds = null);
+    List<Guid>? RelatedProductIds = null,
+    // ShopGenders value, null for products for everyone.
+    string? Gender = null);
 
 public record ReorderShopImagesRequest(List<Guid> ImageIds);
 
@@ -62,7 +65,8 @@ internal static class ShopAdmin
                 .Select(x => new ShopAdminVariantDto(x.Id, x.Size, x.Color, x.Stock))
                 .ToList(),
             product.Keywords,
-            product.RelatedProductIds);
+            product.RelatedProductIds,
+            product.Gender);
 
     public static async Task<ShopAdminProductResponse> Load(ApexPerformanceContext context, Guid id,
         CancellationToken cancellationToken)
@@ -102,6 +106,7 @@ internal static class ShopAdmin
         product.Price = request.Price;
         product.IsActive = request.IsActive;
         product.SortOrder = request.SortOrder;
+        product.Gender = string.IsNullOrWhiteSpace(request.Gender) ? null : request.Gender;
 
         if (request.Keywords is not null)
             product.Keywords = request.Keywords
@@ -168,9 +173,12 @@ public sealed class SaveShopProductValidator : Validator<SaveShopProductRequest>
         RuleFor(x => x.Category).NotEmpty().WithMessage(ErrorCodes.Required).MaximumLength(100).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Price).GreaterThan(0).WithMessage(ErrorCodes.NotValid).LessThan(100000).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Variants).NotEmpty().WithMessage(ErrorCodes.Required);
-        RuleFor(x => x.Keywords).Must(x => x is null || x.Count <= 20).WithMessage(ErrorCodes.NotValid);
-        RuleForEach(x => x.Keywords).MaximumLength(40).WithMessage(ErrorCodes.NotValid);
+        // Grouped ones are "group: value", e.g. "materijal: pamuk".
+        RuleFor(x => x.Keywords).Must(x => x is null || x.Count <= 30).WithMessage(ErrorCodes.NotValid);
+        RuleForEach(x => x.Keywords).MaximumLength(60).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.RelatedProductIds).Must(x => x is null || x.Count <= 12).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Gender).Must(x => string.IsNullOrWhiteSpace(x) || ShopGenders.All.Contains(x))
+            .WithMessage(ErrorCodes.NotValid);
         RuleForEach(x => x.Variants).ChildRules(variant =>
         {
             variant.RuleFor(x => x.Size).MaximumLength(50).WithMessage(ErrorCodes.NotValid);
