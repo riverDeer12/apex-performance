@@ -12,8 +12,12 @@ namespace ApexPerformance.API.Features.Trainings;
 // Null clears the time, e.g. both null when the training was started by mistake.
 // DeviceToken: FCM token of the iPhone that changes the times. It shows the
 // Live Activity itself, so it gets no push to start it.
+// OnlyIfRunning: the times change only if the training still runs with this
+// start (to the second), otherwise nothing changes and the current times are
+// returned: "End training" of a reminder tapped after the training was ended
+// or restarted elsewhere doesn't move its times.
 public record ChangeTrainingTimesRequest(DateTimeOffset? StartedAt, DateTimeOffset? EndedAt,
-    string? DeviceToken = null);
+    string? DeviceToken = null, bool OnlyIfRunning = false);
 
 public record ChangeTrainingTimesResponse(Guid Id, DateTimeOffset? StartedAt, DateTimeOffset? EndedAt,
     TrainingHeartRateResponse? HeartRate, bool IsCompleted, DateTimeOffset? CompletedAt);
@@ -57,7 +61,11 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
         if (training is null)
             ThrowError(ErrorCodes.NotFound);
 
-        if (training.StartedAt != request.StartedAt || training.EndedAt != request.EndedAt)
+        var applies = !request.OnlyIfRunning ||
+                      LiveActivityPushJob.IsRunning(training) && request.StartedAt is not null &&
+                      Math.Abs((training.StartedAt!.Value - request.StartedAt.Value).TotalSeconds) < 1;
+
+        if (applies && (training.StartedAt != request.StartedAt || training.EndedAt != request.EndedAt))
         {
             var wasRunning = LiveActivityPushJob.IsRunning(training);
             var previousStartedAt = training.StartedAt;

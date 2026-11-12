@@ -162,7 +162,9 @@ vremena. Želiš li ga završiti?". The training is never ended by the backend: 
 - Not kept in the app's notification list.
 - Data: `type` = `training_end_reminder`, `trainingId`, `startedAt` (ISO 8601 UTC, e.g.
   `2026-11-11T10:00:00.250Z`). "Završi trening" sends `PUT /trainings/{id}/times` with that `startedAt` and
-  `endedAt` = now.
+  `endedAt` = now and `"onlyIfRunning": true`: the times change only if the training still runs with that start
+  (to the second), otherwise nothing changes and the current times are returned (a reminder tapped after the
+  training was ended or restarted elsewhere).
 - iOS: a notification with `aps.category` = `TRAINING_END_REMINDER` (the app's action `END_TRAINING`),
   `apns-collapse-id` = training id. A tap opens the training.
 - Android: data only, with `title` and `body` in the data, so the app shows it with the action (a notification
