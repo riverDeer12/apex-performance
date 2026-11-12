@@ -11,6 +11,9 @@ public static class PushNotificationTypes
     public const string MonthlyReviewReminder = "monthly_review_reminder";
     // Data also has "trainingId" of the training to open.
     public const string Training = "training";
+    // To the coach who started a training still running after an hour, with
+    // "End training". Data also has "trainingId" and "startedAt" (ISO 8601).
+    public const string TrainingEndReminder = "training_end_reminder";
     // Data also has "conversationId" of the conversation to open.
     public const string ChatMessage = "chat_message";
 

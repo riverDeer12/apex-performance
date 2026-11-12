@@ -73,6 +73,16 @@ public static class PushTexts
         new("Training aktualisiert", $"Dein Coach hat dein Training aktualisiert: {name}"));
 
     /// <summary>
+    /// To the coach: the training they started is still running an hour later.
+    /// <paramref name="training"/> is "name · client".
+    /// </summary>
+    public static PushText TrainingEndReminder(string language, string training) => Pick(language,
+        new("Trening još traje", $"{training} traje već sat vremena. Želiš li ga završiti?"),
+        new("Training still running", $"{training} has been running for an hour. Do you want to end this training?"),
+        new("Allenamento ancora in corso", $"{training} è in corso da un'ora. Vuoi terminare l'allenamento?"),
+        new("Training läuft noch", $"{training} läuft schon seit einer Stunde. Möchtest du das Training beenden?"));
+
+    /// <summary>
     /// Texts of a training's Live Activity, the same as the iOS app's
     /// ("training_in_progress", "training_ended", "end_training").
     /// </summary>

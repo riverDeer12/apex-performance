@@ -146,6 +146,40 @@ End of an ended training (visible 15 more minutes with its duration):
 4. Hangfire dashboard (`/jobs`) and the logs (`Live Activity start of training … sent to device …`) show what was
    sent.
 
+## Training end reminder
+
+An hour after a training was started, if it still runs with that start (not ended, completed or deleted), the
+staff user who started it (`PUT /trainings/{id}/times`) gets a push on all their devices (iOS and Android), in
+each device's language (`PushTexts.TrainingEndReminder`): "Trening još traje" / "Legs · Ana Anić traje već sat
+vremena. Želiš li ga završiti?". The training is never ended by the backend: only the coach's tap on
+"Završi trening" ends it.
+
+- `TrainingEndReminderJob` (Hangfire, scheduled for start + 1 hour) by `PUT /trainings/{id}/times` when the
+  training runs after the change with a different start. It reads the training then and sends only if it still
+  runs with the same start (`TrainingEndReminder.ShouldSend`, unit tested): a changed start or a restart has its
+  own reminder, so there is one reminder per start. A start set more than an hour back schedules none (the coach is
+  editing the times), and a job that runs more than 6 hours after the start (the longest training) sends none.
+- Not kept in the app's notification list.
+- Data: `type` = `training_end_reminder`, `trainingId`, `startedAt` (ISO 8601 UTC, e.g.
+  `2026-11-11T10:00:00.250Z`). "Završi trening" sends `PUT /trainings/{id}/times` with that `startedAt` and
+  `endedAt` = now.
+- iOS: a notification with `aps.category` = `TRAINING_END_REMINDER` (the app's action `END_TRAINING`),
+  `apns-collapse-id` = training id. A tap opens the training.
+- Android: data only, with `title` and `body` in the data, so the app shows it with the action (a notification
+  payload would be shown by the system without it).
+
+```json
+{
+  "token": "<FCM token of an iPhone>",
+  "notification": { "title": "Trening još traje", "body": "Legs · Ana Anić traje već sat vremena. Želiš li ga završiti?" },
+  "data": { "type": "training_end_reminder", "trainingId": "5b0c3f0e-8a7d-4c1b-9e2f-1a2b3c4d5e6f", "startedAt": "2026-11-11T10:00:00.250Z" },
+  "apns": {
+    "headers": { "apns-collapse-id": "5b0c3f0e-8a7d-4c1b-9e2f-1a2b3c4d5e6f" },
+    "payload": { "aps": { "sound": "default", "category": "TRAINING_END_REMINDER", "thread-id": "5b0c3f0e-8a7d-4c1b-9e2f-1a2b3c4d5e6f" } }
+  }
+}
+```
+
 ## Limitations
 
 - iOS decides: Live Activities turned off for the app, Low Power Mode or the budget of push updates can drop a
