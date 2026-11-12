@@ -2,6 +2,7 @@ using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
+using ApexPerformance.API.Utilities;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +86,11 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
             // The training's Live Activity on the client's and the coach's iPhones.
             LiveActivityPushJob.Enqueue(training.Id, wasRunning, previousStartedAt, _currentUserService.UserId,
                 string.IsNullOrWhiteSpace(request.DeviceToken) ? null : request.DeviceToken);
+
+            // An hour after a start the coach is asked whether to end it (once per start).
+            if (TrainingEndReminder.ShouldSchedule(previousStartedAt, training.StartedAt, training.EndedAt,
+                    training.IsCompleted, DateTimeOffset.UtcNow))
+                TrainingEndReminderJob.Schedule(training.Id, training.StartedAt!.Value, _currentUserService.UserId);
         }
 
         await SendAsync(new ChangeTrainingTimesResponse(training.Id, training.StartedAt, training.EndedAt,
