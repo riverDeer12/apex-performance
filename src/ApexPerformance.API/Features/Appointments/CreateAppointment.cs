@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -126,6 +127,10 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
 
         if (appointment.AppointmentStatus.Name == BusinessStatuses.Approved)
             await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+
+        AppointmentReminderJob.Schedule(appointment.Id, appointment.AppointmentStatus.Name, appointment.StartTime,
+            Logger);
+
         return appointment;
     }
 
@@ -135,6 +140,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
     {
         var existingAppointment = await _context.Appointments
             .Include(x => x.Clients)
+            .Include(x => x.AppointmentStatus)
             .FirstOrDefaultAsync(x =>
                     x.TimeSlotId == timeSlot.Id &&
                     x.StartTime.Date == request.StartTime.Date,
@@ -177,6 +183,10 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequest, Stat
             ThrowError(ErrorCodes.SavingError);
 
         await _clientService.RemoveClientsCredits(newClients, 1, cancellationToken);
+
+        // Usually already scheduled; the reminder goes to all clients the appointment has then.
+        AppointmentReminderJob.Schedule(existingAppointment.Id, existingAppointment.AppointmentStatus.Name,
+            existingAppointment.StartTime, Logger);
 
         var newClientIds = newClients.Select(x => x.Id).ToList();
 

@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -64,6 +65,7 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         var appointment = await _context.Appointments
             .Include(appointment => appointment.Clients)
             .ThenInclude(clientAppointment => clientAppointment.Client)
+            .Include(appointment => appointment.AppointmentStatus)
             .FirstOrDefaultAsync(x => x.Id == appointmentRequest.AppointmentId,
                 cancellationToken: cancellationToken);
 
@@ -109,6 +111,10 @@ public class ApproveAppointmentRequestEndpoint : EndpointWithoutRequest<ApproveA
         var clients = new List<Client>{client};
 
         await _clientService.RemoveClientsCredits(clients, 1, cancellationToken);
+
+        // Usually already scheduled; the reminder goes to all clients the appointment has then.
+        AppointmentReminderJob.Schedule(appointment.Id, appointment.AppointmentStatus.Name, appointment.StartTime,
+            Logger);
     }
 
     private async Task ChangeAppointmentStatusToCanceled(Appointment appointment, List<Client> clients,

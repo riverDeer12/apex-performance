@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -107,6 +108,9 @@ public class GenerateNextWeekAppointmentsEndpoint : EndpointWithoutRequest<int>
             ThrowError(ErrorCodes.SavingError);
 
         await _clientService.RemoveClientsCredits(removeCreditClients, 1, cancellationToken);
+
+        foreach (var appointment in nextWeekAppointments)
+            AppointmentReminderJob.Schedule(appointment.Id, BusinessStatuses.Approved, appointment.StartTime, Logger);
 
         var emailClients = recurringClients.DistinctBy(x => x.Id).ToList();
 

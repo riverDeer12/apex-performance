@@ -214,6 +214,9 @@ ErrorAlertJob.ScheduleJob(app.Environment, app.Configuration);
 ShopOrderSyncJob.ScheduleJob();
 PriceListJob.Schedule();
 
+// Reminders of approved appointments ahead that have none (approved before reminders existed).
+BackgroundJob.Enqueue<AppointmentReminderJob>(job => job.ScheduleUpcoming());
+
 // Records of trainings completed before personal records existed.
 BackgroundJob.Enqueue<IPersonalRecordService>(service => service.CalculateMissingRecordsAsync());
 

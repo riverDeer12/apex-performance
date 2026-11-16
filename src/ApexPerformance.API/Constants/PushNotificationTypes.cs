@@ -5,6 +5,9 @@ public static class PushNotificationTypes
 {
     public const string AppointmentRequest = "appointment_request";
     public const string AppointmentUpdated = "appointment_updated";
+    // To the clients of an approved appointment 2 hours before it starts.
+    // Data also has "appointmentId". Not kept in the notifications list.
+    public const string AppointmentReminder = "appointment_reminder";
     public const string BodyMeasurement = "body_measurement";
     public const string ClientGoal = "client_goal";
     public const string MonthlyReview = "monthly_review";

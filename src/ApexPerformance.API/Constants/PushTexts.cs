@@ -136,6 +136,45 @@ public static class PushTexts
         new("Aggiornamento appuntamento", $"Il tuo appuntamento è stato {Status(Italian, status)}."),
         new("Terminänderung", $"Dein Termin wurde {Status(German, status)}."));
 
+    public enum ReminderDay { Today, Tomorrow, Other }
+
+    /// <summary>
+    /// To the client two hours before an approved appointment: "Trening za 2 h",
+    /// "Danas u 18:00 · Ivan Horvat". <paramref name="date"/> ("24.11.") only
+    /// for <see cref="ReminderDay.Other"/>; no coach, no " · coach".
+    /// </summary>
+    public static PushText AppointmentReminder(string language, ReminderDay day, string time, string date,
+        string coaches)
+    {
+        var coach = string.IsNullOrWhiteSpace(coaches) ? "" : $" · {coaches}";
+
+        return Pick(language,
+            new("Trening za 2 h", day switch
+            {
+                ReminderDay.Today => $"Danas u {time}{coach}",
+                ReminderDay.Tomorrow => $"Sutra u {time}{coach}",
+                _ => $"{date} u {time}{coach}"
+            }),
+            new("Training in 2 h", day switch
+            {
+                ReminderDay.Today => $"Today at {time}{coach}",
+                ReminderDay.Tomorrow => $"Tomorrow at {time}{coach}",
+                _ => $"{date} at {time}{coach}"
+            }),
+            new("Allenamento tra 2 h", day switch
+            {
+                ReminderDay.Today => $"Oggi alle {time}{coach}",
+                ReminderDay.Tomorrow => $"Domani alle {time}{coach}",
+                _ => $"{date} alle {time}{coach}"
+            }),
+            new("Training in 2 Std.", day switch
+            {
+                ReminderDay.Today => $"Heute um {time}{coach}",
+                ReminderDay.Tomorrow => $"Morgen um {time}{coach}",
+                _ => $"{date} um {time}{coach}"
+            }));
+    }
+
     public static PushText WeeklySchedule(string language, IEnumerable<Appointment> appointments) => Pick(language,
         new("Tvoj raspored treninga za idući tjedan je spreman", ScheduleBody(Croatian, appointments)),
         new("Your weekly training schedule is ready", ScheduleBody(English, appointments)),

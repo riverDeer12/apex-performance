@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -60,6 +61,9 @@ public class ApproveAppointmentEndpoint : EndpointWithoutRequest<ApproveAppointm
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
+
+        AppointmentReminderJob.Schedule(appointment.Id, appointment.AppointmentStatus.Name, appointment.StartTime,
+            Logger);
 
         var clients = appointment.Clients.Select(x => x.Client).ToList();
 

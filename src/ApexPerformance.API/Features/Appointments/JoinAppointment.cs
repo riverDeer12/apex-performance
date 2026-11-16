@@ -1,3 +1,4 @@
+using ApexPerformance.API.BackgroundJobs;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -53,6 +54,7 @@ public class JoinAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
                 .Include(appointment => appointment.Clients)
                 .ThenInclude(clientAppointment => clientAppointment.Client)
                 .Include(appointment => appointment.TimeSlot)
+                .Include(appointment => appointment.AppointmentStatus)
                 .FirstOrDefaultAsync(x => x.Id == appointmentRequest.AppointmentId,
                     cancellationToken: cancellationToken);
 
@@ -83,6 +85,10 @@ public class JoinAppointmentEndpoint : EndpointWithoutRequest<StatusResponse>
             ThrowError(ErrorCodes.SavingError);
 
         await _clientService.RemoveClientsCredits([appointmentRequest.Client], 1, cancellationToken);
+
+        // Usually already scheduled; the reminder goes to all clients the appointment has then.
+        AppointmentReminderJob.Schedule(appointment.Id, appointment.AppointmentStatus.Name, appointment.StartTime,
+            Logger);
         
         _emailService.SendJoinedAppointmentEmail(appointment, appointmentExistingClients,
             appointmentRequest.Client);
