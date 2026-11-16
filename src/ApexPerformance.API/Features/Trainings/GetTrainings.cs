@@ -33,6 +33,8 @@ public class GetTrainingsEndpoint : EndpointWithoutRequest<List<TrainingResponse
             .Include(x => x.Exercises)
             .ThenInclude(x => x.Sets)
             .OrderByDescending(x => x.Date)
+            // Separate queries instead of one join of every set of every training: much less data and shorter reads.
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         await SendAsync(trainings.Select(TrainingMapper.ToResponse).ToList(), cancellation: cancellationToken);
