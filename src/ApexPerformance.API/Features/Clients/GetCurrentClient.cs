@@ -3,6 +3,7 @@ using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
 using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
+using ApexPerformance.API.Utilities;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,10 @@ public record GetCurrentClientResponse(
     string Phone,
     int Credits,
     PersonDataDto User,
-    string Plan
+    string Plan,
+    // Approved appointments of this month (Croatian time) that are over; the
+    // apps' package "done of total". See ClientPackage.
+    int DoneThisMonth
 );
 
 public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientResponse>
@@ -52,6 +56,21 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
 
         var userResponse = new PersonDataDto(user.Id, user.UserName, user.Email, user.UserName);
 
+        var now = DateTimeOffset.Now;
+        var monthStart = ClientPackage.MonthStart(now, AppointmentReminder.CroatianTimeZone());
+
+        // Same as ClientPackage.IsDoneThisMonth, in the database.
+        var doneThisMonth = await _context.ClientAppointments
+            .Where(x => x.ClientId == client.Id)
+            .Select(x => x.Appointment)
+            .CountAsync(appointment =>
+                    !appointment.IsDeleted &&
+                    (appointment.AppointmentStatus.Name == BusinessStatuses.Approved ||
+                     appointment.AppointmentStatus.Name == BusinessStatuses.InProgress) &&
+                    appointment.EndTime <= now &&
+                    appointment.StartTime >= monthStart,
+                cancellationToken);
+
         await SendAsync(new GetCurrentClientResponse(
             client.Id,
             client.FirstName,
@@ -60,7 +79,8 @@ public class GetCurrentClientEndpoint : EndpointWithoutRequest<GetCurrentClientR
             client.Phone,
             client.Credits,
             userResponse,
-            client.Plan
+            client.Plan,
+            doneThisMonth
             ), cancellation: cancellationToken);
     }
 }
