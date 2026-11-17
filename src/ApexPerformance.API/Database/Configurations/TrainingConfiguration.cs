@@ -14,6 +14,8 @@ public class TrainingConfiguration : IEntityTypeConfiguration<Training>
 
         builder.Property(e => e.Note).HasMaxLength(2000);
 
+        builder.Property(e => e.HeartRateSource).HasMaxLength(32);
+
         builder.HasMany(e => e.Exercises)
             .WithOne(e => e.Training)
             .HasForeignKey(e => e.TrainingId)
