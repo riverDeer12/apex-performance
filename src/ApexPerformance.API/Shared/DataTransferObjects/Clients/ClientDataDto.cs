@@ -13,4 +13,6 @@ public record ClientDataDto(
     string FullName,
     List<PersonDataDto> Coaches,
     List<BodyMeasurementDto> BodyMeasurements,
-    string Plan);
+    string Plan,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null);

@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -51,6 +52,10 @@ public class GetMyAppointmentRequestsEndpoint : EndpointWithoutRequest<List<MyAp
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            appointments.SelectMany(x => x.Clients.Select(c => c.Client.UserId)
+                .Concat(x.Coaches.Select(c => c.Coach.UserId))), cancellationToken);
+
         var response = appointments.Select(appointment =>
             new MyAppointmentRequestResponse(
                 new AppointmentDataDto(appointment.Id,
@@ -61,11 +66,13 @@ public class GetMyAppointmentRequestsEndpoint : EndpointWithoutRequest<List<MyAp
                         appointment.AppointmentStatus.Name, appointment.AppointmentStatus.Description),
                     appointment.Clients
                         .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName,
-                            x.Client.LastName, x.Client.FullName))
+                            x.Client.LastName, x.Client.FullName,
+                            PictureUrl: pictures.UrlFor(x.Client.UserId)))
                         .ToList(),
                     appointment.Coaches
                         .Select(x => new PersonDataDto(x.CoachId, x.Coach.FirstName,
-                            x.Coach.LastName, x.Coach.FullName))
+                            x.Coach.LastName, x.Coach.FullName,
+                            PictureUrl: pictures.UrlFor(x.Coach.UserId)))
                         .ToList(),
                     new CatalogDataDto(appointment.TimeSlot.Id, appointment.TimeSlot.Name,
                         appointment.TimeSlot.Description)),

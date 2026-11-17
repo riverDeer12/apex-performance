@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services;
@@ -39,9 +40,13 @@ public class GetClientCoachesEndpoint : EndpointWithoutRequest<List<PersonDataDt
         if (clientCoaches.Count is 0)
             ThrowError(ErrorCodes.NotFound);
 
+        var pictures = await UserPictures.LoadAsync(_context, clientCoaches.Select(x => x.Coach.UserId),
+            cancellationToken);
+
         await SendAsync(
             clientCoaches.Select(x =>
-                new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName, x.Coach.FullName)).ToList(),
+                new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName, x.Coach.FullName,
+                    PictureUrl: pictures.UrlFor(x.Coach.UserId))).ToList(),
             cancellation: cancellationToken);
     }
 }

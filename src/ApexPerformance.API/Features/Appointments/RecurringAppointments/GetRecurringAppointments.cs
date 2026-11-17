@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -36,6 +37,10 @@ public class GetRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<Recu
             return;
         }
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            recurringAppointments.SelectMany(x => x.Clients.Select(c => c.Client.UserId).Append(x.Coach.UserId)),
+            cancellationToken);
+
         await SendAsync(recurringAppointments.Select(x =>
                     new RecurringAppointmentDto(
                         x.Id,
@@ -43,10 +48,12 @@ public class GetRecurringAppointmentsEndpoint : EndpointWithoutRequest<List<Recu
                                 new PersonDataDto(clientRecurringAppointment.Client.Id,
                                     clientRecurringAppointment.Client.FirstName,
                                     clientRecurringAppointment.Client.LastName,
-                                    clientRecurringAppointment.Client.FullName))
+                                    clientRecurringAppointment.Client.FullName,
+                                    PictureUrl: pictures.UrlFor(clientRecurringAppointment.Client.UserId)))
                             .ToList(),
                         new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
-                            x.Coach.LastName, x.Coach.FullName),
+                            x.Coach.LastName, x.Coach.FullName,
+                            PictureUrl: pictures.UrlFor(x.Coach.UserId)),
                         new TimeSlotDto(x.TimeSlot.Id, x.TimeSlot.Name,
                             x.TimeSlot.Day,
                             x.TimeSlot.StartTime, x.TimeSlot.EndTime),

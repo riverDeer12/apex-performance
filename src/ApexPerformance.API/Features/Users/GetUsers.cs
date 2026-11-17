@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
@@ -12,7 +13,9 @@ public sealed record GetUserResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
-    List<UserRoleDto> Roles);
+    List<UserRoleDto> Roles,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null);
 
 public sealed record UserRoleDto(
     Guid Id,
@@ -47,6 +50,8 @@ public sealed class GetUsersEndpoint : EndpointWithoutRequest<List<GetUserRespon
             return;
         }
         
+        var pictures = await UserPictures.LoadAsync(_context, users.Select(x => x.Id), cancellationToken);
+
         var response = new List<GetUserResponse>();
 
         foreach (var user in users)
@@ -64,7 +69,8 @@ public sealed class GetUsersEndpoint : EndpointWithoutRequest<List<GetUserRespon
                 user.CreatedAt,
                 user.UpdatedAt,
                 user.IsDeleted,
-                rolesResponse);
+                rolesResponse,
+                pictures.UrlFor(user.Id));
             
             response.Add(usersResponse);
         }

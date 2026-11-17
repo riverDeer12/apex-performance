@@ -7,5 +7,7 @@ public record PersonDataDto(
     string? FullName,
     string? Address = null,
     string? Phone = null,
-    string? Email = null
+    string? Email = null,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null
 );

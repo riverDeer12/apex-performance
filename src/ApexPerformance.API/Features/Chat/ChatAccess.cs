@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
@@ -77,7 +78,9 @@ public static class ChatAccess
             .ToDictionaryAsync(x => x.Id, cancellationToken);
     }
 
-    public static ChatParticipantResponse Participant(Coach coach) => new(coach.Id, coach.UserId, coach.FullName);
+    public static ChatParticipantResponse Participant(Coach coach, UserPictures? pictures = null)
+        => new(coach.Id, coach.UserId, coach.FullName, pictures?.UrlFor(coach.UserId));
 
-    public static ChatParticipantResponse Participant(Client client) => new(client.Id, client.UserId, client.FullName);
+    public static ChatParticipantResponse Participant(Client client, UserPictures? pictures = null)
+        => new(client.Id, client.UserId, client.FullName, pictures?.UrlFor(client.UserId));
 }

@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
@@ -12,7 +13,9 @@ public sealed record GetAdministratorResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
-    AdminUserDto User);
+    AdminUserDto User,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null);
 
 public sealed record AdminUserDto(Guid Id, string Username, string Email);
 
@@ -44,6 +47,9 @@ public sealed class GetAdministratorsEndpoint : EndpointWithoutRequest<List<GetA
             return;
         }
 
+        var pictures = await UserPictures.LoadAsync(_context, administrators.Select(x => x.UserId),
+            cancellationToken);
+
         var response = new List<GetAdministratorResponse>();
 
         foreach (var administrator in administrators)
@@ -58,7 +64,8 @@ public sealed class GetAdministratorsEndpoint : EndpointWithoutRequest<List<GetA
                 administrator.FirstName, administrator.LastName,
                 administrator.CreatedAt,
                 administrator.UpdatedAt,
-                administrator.IsDeleted, adminUserResponse);
+                administrator.IsDeleted, adminUserResponse,
+                pictures.UrlFor(administrator.UserId));
 
             response.Add(roleResponse);
         }

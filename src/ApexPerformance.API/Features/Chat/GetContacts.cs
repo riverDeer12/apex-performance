@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -47,16 +48,22 @@ public class GetContactsEndpoint : EndpointWithoutRequest<List<ChatContactRespon
             })
             .ToListAsync(cancellationToken);
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            links.Select(x => x.IsCoach ? x.Client.UserId : x.Coach.UserId), cancellationToken);
+
         var response = links
             .Select(x =>
             {
-                var participant = x.IsCoach ? ChatAccess.Participant(x.Client) : ChatAccess.Participant(x.Coach);
+                var participant = x.IsCoach
+                    ? ChatAccess.Participant(x.Client, pictures)
+                    : ChatAccess.Participant(x.Coach, pictures);
 
                 return new ChatContactResponse(participant.Id, participant.UserId, participant.FullName,
                     x.Conversation?.Id,
                     // No conversation yet means the chat is open.
                     x.Conversation is null || (x.Conversation.IsEnabled && !x.Conversation.IsBlockedByClient),
-                    x.Conversation?.IsBlockedByClient ?? false);
+                    x.Conversation?.IsBlockedByClient ?? false,
+                    participant.PictureUrl);
             })
             .OrderBy(x => x.FullName)
             .ToList();
