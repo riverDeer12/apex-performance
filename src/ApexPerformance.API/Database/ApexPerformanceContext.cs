@@ -125,6 +125,8 @@ public class ApexPerformanceContext : DbContext
 
     public DbSet<ShopFavorite> ShopFavorites { get; set; }
 
+    public DbSet<FavoriteWorkout> FavoriteWorkouts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
