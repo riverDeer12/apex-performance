@@ -24,7 +24,9 @@ public record GetWorkoutResponse(
     // WorkoutCategories, for filtering the list.
     string Category,
     // WorkoutPaceTypes: sets record a distance and show a pace. Null for other workouts.
-    string? PaceType = null
+    string? PaceType = null,
+    // The logged in user marked it with the star. Missing in older servers' responses.
+    bool IsFavorite = false
 );
 
 public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutResponse>>
@@ -63,14 +65,10 @@ public class GetWorkoutsEndpoint : EndpointWithoutRequest<List<GetWorkoutRespons
             return;
         }
 
-        await SendAsync(
-            workouts.Select(workout => new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
-                new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
-                workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
-                    new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
-                        workoutTypeRelation.WorkoutType.Description)).ToList(),
-                WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
-                workout.Category, workout.PaceType)).ToList(),
+        var favoriteIds = await WorkoutFavorites.IdsOf(_context, _currentUserService.UserId, cancellationToken);
+
+        await SendAsync(WorkoutFavorites.Mark(workouts.Select(workout => WorkoutMapper.ToResponse(workout)),
+                favoriteIds),
             cancellation: cancellationToken);
     }
 }
