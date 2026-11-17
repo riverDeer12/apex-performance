@@ -40,6 +40,12 @@ public class ErrorAlertJob
     // (ERROR_CONNECTION_INVALID), logged by the server as an unhandled exception.
     private const string ClosedConnectionError = "0x800704CD";
 
+    // IIS ending a WebSocket (the chat's SignalR connection) the client already dropped, e.g. a
+    // phone going to the background: the handle is gone (E_HANDLE). Matched together with the
+    // WebSocket code, so an invalid handle anywhere else still sends an alert.
+    private const string ClosedWebSocketError = "0x80070006";
+    private const string WebSocketEngine = "WebSocketsAsyncIOEngine";
+
     // SQL Server stopping a query because the client's request was cancelled; EF wraps it
     // in an InvalidOperationException ("transient failure"), so it is matched by its text.
     private const string CancelledQueryError = "Operation cancelled by user.";
@@ -118,6 +124,8 @@ public class ErrorAlertJob
                 .Where(x => x.Exception is null ||
                             (!CancellationExceptions.Any(name => x.Exception.StartsWith(name, StringComparison.Ordinal)) &&
                              !x.Exception.Contains(ClosedConnectionError, StringComparison.Ordinal) &&
+                             !(x.Exception.Contains(ClosedWebSocketError, StringComparison.Ordinal) &&
+                               x.Exception.Contains(WebSocketEngine, StringComparison.Ordinal)) &&
                              !x.Exception.Contains(CancelledQueryError, StringComparison.Ordinal)))
                 .Where(x => x.Timestamp > from && x.Timestamp <= to)
                 .Select(x => (file.Name, x)));
