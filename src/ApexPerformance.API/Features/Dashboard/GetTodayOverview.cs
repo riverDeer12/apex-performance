@@ -17,7 +17,9 @@ public record TodayAppointmentDto(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     string Status,
-    List<string> Clients
+    List<string> Clients,
+    // Picture links of the clients, in the same order (null without a picture).
+    List<string?>? ClientPictureUrls = null
 );
 
 // PictureUrl: profile picture link (see UserPictures), null when there is none.
@@ -100,15 +102,36 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
         if (coachId is not null)
             appointments = appointments.Where(x => x.Coaches.Any(coach => coach.CoachId == coachId));
 
-        var todayAppointments = await appointments
+        var todayAppointmentRows = await appointments
             .AsNoTracking()
             .Where(x => x.StartTime >= dayStart && x.StartTime < dayEnd &&
                         (x.AppointmentStatus.Name == BusinessStatuses.Approved ||
                          x.AppointmentStatus.Name == BusinessStatuses.InProgress))
             .OrderBy(x => x.StartTime)
-            .Select(x => new TodayAppointmentDto(x.Id, x.StartTime, x.EndTime, x.AppointmentStatus.Name,
-                x.Clients.Select(client => client.Client.FirstName + " " + client.Client.LastName).ToList()))
+            .Select(x => new
+            {
+                x.Id,
+                x.StartTime,
+                x.EndTime,
+                Status = x.AppointmentStatus.Name,
+                Clients = x.Clients
+                    .Select(client => new
+                    {
+                        FullName = client.Client.FirstName + " " + client.Client.LastName,
+                        client.Client.UserId
+                    })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
+
+        var pictures = await UserPictures.LoadAsync(_context,
+            todayAppointmentRows.SelectMany(x => x.Clients.Select(client => client.UserId)), cancellationToken);
+
+        var todayAppointments = todayAppointmentRows
+            .Select(x => new TodayAppointmentDto(x.Id, x.StartTime, x.EndTime, x.Status,
+                x.Clients.Select(client => client.FullName).ToList(),
+                x.Clients.Select(client => pictures.UrlFor(client.UserId)).ToList()))
+            .ToList();
 
         var pendingAppointments = await appointments
             .CountAsync(x => x.AppointmentStatus.Name == BusinessStatuses.Pending && x.StartTime >= dayStart,
