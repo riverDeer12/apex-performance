@@ -2717,6 +2717,10 @@ namespace ApexPerformance.API.Database.Migrations
                     b.Property<int?>("HeartRateMin")
                         .HasColumnType("int");
 
+                    b.Property<string>("HeartRateSource")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
 

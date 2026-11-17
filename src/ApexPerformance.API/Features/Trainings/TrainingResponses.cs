@@ -1,3 +1,4 @@
+using ApexPerformance.API.Constants;
 using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
@@ -48,7 +49,8 @@ public record TrainingResponse(
     TrainingHeartRateResponse? HeartRate = null
 );
 
-public record TrainingHeartRateResponse(int Min, int Max, int Average);
+// Source: where the client's phone read it (HeartRateSources), shown to the coach.
+public record TrainingHeartRateResponse(int Min, int Max, int Average, string? Source = null);
 
 public record TrainingExerciseSetRequest(
     string? Reps,
@@ -100,7 +102,9 @@ public static class TrainingMapper
 
     public static TrainingHeartRateResponse? HeartRateOf(Training training)
         => training is { HeartRateMin: { } min, HeartRateMax: { } max, HeartRateAverage: { } average }
-            ? new TrainingHeartRateResponse(min, max, average)
+            ? new TrainingHeartRateResponse(min, max, average,
+                // Saved before the source was kept: only iPhones sent heart rate then.
+                training.HeartRateSource ?? HeartRateSources.AppleHealth)
             : null;
 
     /// <summary>

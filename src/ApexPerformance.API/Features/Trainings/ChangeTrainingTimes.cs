@@ -75,6 +75,7 @@ public class ChangeTrainingTimesEndpoint : Endpoint<ChangeTrainingTimesRequest, 
             training.HeartRateMin = null;
             training.HeartRateMax = null;
             training.HeartRateAverage = null;
+            training.HeartRateSource = null;
 
             var completes = training.EndedAt is not null && !training.IsCompleted;
             if (completes)
