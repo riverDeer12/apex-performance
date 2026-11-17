@@ -21,10 +21,12 @@ public class Training : BaseEntity
     public DateTimeOffset? EndedAt { get; set; }
 
     // Client's heart rate between start and end, in beats per minute,
-    // read from Apple Health on the client's phone.
+    // read from Apple Health (iPhone) or Health Connect (Android) on the client's phone.
     public int? HeartRateMin { get; set; }
     public int? HeartRateMax { get; set; }
     public int? HeartRateAverage { get; set; }
+    // Where the heart rate came from, a HeartRateSources value.
+    public string? HeartRateSource { get; set; }
 
     public required Client Client { get; set; }
     public Guid ClientId { get; set; }
