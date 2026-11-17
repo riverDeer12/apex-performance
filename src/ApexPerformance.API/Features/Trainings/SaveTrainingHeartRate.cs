@@ -7,12 +7,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApexPerformance.API.Features.Trainings;
 
-public record SaveTrainingHeartRateRequest(int Min, int Max, int Average);
+// Source is optional: iPhone builds before it was added send none, they read Apple Health.
+public record SaveTrainingHeartRateRequest(int Min, int Max, int Average, string? Source = null);
 
 /// <summary>
 /// Client's heart rate during the training (between StartedAt and EndedAt),
-/// read from Apple Health by the client's phone and sent once the training
-/// is completed. Only the summary is kept, not the measurements.
+/// read from Apple Health (iPhone) or Health Connect (Android) by the client's
+/// phone and sent once the training is completed. Only the summary is kept, not the measurements.
 /// </summary>
 public class SaveTrainingHeartRateEndpoint : Endpoint<SaveTrainingHeartRateRequest, TrainingHeartRateResponse>
 {
@@ -51,10 +52,11 @@ public class SaveTrainingHeartRateEndpoint : Endpoint<SaveTrainingHeartRateReque
         training.HeartRateMin = request.Min;
         training.HeartRateMax = request.Max;
         training.HeartRateAverage = request.Average;
+        training.HeartRateSource = HeartRateSources.Normalize(request.Source);
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        await SendAsync(new TrainingHeartRateResponse(request.Min, request.Max, request.Average),
+        await SendAsync(TrainingMapper.HeartRateOf(training)!,
             cancellation: cancellationToken);
     }
 }
@@ -66,5 +68,6 @@ public sealed class SaveTrainingHeartRateValidator : Validator<SaveTrainingHeart
         RuleFor(x => x.Min).InclusiveBetween(25, 250).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x.Max).InclusiveBetween(25, 250).WithMessage(ErrorCodes.NotValid);
         RuleFor(x => x).Must(x => x.Min <= x.Average && x.Average <= x.Max).WithMessage(ErrorCodes.NotValid);
+        RuleFor(x => x.Source).Must(HeartRateSources.IsValid).WithMessage(ErrorCodes.NotValid);
     }
 }
