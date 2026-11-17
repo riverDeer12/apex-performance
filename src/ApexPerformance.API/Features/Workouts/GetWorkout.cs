@@ -43,20 +43,13 @@ public class GetWorkoutEndpoint : EndpointWithoutRequest<GetWorkoutResponse>
         if (workout is null)
             ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        var planFilter = await WorkoutPlanAccess.GetFilter(_context, _currentUserService, cancellationToken);
+        if (!await WorkoutFavorites.CanSee(_context, _currentUserService, workout, cancellationToken))
+            ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-        if (planFilter is not null && !planFilter(workout))
-        {
-            var userId = _currentUserService.UserId;
-            var isInTraining = await _context.Trainings.AnyAsync(training =>
-                training.Client.UserId == userId &&
-                training.Exercises.Any(exercise => exercise.WorkoutId == id), cancellationToken);
+        var isFavorite = await WorkoutFavorites.IsFavorite(_context, _currentUserService.UserId, id,
+            cancellationToken);
 
-            if (!isInTraining)
-                ThrowError(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
-        }
-
-        await SendAsync(WorkoutMapper.ToResponse(workout), cancellation: cancellationToken);
+        await SendAsync(WorkoutMapper.ToResponse(workout, isFavorite), cancellation: cancellationToken);
     }
 }
 
@@ -65,12 +58,12 @@ public static class WorkoutMapper
     /// <summary>
     /// Workout types need to be loaded.
     /// </summary>
-    public static GetWorkoutResponse ToResponse(Workout workout)
+    public static GetWorkoutResponse ToResponse(Workout workout, bool isFavorite = false)
         => new(workout.Id, new LocalizedProperty(workout.Name), new LocalizedProperty(workout.Description),
             workout.ThumbnailUrl, workout.VideoUrl,
             (workout.WorkoutTypes ?? []).Where(x => x.WorkoutType is not null)
                 .Select(x => new CatalogDataDto(x.WorkoutType.Id, x.WorkoutType.Name, x.WorkoutType.Description))
                 .ToList(),
             WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
-            workout.Category, workout.PaceType);
+            workout.Category, workout.PaceType, isFavorite);
 }

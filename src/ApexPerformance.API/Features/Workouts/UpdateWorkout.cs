@@ -1,6 +1,7 @@
 ﻿using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
+using ApexPerformance.API.Services.Interfaces;
 using ApexPerformance.API.Shared.DataTransferObjects;
 using ApexPerformance.API.Utilities;
 using ApexPerformance.API.Utilities.Localization;
@@ -34,10 +35,12 @@ public record UpdateWorkoutRequest(
 public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutResponse>
 {
     private readonly ApexPerformanceContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UpdateWorkoutEndpoint(ApexPerformanceContext context)
+    public UpdateWorkoutEndpoint(ApexPerformanceContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public override void Configure()
@@ -125,14 +128,17 @@ public class UpdateWorkoutEndpoint : Endpoint<UpdateWorkoutRequest, GetWorkoutRe
 
         if (result == 0)
             ThrowError(ErrorCodes.SavingError);
-        
+
+        var isFavorite = await WorkoutFavorites.IsFavorite(_context, _currentUserService.UserId, workout.Id,
+            cancellationToken);
+
         await SendAsync(new GetWorkoutResponse(workout.Id, new LocalizedProperty(workout.Name),
                 new LocalizedProperty(workout.Description), workout.ThumbnailUrl,
                 workout.VideoUrl, workout.WorkoutTypes.Select(workoutTypeRelation =>
                     new CatalogDataDto(workoutTypeRelation.WorkoutType.Id, workoutTypeRelation.WorkoutType.Name,
                         workoutTypeRelation.WorkoutType.Description)).ToList(),
                 WorkoutMuscles.Parse(workout.Muscles), WorkoutMuscles.ParseSecondary(workout), workout.IsTimed,
-                workout.Category, workout.PaceType),
+                workout.Category, workout.PaceType, isFavorite),
             cancellation: cancellationToken);
     }
 }

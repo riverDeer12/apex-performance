@@ -1113,6 +1113,31 @@ namespace ApexPerformance.API.Database.Migrations
                     b.ToTable("DeviceTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.FavoriteWorkout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("WorkoutId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkoutId");
+
+                    b.HasIndex("UserId", "WorkoutId")
+                        .IsUnique();
+
+                    b.ToTable("FavoriteWorkouts", (string)null);
+                });
+
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.FunctionalMovementScreen", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3537,6 +3562,25 @@ namespace ApexPerformance.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ApexPerformance.API.Database.Entities.FavoriteWorkout", b =>
+                {
+                    b.HasOne("ApexPerformance.API.Database.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ApexPerformance.API.Database.Entities.Workout", "Workout")
+                        .WithMany()
+                        .HasForeignKey("WorkoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workout");
                 });
 
             modelBuilder.Entity("ApexPerformance.API.Database.Entities.FunctionalMovementScreen", b =>
