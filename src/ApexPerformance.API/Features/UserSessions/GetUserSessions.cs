@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -16,7 +17,9 @@ public sealed record GetUserLastSessionResponse(
     string? LastIpAddress,
     string? LastUserAgent,
     int LoginsCount,
-    Guid? ActiveSessionId);
+    Guid? ActiveSessionId,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null);
 
 /// <summary>
 /// Users with their last login. Super admin sees
@@ -94,6 +97,8 @@ public sealed class GetUserSessionsEndpoint : EndpointWithoutRequest<List<GetUse
             .Select(x => new { UserId = x.Key, SessionId = x.OrderByDescending(session => session.CreatedAt).First().Id })
             .ToDictionaryAsync(x => x.UserId, x => x.SessionId, cancellationToken);
 
+        var pictures = await UserPictures.LoadAsync(_context, visibleUserIds, cancellationToken);
+
         var response = users.Select(x =>
             {
                 lastSessions.TryGetValue(x.Id, out var lastSession);
@@ -110,7 +115,8 @@ public sealed class GetUserSessionsEndpoint : EndpointWithoutRequest<List<GetUse
                     lastSession?.IpAddress,
                     lastSession?.UserAgent,
                     loginsCount,
-                    activeSessionId);
+                    activeSessionId,
+                    pictures.UrlFor(x.Id));
             })
             .OrderByDescending(x => x.LastLoginAt.HasValue)
             .ThenByDescending(x => x.LastLoginAt)

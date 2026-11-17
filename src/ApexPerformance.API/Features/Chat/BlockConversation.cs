@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Hubs;
@@ -53,7 +54,10 @@ public class BlockConversationEndpoint : Endpoint<BlockConversationRequest, Chat
         await _hub.Clients.Users(conversation.Coach.UserId.ToString(), conversation.Client.UserId.ToString())
             .SendAsync(ChatHub.Events.ConversationUpdated, conversation.Id, cancellationToken);
 
-        await SendAsync(ChatAccess.ToResponse(conversation, conversation.Coach, conversation.Client),
+        var pictures = await UserPictures.LoadAsync(_context,
+            [conversation.Coach.UserId, conversation.Client.UserId], cancellationToken);
+
+        await SendAsync(ChatAccess.ToResponse(conversation, conversation.Coach, conversation.Client, pictures),
             cancellation: cancellationToken);
     }
 }

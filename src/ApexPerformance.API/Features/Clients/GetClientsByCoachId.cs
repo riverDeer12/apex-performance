@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Shared.DataTransferObjects;
@@ -38,8 +39,11 @@ public class GetClientsByCoachIdEndpoint : EndpointWithoutRequest<List<PersonDat
             .WithActiveUserAccount()
             .ToListAsync(cancellationToken: cancellationToken);
 
-        await SendAsync(coachClients.Select(x => 
-                new PersonDataDto(x.Id, x.FirstName, x.LastName, x.FullName)).ToList(),
+        var pictures = await UserPictures.LoadAsync(_context, coachClients.Select(x => x.UserId), cancellationToken);
+
+        await SendAsync(coachClients.Select(x =>
+                new PersonDataDto(x.Id, x.FirstName, x.LastName, x.FullName,
+                    PictureUrl: pictures.UrlFor(x.UserId))).ToList(),
             cancellation: cancellationToken);
     }
 }

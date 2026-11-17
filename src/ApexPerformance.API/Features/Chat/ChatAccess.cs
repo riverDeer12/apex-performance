@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Services.Interfaces;
@@ -35,8 +36,9 @@ public static class ChatAccess
         => conversation.IsEnabled && !conversation.IsBlockedByClient;
 
     // Response without the last message, after the conversation was created or changed.
-    public static ChatConversationResponse ToResponse(ChatConversation conversation, Coach coach, Client client)
-        => new(conversation.Id, Participant(coach), Participant(client), CanWrite(conversation),
+    public static ChatConversationResponse ToResponse(ChatConversation conversation, Coach coach, Client client,
+        UserPictures? pictures = null)
+        => new(conversation.Id, Participant(coach, pictures), Participant(client, pictures), CanWrite(conversation),
             conversation.LastMessageAt, null, 0, conversation.IsBlockedByClient);
 
     public static ChatMessageResponse ToResponse(ChatMessage message, IChatEncryptionService encryption,
@@ -77,7 +79,9 @@ public static class ChatAccess
             .ToDictionaryAsync(x => x.Id, cancellationToken);
     }
 
-    public static ChatParticipantResponse Participant(Coach coach) => new(coach.Id, coach.UserId, coach.FullName);
+    public static ChatParticipantResponse Participant(Coach coach, UserPictures? pictures = null)
+        => new(coach.Id, coach.UserId, coach.FullName, pictures?.UrlFor(coach.UserId));
 
-    public static ChatParticipantResponse Participant(Client client) => new(client.Id, client.UserId, client.FullName);
+    public static ChatParticipantResponse Participant(Client client, UserPictures? pictures = null)
+        => new(client.Id, client.UserId, client.FullName, pictures?.UrlFor(client.UserId));
 }

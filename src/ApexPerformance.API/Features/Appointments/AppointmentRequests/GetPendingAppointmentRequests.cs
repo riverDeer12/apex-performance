@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -51,6 +52,11 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
         var appointmentRequestSenders = appointmentRequests.Select(x => x.Client).ToList();
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            appointmentRequestSenders.Select(x => x.UserId)
+                .Concat(appointments.SelectMany(x => x.Clients.Select(c => c.Client.UserId)
+                    .Concat(x.Coaches.Select(c => c.Coach.UserId)))), cancellationToken);
+
         var appointmentRequestsResponse = new List<GetPendingAppointmentRequestResponse>();
 
         foreach (var appointmentRequest in appointmentRequests)
@@ -67,7 +73,8 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
             var requestSenderResponse =
                 new PersonDataDto(requestSender.Id, requestSender.FirstName,
-                    requestSender.LastName, requestSender.FullName);
+                    requestSender.LastName, requestSender.FullName,
+                    PictureUrl: pictures.UrlFor(requestSender.UserId));
 
             var relatedAppointment = appointments
                 .FirstOrDefault(x => x.Id == appointmentRequest.AppointmentId);
@@ -88,12 +95,14 @@ public class GetPendingAppointmentRequestsEndpoint : EndpointWithoutRequest<List
 
             var clients = relatedAppointment.Clients
                 .Select(x => new PersonDataDto(x.Client.Id, x.Client.FirstName,
-                    x.Client.LastName, x.Client.FullName))
+                    x.Client.LastName, x.Client.FullName,
+                    PictureUrl: pictures.UrlFor(x.Client.UserId)))
                 .ToList();
 
             var coaches = relatedAppointment.Coaches
                 .Select(x => new PersonDataDto(x.Coach.Id, x.Coach.FirstName,
-                    x.Coach.LastName, x.Coach.FullName))
+                    x.Coach.LastName, x.Coach.FullName,
+                    PictureUrl: pictures.UrlFor(x.Coach.UserId)))
                 .ToList();
 
             var appointmentResponse = new AppointmentDataDto(

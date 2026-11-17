@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using System.Text.Json;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
@@ -41,6 +42,10 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
 
         var lastCreditIncreaseList = await GetLastClientCreditIncreases(clients.Select(x => x.Id).ToList());
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            clients.Select(x => x.UserId).Concat(clients.SelectMany(x => x.Coaches.Select(c => c.Coach.UserId))),
+            cancellationToken);
+
         await SendAsync(clients.Select(x =>
             new ClientDataDto(x.Id, x.FirstName, x.LastName,
                 x.Credits, x.Phone, x.Email, x.CreatedAt,
@@ -52,7 +57,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                 ?? x.CreatedAt,
                 x.FullName,
                 x.Coaches.Select(coach => new PersonDataDto(coach.Coach.Id, coach.Coach.FirstName,
-                        coach.Coach.LastName, coach.Coach.FullName))
+                        coach.Coach.LastName, coach.Coach.FullName,
+                        PictureUrl: pictures.UrlFor(coach.Coach.UserId)))
                     .ToList(),
                 x.BodyMeasurements
                     .Select(bodyMeasurement =>
@@ -69,7 +75,8 @@ public class GetClientsEndpoint : EndpointWithoutRequest<List<ClientDataDto>>
                             bodyMeasurement.Glutes,
                             bodyMeasurement.CreatedAt
                         )).ToList(),
-                x.Plan)).ToList(), cancellation: cancellationToken);
+                x.Plan,
+                pictures.UrlFor(x.UserId))).ToList(), cancellation: cancellationToken);
     }
 
     private async Task<List<Client>> GetClientsForUser(CancellationToken cancellationToken)

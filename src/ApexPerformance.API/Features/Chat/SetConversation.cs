@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -69,6 +70,8 @@ public class SetConversationEndpoint : Endpoint<SetConversationRequest, ChatConv
         await _hub.Clients.Users(coach.UserId.ToString(), client.UserId.ToString())
             .SendAsync(ChatHub.Events.ConversationUpdated, conversation.Id, cancellationToken);
 
-        await SendAsync(ChatAccess.ToResponse(conversation, coach, client), cancellation: cancellationToken);
+        var pictures = await UserPictures.LoadAsync(_context, [coach.UserId, client.UserId], cancellationToken);
+
+        await SendAsync(ChatAccess.ToResponse(conversation, coach, client, pictures), cancellation: cancellationToken);
     }
 }

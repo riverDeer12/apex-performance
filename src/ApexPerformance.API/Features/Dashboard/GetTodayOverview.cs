@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -16,14 +17,17 @@ public record TodayAppointmentDto(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     string Status,
-    List<string> Clients
+    List<string> Clients,
+    // Picture links of the clients, in the same order (null without a picture).
+    List<string?>? ClientPictureUrls = null
 );
 
-public record OverviewClientDto(Guid Id, string FullName);
+// PictureUrl: profile picture link (see UserPictures), null when there is none.
+public record OverviewClientDto(Guid Id, string FullName, string? PictureUrl = null);
 
-public record LowCreditsClientDto(Guid Id, string FullName, int Credits);
+public record LowCreditsClientDto(Guid Id, string FullName, int Credits, string? PictureUrl = null);
 
-public record InactiveClientDto(Guid Id, string FullName, DateTimeOffset? LastActivityAt);
+public record InactiveClientDto(Guid Id, string FullName, DateTimeOffset? LastActivityAt, string? PictureUrl = null);
 
 public record PendingRequestsDto(int Appointments, int CancelationRequests, int JoinRequests);
 
@@ -98,15 +102,36 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
         if (coachId is not null)
             appointments = appointments.Where(x => x.Coaches.Any(coach => coach.CoachId == coachId));
 
-        var todayAppointments = await appointments
+        var todayAppointmentRows = await appointments
             .AsNoTracking()
             .Where(x => x.StartTime >= dayStart && x.StartTime < dayEnd &&
                         (x.AppointmentStatus.Name == BusinessStatuses.Approved ||
                          x.AppointmentStatus.Name == BusinessStatuses.InProgress))
             .OrderBy(x => x.StartTime)
-            .Select(x => new TodayAppointmentDto(x.Id, x.StartTime, x.EndTime, x.AppointmentStatus.Name,
-                x.Clients.Select(client => client.Client.FirstName + " " + client.Client.LastName).ToList()))
+            .Select(x => new
+            {
+                x.Id,
+                x.StartTime,
+                x.EndTime,
+                Status = x.AppointmentStatus.Name,
+                Clients = x.Clients
+                    .Select(client => new
+                    {
+                        FullName = client.Client.FirstName + " " + client.Client.LastName,
+                        client.Client.UserId
+                    })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
+
+        var pictures = await UserPictures.LoadAsync(_context,
+            todayAppointmentRows.SelectMany(x => x.Clients.Select(client => client.UserId)), cancellationToken);
+
+        var todayAppointments = todayAppointmentRows
+            .Select(x => new TodayAppointmentDto(x.Id, x.StartTime, x.EndTime, x.Status,
+                x.Clients.Select(client => client.FullName).ToList(),
+                x.Clients.Select(client => pictures.UrlFor(client.UserId)).ToList()))
+            .ToList();
 
         var pendingAppointments = await appointments
             .CountAsync(x => x.AppointmentStatus.Name == BusinessStatuses.Pending && x.StartTime >= dayStart,
@@ -124,7 +149,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             .Where(x => x.Credits <= LowCreditsLimit)
             .OrderBy(x => x.Credits)
             .ThenBy(x => x.FirstName)
-            .Select(x => new LowCreditsClientDto(x.Id, x.FirstName + " " + x.LastName, x.Credits))
+            .Select(x => new LowCreditsClientDto(x.Id, x.FirstName + " " + x.LastName, x.Credits,
+                UserPictures.Url(x.UserId, _context.UserProfilePictures
+                    .Where(p => p.UserId == x.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault())))
             .ToListAsync(cancellationToken);
 
         var inactiveClients = await GetInactiveClients(clients, now, inactiveDays, cancellationToken);
@@ -159,6 +188,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             {
                 client.Id,
                 FullName = client.FirstName + " " + client.LastName,
+                client.UserId,
+                PictureUpdatedAt = _context.UserProfilePictures
+                    .Where(p => p.UserId == client.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault(),
                 LastTraining = _context.Trainings
                     .Where(x => x.ClientId == client.Id && x.IsCompleted && x.Date <= now)
                     .Max(x => (DateTimeOffset?)x.Date),
@@ -172,7 +206,8 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
 
         return activity
             .Select(x => new InactiveClientDto(x.Id, x.FullName,
-                x.LastTraining > x.LastAppointment || x.LastAppointment is null ? x.LastTraining : x.LastAppointment))
+                x.LastTraining > x.LastAppointment || x.LastAppointment is null ? x.LastTraining : x.LastAppointment,
+                UserPictures.Url(x.UserId, x.PictureUpdatedAt)))
             .Where(x => x.LastActivityAt is null || x.LastActivityAt < since)
             .OrderBy(x => x.LastActivityAt is null)
             .ThenBy(x => x.LastActivityAt)
@@ -195,7 +230,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             .Where(x => !reviewedClientIds.Contains(x.Id))
             .OrderBy(x => x.FirstName)
             .ThenBy(x => x.LastName)
-            .Select(x => new OverviewClientDto(x.Id, x.FirstName + " " + x.LastName))
+            .Select(x => new OverviewClientDto(x.Id, x.FirstName + " " + x.LastName,
+                UserPictures.Url(x.UserId, _context.UserProfilePictures
+                    .Where(p => p.UserId == x.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault())))
             .ToListAsync(cancellationToken);
 
         var totalClients = await clients.CountAsync(cancellationToken);

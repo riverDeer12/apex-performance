@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
 using FastEndpoints;
@@ -37,6 +38,10 @@ public class GetTrainingsEndpoint : EndpointWithoutRequest<List<TrainingResponse
             .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
-        await SendAsync(trainings.Select(TrainingMapper.ToResponse).ToList(), cancellation: cancellationToken);
+        var pictures = await UserPictures.LoadAsync(_context, trainings.Select(x => x.Client.UserId),
+            cancellationToken);
+
+        await SendAsync(trainings.Select(x => TrainingMapper.ToResponse(x, pictures)).ToList(),
+            cancellation: cancellationToken);
     }
 }
