@@ -36,8 +36,9 @@ public static class ChatAccess
         => conversation.IsEnabled && !conversation.IsBlockedByClient;
 
     // Response without the last message, after the conversation was created or changed.
-    public static ChatConversationResponse ToResponse(ChatConversation conversation, Coach coach, Client client)
-        => new(conversation.Id, Participant(coach), Participant(client), CanWrite(conversation),
+    public static ChatConversationResponse ToResponse(ChatConversation conversation, Coach coach, Client client,
+        UserPictures? pictures = null)
+        => new(conversation.Id, Participant(coach, pictures), Participant(client, pictures), CanWrite(conversation),
             conversation.LastMessageAt, null, 0, conversation.IsBlockedByClient);
 
     public static ChatMessageResponse ToResponse(ChatMessage message, IChatEncryptionService encryption,
