@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Services.Interfaces;
@@ -50,12 +51,16 @@ public class GetConversationsEndpoint : EndpointWithoutRequest<List<ChatConversa
         var workouts = await ChatAccess.LoadWorkouts(_context, conversations.Select(x => x.LastMessage),
             cancellationToken);
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            conversations.SelectMany(x => new[] { x.Conversation.Coach.UserId, x.Conversation.Client.UserId }),
+            cancellationToken);
+
         var response = conversations
             .OrderByDescending(x => x.Conversation.LastMessageAt ?? x.Conversation.CreatedAt)
             .Select(x => new ChatConversationResponse(
                 x.Conversation.Id,
-                ChatAccess.Participant(x.Conversation.Coach),
-                ChatAccess.Participant(x.Conversation.Client),
+                ChatAccess.Participant(x.Conversation.Coach, pictures),
+                ChatAccess.Participant(x.Conversation.Client, pictures),
                 ChatAccess.CanWrite(x.Conversation),
                 x.Conversation.LastMessageAt,
                 x.LastMessage is null ? null : ChatAccess.ToResponse(x.LastMessage, _encryption, workouts),

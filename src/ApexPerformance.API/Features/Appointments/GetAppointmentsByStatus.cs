@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Shared.DataTransferObjects;
@@ -58,6 +59,10 @@ public class GetAppointmentsByStatusEndpoint : EndpointWithoutRequest<Appointmen
             return;
         }
 
+        var pictures = await UserPictures.LoadAsync(_context,
+            appointments.SelectMany(x => x.Clients.Select(c => c.Client.UserId)
+                .Concat(x.Coaches.Select(c => c.Coach.UserId))), cancellationToken);
+
         var approvedAppointments = new List<AppointmentDataDto>();
 
         var pendingAppointments = new List<AppointmentDataDto>();
@@ -69,11 +74,13 @@ public class GetAppointmentsByStatusEndpoint : EndpointWithoutRequest<Appointmen
             var appointmentClientsResponse = appointment.Clients
                 .Select(appointmentClient =>
                     new PersonDataDto(appointmentClient.Client.Id, appointmentClient.Client.FirstName,
-                        appointmentClient.Client.LastName, appointmentClient.Client.FullName))
+                        appointmentClient.Client.LastName, appointmentClient.Client.FullName,
+                        PictureUrl: pictures.UrlFor(appointmentClient.Client.UserId)))
                 .ToList();
 
             var appointmentCoachesResponse = appointment.Coaches
-                .Select(x => new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName, x.Coach.FullName))
+                .Select(x => new PersonDataDto(x.CoachId, x.Coach.FirstName, x.Coach.LastName, x.Coach.FullName,
+                    PictureUrl: pictures.UrlFor(x.Coach.UserId)))
                 .ToList();
 
             var appointmentTypeResponse = new CatalogDataDto(appointment.AppointmentType.Id,

@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Database.Entities;
 using ApexPerformance.API.Shared.DataTransferObjects;
 
@@ -70,7 +71,9 @@ public record TrainingExerciseRequest(
 
 public static class TrainingMapper
 {
-    public static TrainingResponse ToResponse(Training training) => new(
+    public static TrainingResponse ToResponse(Training training) => ToResponse(training, UserPictures.None);
+
+    public static TrainingResponse ToResponse(Training training, UserPictures pictures) => new(
         training.Id,
         training.Name,
         training.Date,
@@ -78,7 +81,7 @@ public static class TrainingMapper
         training.IsCompleted,
         training.CompletedAt,
         new PersonDataDto(training.Client.Id, training.Client.FirstName, training.Client.LastName,
-            training.Client.FullName),
+            training.Client.FullName, PictureUrl: pictures.UrlFor(training.Client.UserId)),
         training.Exercises
             .OrderBy(x => x.Order)
             .Select(x => new TrainingExerciseResponse(x.Id, x.WorkoutId, x.Workout.Name, x.Order, x.Note,

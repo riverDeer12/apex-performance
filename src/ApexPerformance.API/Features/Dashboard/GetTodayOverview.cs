@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using ApexPerformance.API.Database.Entities;
@@ -19,11 +20,12 @@ public record TodayAppointmentDto(
     List<string> Clients
 );
 
-public record OverviewClientDto(Guid Id, string FullName);
+// PictureUrl: profile picture link (see UserPictures), null when there is none.
+public record OverviewClientDto(Guid Id, string FullName, string? PictureUrl = null);
 
-public record LowCreditsClientDto(Guid Id, string FullName, int Credits);
+public record LowCreditsClientDto(Guid Id, string FullName, int Credits, string? PictureUrl = null);
 
-public record InactiveClientDto(Guid Id, string FullName, DateTimeOffset? LastActivityAt);
+public record InactiveClientDto(Guid Id, string FullName, DateTimeOffset? LastActivityAt, string? PictureUrl = null);
 
 public record PendingRequestsDto(int Appointments, int CancelationRequests, int JoinRequests);
 
@@ -124,7 +126,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             .Where(x => x.Credits <= LowCreditsLimit)
             .OrderBy(x => x.Credits)
             .ThenBy(x => x.FirstName)
-            .Select(x => new LowCreditsClientDto(x.Id, x.FirstName + " " + x.LastName, x.Credits))
+            .Select(x => new LowCreditsClientDto(x.Id, x.FirstName + " " + x.LastName, x.Credits,
+                UserPictures.Url(x.UserId, _context.UserProfilePictures
+                    .Where(p => p.UserId == x.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault())))
             .ToListAsync(cancellationToken);
 
         var inactiveClients = await GetInactiveClients(clients, now, inactiveDays, cancellationToken);
@@ -159,6 +165,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             {
                 client.Id,
                 FullName = client.FirstName + " " + client.LastName,
+                client.UserId,
+                PictureUpdatedAt = _context.UserProfilePictures
+                    .Where(p => p.UserId == client.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault(),
                 LastTraining = _context.Trainings
                     .Where(x => x.ClientId == client.Id && x.IsCompleted && x.Date <= now)
                     .Max(x => (DateTimeOffset?)x.Date),
@@ -172,7 +183,8 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
 
         return activity
             .Select(x => new InactiveClientDto(x.Id, x.FullName,
-                x.LastTraining > x.LastAppointment || x.LastAppointment is null ? x.LastTraining : x.LastAppointment))
+                x.LastTraining > x.LastAppointment || x.LastAppointment is null ? x.LastTraining : x.LastAppointment,
+                UserPictures.Url(x.UserId, x.PictureUpdatedAt)))
             .Where(x => x.LastActivityAt is null || x.LastActivityAt < since)
             .OrderBy(x => x.LastActivityAt is null)
             .ThenBy(x => x.LastActivityAt)
@@ -195,7 +207,11 @@ public class GetTodayOverviewEndpoint : Endpoint<GetTodayOverviewRequest, GetTod
             .Where(x => !reviewedClientIds.Contains(x.Id))
             .OrderBy(x => x.FirstName)
             .ThenBy(x => x.LastName)
-            .Select(x => new OverviewClientDto(x.Id, x.FirstName + " " + x.LastName))
+            .Select(x => new OverviewClientDto(x.Id, x.FirstName + " " + x.LastName,
+                UserPictures.Url(x.UserId, _context.UserProfilePictures
+                    .Where(p => p.UserId == x.UserId)
+                    .Select(p => (DateTimeOffset?)p.UpdatedAt)
+                    .FirstOrDefault())))
             .ToListAsync(cancellationToken);
 
         var totalClients = await clients.CountAsync(cancellationToken);

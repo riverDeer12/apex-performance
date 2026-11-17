@@ -2,7 +2,8 @@ using ApexPerformance.API.Features.Workouts;
 
 namespace ApexPerformance.API.Features.Chat;
 
-public record ChatParticipantResponse(Guid Id, Guid UserId, string FullName);
+// PictureUrl: profile picture link (see UserPictures), null when there is none.
+public record ChatParticipantResponse(Guid Id, Guid UserId, string FullName, string? PictureUrl = null);
 
 public record ChatMessageResponse(
     Guid Id,
@@ -41,4 +42,4 @@ public record MessagesReadEvent(Guid ConversationId, Guid ReaderUserId, DateTime
 
 // Coach or client the logged user can chat with.
 public record ChatContactResponse(Guid Id, Guid UserId, string FullName, Guid? ConversationId, bool IsEnabled,
-    bool IsBlockedByClient);
+    bool IsBlockedByClient, string? PictureUrl = null);

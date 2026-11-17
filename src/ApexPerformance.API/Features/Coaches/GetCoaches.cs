@@ -1,3 +1,4 @@
+using ApexPerformance.API.Features.Profile;
 using ApexPerformance.API.Constants;
 using ApexPerformance.API.Database;
 using FastEndpoints;
@@ -16,7 +17,9 @@ public record GetCoachResponse(
     bool IsDeleted,
     string FullName,
     List<CoachClientDto> Clients,
-    CoachUserDto User
+    CoachUserDto User,
+    // Profile picture link (see UserPictures), null when there is none.
+    string? PictureUrl = null
 );
 
 public record CoachUserDto(Guid Id, string Username, string Email);
@@ -53,6 +56,8 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
             return;
         }
 
+        var pictures = await UserPictures.LoadAsync(_context, coaches.Select(x => x.UserId), cancellationToken);
+
         var response = new List<GetCoachResponse>();
 
         foreach (var coach in coaches)
@@ -80,7 +85,8 @@ public class GetCoachesEndpoint : EndpointWithoutRequest<List<GetCoachResponse>>
                 coach.IsDeleted,
                 coach.FullName,
                 coachClients,
-                clientUserResponse);
+                clientUserResponse,
+                pictures.UrlFor(coach.UserId));
 
             response.Add(coachResponse);
         }
