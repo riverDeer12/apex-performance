@@ -124,4 +124,52 @@ public class TrainingEndReminderTests
         Assert.Equal("2026-11-11T10:00:00.250Z", message.Data["startedAt"]);
         Assert.Equal(FirebaseAdmin.Messaging.Priority.High, message.Android.Priority);
     }
+    // Clients training at the same time with the coach: one start, one reminder.
+    private static readonly Guid MarkoTrainingId = Guid.Parse("7c1d4e2f-0000-4000-8000-000000000002");
+
+    [Fact]
+    public void Trainings_of_a_session_share_the_start_to_the_second()
+    {
+        Assert.True(TrainingEndReminder.SameSession(Started, Started));
+        Assert.True(TrainingEndReminder.SameSession(Started, Started.AddMilliseconds(-750)));
+        Assert.True(TrainingEndReminder.SameSession(Started, Started.ToOffset(TimeSpan.FromHours(1))));
+        Assert.False(TrainingEndReminder.SameSession(Started, Started.AddSeconds(2)));
+        Assert.False(TrainingEndReminder.SameSession(Started, null));
+    }
+
+    [Fact]
+    public void A_session_sends_one_reminder_from_its_lowest_id()
+    {
+        var low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+
+        Assert.True(TrainingEndReminder.SendsForSession(low, [high]));
+        Assert.False(TrainingEndReminder.SendsForSession(high, [low]));
+        // A training on its own always sends its reminder.
+        Assert.True(TrainingEndReminder.SendsForSession(high, []));
+        // Exactly one of the jobs sends it.
+        var ids = new[] { TrainingId, MarkoTrainingId, low, high };
+        Assert.Single(ids, id => TrainingEndReminder.SendsForSession(id, ids.Where(x => x != id)));
+    }
+
+    [Fact]
+    public void Session_reminder_names_every_client_and_training()
+    {
+        var marko = new TrainingEndReminder.Training(MarkoTrainingId, "Noge", "Marko Marić", Started, null, false, false);
+        var others = new[] { marko };
+
+        var ios = TrainingEndReminder.MessageFor(Training(Started),
+            new TrainingEndReminder.Device("ios-token", "ios", "hr"), others);
+        Assert.Equal("Legs · Ana Anić, Marko Marić traje već sat vremena. Želiš li ga završiti?", ios.Notification.Body);
+        Assert.Equal($"{TrainingId},{MarkoTrainingId}", ios.Data["trainingIds"]);
+        Assert.Equal(TrainingId.ToString(), ios.Data["trainingId"]);
+
+        var android = TrainingEndReminder.MessageFor(Training(Started),
+            new TrainingEndReminder.Device("android-token", "android", "en"), others);
+        Assert.Equal($"{TrainingId},{MarkoTrainingId}", android.Data["trainingIds"]);
+
+        // A training on its own has no list.
+        Assert.False(TrainingEndReminder.MessageFor(Training(Started),
+            new TrainingEndReminder.Device("ios-token", "ios", "hr")).Data.ContainsKey("trainingIds"));
+    }
 }

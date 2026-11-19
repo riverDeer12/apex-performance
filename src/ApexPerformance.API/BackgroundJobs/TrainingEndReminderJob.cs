@@ -10,7 +10,8 @@ namespace ApexPerformance.API.BackgroundJobs;
 /// An hour after a training was started: if it still runs with that start,
 /// the staff user who started it gets a push on all their devices asking
 /// whether to end it ("End training" ends it without opening the app).
-/// The training is never ended here.
+/// The training is never ended here. Trainings of clients training at the
+/// same time (one start) get one reminder for all of them.
 /// </summary>
 public class TrainingEndReminderJob
 {
@@ -55,6 +56,29 @@ public class TrainingEndReminderJob
             return;
         }
 
+        // The other running trainings of the session: the coach's, with the same start.
+        var start = training!.StartedAt!.Value;
+        var from = start.AddSeconds(-1);
+        var to = start.AddSeconds(1);
+        var others = (await _context.Trainings
+                .AsNoTracking()
+                .Where(x => x.Id != trainingId && x.CreatedBy == coachUserId && !x.IsDeleted &&
+                            x.StartedAt != null && x.EndedAt == null && !x.IsCompleted &&
+                            x.StartedAt >= from && x.StartedAt <= to)
+                .Select(x => new TrainingEndReminder.Training(x.Id, x.Name,
+                    x.Client.FirstName + " " + x.Client.LastName, x.StartedAt, x.EndedAt, x.IsCompleted, x.IsDeleted))
+                .ToListAsync())
+            .Where(x => TrainingEndReminder.SameSession(start, x.StartedAt))
+            .OrderBy(x => x.ClientName)
+            .ToList();
+
+        if (!TrainingEndReminder.SendsForSession(trainingId, others.Select(x => x.Id)))
+        {
+            _logger.LogInformation("No end reminder for training {TrainingId}: another training of its session sends it.",
+                trainingId);
+            return;
+        }
+
         var devices = await _context.DeviceTokens
             .AsNoTracking()
             .Where(x => x.UserId == coachUserId)
@@ -66,7 +90,7 @@ public class TrainingEndReminderJob
         if (devices.Count == 0)
             return;
 
-        var messages = devices.Select(x => TrainingEndReminder.MessageFor(training!, x)).ToList();
+        var messages = devices.Select(x => TrainingEndReminder.MessageFor(training, x, others)).ToList();
 
         BatchResponse response;
 

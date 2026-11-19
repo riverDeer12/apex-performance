@@ -160,6 +160,12 @@ vremena. Želiš li ga završiti?". The training is never ended by the backend: 
   own reminder, so there is one reminder per start. A start set more than an hour back schedules none (the coach is
   editing the times), and a job that runs more than 6 hours after the start (the longest training) sends none.
 - Not kept in the app's notification list.
+- Clients training at the same time with the coach (the apps' session form: one training per client, one start)
+  get one reminder for all of them, not one per client: other running trainings the coach created with the same
+  start (to the second, `TrainingEndReminder.SameSession`) are its session, and only the job of the training with
+  the lowest id sends it (`SendsForSession`). Its body names every client ("Legs · Ana Anić, Marko Marić …") and
+  its data has `trainingIds` (all trainings of the session, comma separated); "Završi trening" ends each of them
+  the same way. A training on its own has no `trainingIds`.
 - Data: `type` = `training_end_reminder`, `trainingId`, `startedAt` (ISO 8601 UTC, e.g.
   `2026-11-11T10:00:00.250Z`). "Završi trening" sends `PUT /trainings/{id}/times` with that `startedAt` and
   `endedAt` = now and `"onlyIfRunning": true`: the times change only if the training still runs with that start
