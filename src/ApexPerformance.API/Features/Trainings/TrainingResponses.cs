@@ -46,7 +46,9 @@ public record TrainingResponse(
     DateTimeOffset? StartedAt = null,
     DateTimeOffset? EndedAt = null,
     // Client's heart rate in between, beats per minute (null until the client's phone sends it).
-    TrainingHeartRateResponse? HeartRate = null
+    TrainingHeartRateResponse? HeartRate = null,
+    // Shared by the trainings of clients training at the same time (null on its own).
+    Guid? SessionId = null
 );
 
 // Source: where the client's phone read it (HeartRateSources), shown to the coach.
@@ -98,7 +100,8 @@ public static class TrainingMapper
         training.UpdatedAt,
         training.StartedAt,
         training.EndedAt,
-        HeartRateOf(training));
+        HeartRateOf(training),
+        training.SessionId);
 
     public static TrainingHeartRateResponse? HeartRateOf(Training training)
         => training is { HeartRateMin: { } min, HeartRateMax: { } max, HeartRateAverage: { } average }

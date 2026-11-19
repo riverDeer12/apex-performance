@@ -16,7 +16,10 @@ public record UpdateTrainingRequest(
     bool IsCompleted,
     List<TrainingExerciseRequest>? Exercises,
     // Push notification to the client, only sent when true.
-    bool? NotifyClient = null
+    bool? NotifyClient = null,
+    // Optional: the session of clients training at the same time. Null keeps
+    // the training's session (older apps), an empty id takes it out of it.
+    Guid? SessionId = null
 );
 
 public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingResponse>
@@ -72,6 +75,8 @@ public class UpdateTrainingEndpoint : Endpoint<UpdateTrainingRequest, TrainingRe
         training.Date = request.Date;
         training.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
         training.Client = client;
+        if (request.SessionId is { } sessionId)
+            training.SessionId = sessionId == Guid.Empty ? null : sessionId;
 
         if (training.IsCompleted != request.IsCompleted)
         {
