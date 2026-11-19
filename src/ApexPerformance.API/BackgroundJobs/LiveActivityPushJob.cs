@@ -55,7 +55,7 @@ public class LiveActivityPushJob
             .Where(x => x.Id == trainingId)
             .Select(x => new
             {
-                x.Id, x.Name, x.StartedAt, x.EndedAt, x.IsCompleted, x.IsDeleted,
+                x.Id, x.Name, x.StartedAt, x.EndedAt, x.IsCompleted, x.IsDeleted, x.SessionId,
                 ClientUserId = x.Client.UserId,
                 ClientName = x.Client.FirstName + " " + x.Client.LastName
             })
@@ -121,10 +121,19 @@ public class LiveActivityPushJob
             training.IsCompleted, training.IsDeleted, previousStartedAt, training.ClientUserId,
             training.ClientName.Trim(), coachName?.Trim());
 
+        // A session's training: the staff user's other iPhones get one activity for the session.
+        var inSession = training.SessionId is not null;
+
         var sends = LiveActivityPush.Plan(model,
             devices.Select(x => new LiveActivityPush.Device(x.Id, x.Token, x.UserId, x.Language,
                 pushToStartTokens.GetValueOrDefault(x.Id), latestUpdateTokens.GetValueOrDefault(x.Id))),
-            wasRunning, actorUserId, actorDeviceToken, DateTimeOffset.UtcNow);
+            wasRunning, actorUserId, actorDeviceToken, DateTimeOffset.UtcNow, actorStartsWithSession: inSession);
+
+        if (startsNow && inSession && actorUserId is not null)
+            BackgroundJob.Schedule<LiveActivityPushJob>(
+                job => job.StartSessionForCoach(training.Id, training.SessionId!.Value, actorUserId.Value,
+                    actorDeviceToken),
+                LiveActivityPush.SessionStartDelay);
 
         if (sends.Count > 0)
             await SendAll(trainingId, sends);
@@ -137,6 +146,78 @@ public class LiveActivityPushJob
                 .Where(x => x.Kind == LiveActivityTokenKind.Update && x.TrainingId == trainingId)
                 .ExecuteDeleteAsync();
         }
+    }
+
+    /// <summary>
+    /// One activity for a session (clients training at the same time) on the staff user's other iPhones:
+    /// the first running training's, named after every client ("Ana, Marko"). Tapping it opens the session
+    /// in the app; its "End training" ends every training of the session. iPhones that show a training of
+    /// the session already get none.
+    /// </summary>
+    [AutomaticRetry(Attempts = 0)]
+    public async Task StartSessionForCoach(Guid trainingId, Guid sessionId, Guid actorUserId, string? actorDeviceToken)
+    {
+        var running = await _context.Trainings
+            .AsNoTracking()
+            .Where(x => x.SessionId == sessionId && !x.IsDeleted && x.StartedAt != null && x.EndedAt == null &&
+                        !x.IsCompleted)
+            .OrderBy(x => x.CreatedAt)
+            .Select(x => new
+            {
+                x.Id, x.Name, x.StartedAt, ClientUserId = x.Client.UserId, x.Client.FirstName,
+                ClientName = x.Client.FirstName + " " + x.Client.LastName
+            })
+            .ToListAsync();
+
+        var leader = running.FirstOrDefault(x => x.Id == trainingId);
+        if (leader is null || !LiveActivityPush.StartsSessionActivity(trainingId, running.Select(x => x.Id)))
+            return;
+
+        var sessionTrainingIds = running.Select(x => x.Id).ToList();
+        var showing = await _context.LiveActivityTokens
+            .AsNoTracking()
+            .Where(x => x.Kind == LiveActivityTokenKind.Update && x.TrainingId != null &&
+                        sessionTrainingIds.Contains(x.TrainingId.Value))
+            .Select(x => x.DeviceTokenId)
+            .ToListAsync();
+
+        var devices = (await _context.DeviceTokens
+                .AsNoTracking()
+                .Where(x => x.UserId == actorUserId && x.Platform == "ios")
+                .Select(x => new { x.Id, x.Token, x.Language })
+                .ToListAsync())
+            .Where(x => x.Token != actorDeviceToken && !showing.Contains(x.Id))
+            .GroupBy(x => x.Id).Select(x => x.First())
+            .ToList();
+
+        if (devices.Count == 0)
+            return;
+
+        var deviceIds = devices.Select(x => x.Id).ToList();
+        var pushToStartTokens = (await _context.LiveActivityTokens
+                .AsNoTracking()
+                .Where(x => x.Kind == LiveActivityTokenKind.PushToStart && deviceIds.Contains(x.DeviceTokenId))
+                .Select(x => new { x.DeviceTokenId, x.Token, x.UpdatedAt })
+                .ToListAsync())
+            .GroupBy(x => x.DeviceTokenId)
+            .ToDictionary(x => x.Key, x => x.OrderByDescending(t => t.UpdatedAt).First().Token);
+
+        var clientName = running.Count > 1
+            ? LiveActivityPush.SessionClientNames(running.Select(x => x.FirstName))
+            : leader.ClientName.Trim();
+
+        var model = new LiveActivityPush.Training(leader.Id, leader.Name, leader.StartedAt, null, false, false,
+            null, leader.ClientUserId, clientName, null);
+
+        var now = DateTimeOffset.UtcNow;
+        var sends = devices
+            .Where(x => pushToStartTokens.ContainsKey(x.Id))
+            .Select(x => new LiveActivityPush.Send(x.Id, LiveActivityPush.Start, pushToStartTokens[x.Id],
+                LiveActivityPush.StartMessage(model, x.Token, pushToStartTokens[x.Id], x.Language, false, now)))
+            .ToList();
+
+        if (sends.Count > 0)
+            await SendAll(trainingId, sends);
     }
 
     private async Task SendAll(Guid trainingId, List<LiveActivityPush.Send> sends)

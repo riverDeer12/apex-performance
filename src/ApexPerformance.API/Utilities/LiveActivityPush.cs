@@ -78,8 +78,11 @@ public static class LiveActivityPush
     /// <item>Not running: "end" on every device that shows it.</item>
     /// </list>
     /// </summary>
+    /// <param name="actorStartsWithSession">The training belongs to a session (clients training at the same
+    /// time): the staff user's other iPhones get one activity for the whole session instead
+    /// (<see cref="StartsSessionActivity"/>), not one per training.</param>
     public static List<Send> Plan(Training training, IEnumerable<Device> devices, bool wasRunning,
-        Guid? actorUserId, string? excludeFcmToken, DateTimeOffset now)
+        Guid? actorUserId, string? excludeFcmToken, DateTimeOffset now, bool actorStartsWithSession = false)
     {
         var sends = new List<Send>();
         // A device can be listed twice (e.g. the client is also the actor); once is enough.
@@ -110,12 +113,32 @@ public static class LiveActivityPush
             if (isActor && !isClient && excludeFcmToken is not null && device.FcmToken == excludeFcmToken)
                 continue;
 
+            if (isActor && !isClient && actorStartsWithSession)
+                continue;
+
             sends.Add(new Send(device.DeviceTokenId, Start, device.PushToStartToken,
                 StartMessage(training, device.FcmToken, device.PushToStartToken, device.Language, isClient, now)));
         }
 
         return sends;
     }
+
+    /// <summary>
+    /// The staff user's other iPhones start one activity for a session, after its trainings were started
+    /// (<see cref="SessionStartDelay"/>): the one of its running training with the lowest id, so exactly one
+    /// of the trainings' jobs sends it.
+    /// </summary>
+    public static bool StartsSessionActivity(Guid trainingId, IEnumerable<Guid> runningSessionTrainingIds)
+        => runningSessionTrainingIds.All(x => trainingId.CompareTo(x) <= 0);
+
+    // The app saves a session's trainings one after another in a few seconds.
+    public static readonly TimeSpan SessionStartDelay = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// "Ana, Marko": the clients of a session on the staff user's activity.
+    /// </summary>
+    public static string SessionClientNames(IEnumerable<string?> firstNames)
+        => string.Join(", ", firstNames.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!.Trim()));
 
     public static Message StartMessage(Training training, string fcmToken, string pushToStartToken,
         string? language, bool forClient, DateTimeOffset now)
