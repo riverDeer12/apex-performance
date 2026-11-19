@@ -146,6 +146,17 @@ End of an ended training (visible 15 more minutes with its duration):
 4. Hangfire dashboard (`/jobs`) and the logs (`Live Activity start of training … sent to device …`) show what was
    sent.
 
+## Sessions (clients training at the same time)
+
+Trainings with the same `sessionId` (docs/TRAININGS_API.md) are one session. The client of each training gets
+its own activity as above. The staff user's other iPhones get ONE activity for the whole session, not one per
+training: `Plan` skips their per-training start (`actorStartsWithSession`), and `LiveActivityPushJob.StartSessionForCoach`
+(scheduled `SessionStartDelay` = 15 s after a start, when the app has saved every training) starts the activity of
+the session's running training with the lowest id (`StartsSessionActivity`) on the iPhones that don't show one of
+its trainings yet, with `clientName` "Ana, Marko" (`SessionClientNames`). Its updates and end follow that training.
+A tap opens `apexperformance://training/<id>`, which the app opens as the session; its "End training" ends every
+training of the session (the app asks `GET trainings/{id}/session`).
+
 ## Training end reminder
 
 An hour after a training was started, if it still runs with that start (not ended, completed or deleted), the

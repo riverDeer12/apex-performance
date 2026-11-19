@@ -229,4 +229,32 @@ public class LiveActivityPushTests
 
         Assert.Single(sends);
     }
+    [Fact]
+    public void Session_training_starts_on_the_client_but_not_per_training_on_the_coach_other_devices()
+    {
+        var clientPhone = Device(ClientUser, "client-phone", pushToStart: "pts-1");
+        var coachOtherPhone = Device(CoachUser, "coach-other", pushToStart: "pts-4");
+        var coachShowing = Device(CoachUser, "coach-showing", update: "upd-4");
+
+        var sends = LiveActivityPush.Plan(Training(Started), [clientPhone, coachOtherPhone, coachShowing],
+            wasRunning: false, CoachUser, "coach-this", Now, actorStartsWithSession: true);
+
+        Assert.Equal(2, sends.Count);
+        Assert.Contains(sends, x => x.DeviceTokenId == clientPhone.DeviceTokenId && x.Event == "start");
+        // An activity the coach's iPhone shows already is still updated.
+        Assert.Contains(sends, x => x.DeviceTokenId == coachShowing.DeviceTokenId && x.Event == "update");
+        Assert.DoesNotContain(sends, x => x.DeviceTokenId == coachOtherPhone.DeviceTokenId);
+    }
+
+    [Fact]
+    public void Session_activity_is_started_by_its_lowest_training_id_with_every_client()
+    {
+        var low = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var high = Guid.Parse("ffffffff-0000-0000-0000-000000000000");
+
+        Assert.True(LiveActivityPush.StartsSessionActivity(low, [low, high]));
+        Assert.False(LiveActivityPush.StartsSessionActivity(high, [low, high]));
+        Assert.True(LiveActivityPush.StartsSessionActivity(high, [high]));
+        Assert.Equal("Ana, Marko", LiveActivityPush.SessionClientNames([" Ana ", null, "", "Marko"]));
+    }
 }
