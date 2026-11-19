@@ -70,6 +70,23 @@ public static class TrainingEndReminder
            SameInstant(training.StartedAt, scheduledStartedAt) &&
            now - scheduledStartedAt <= MaxDuration;
 
+    /// <summary>
+    /// Trainings of clients who train at the same time with the coach are
+    /// started together, with one start (the apps' session form): other running
+    /// trainings the coach created with the same start (to the second) are the
+    /// same session.
+    /// </summary>
+    public static bool SameSession(DateTimeOffset? startedAt, DateTimeOffset? otherStartedAt)
+        => startedAt is not null && otherStartedAt is not null &&
+           Math.Abs((startedAt.Value - otherStartedAt.Value).TotalSeconds) < 1;
+
+    /// <summary>
+    /// A session gets one reminder for all its trainings, not one per client:
+    /// the job of its training with the lowest id sends it, the others nothing.
+    /// </summary>
+    public static bool SendsForSession(Guid trainingId, IEnumerable<Guid> otherSessionTrainingIds)
+        => otherSessionTrainingIds.All(x => trainingId.CompareTo(x) < 0);
+
     // The database keeps less precision than the value the job was scheduled with.
     private static bool SameInstant(DateTimeOffset? a, DateTimeOffset? b)
         => a is null || b is null
@@ -82,25 +99,40 @@ public static class TrainingEndReminder
 
     /// <summary>
     /// "type", "trainingId" and "startedAt" (ISO 8601 UTC with milliseconds),
-    /// which the apps send back with the end time.
+    /// which the apps send back with the end time. A session's reminder also
+    /// has "trainingIds": all its trainings, comma separated, ended together.
     /// </summary>
-    public static Dictionary<string, string> Data(Training training) => new()
+    public static Dictionary<string, string> Data(Training training, IReadOnlyCollection<Training>? others = null)
     {
-        ["type"] = Type,
-        ["trainingId"] = training.Id.ToString(),
-        ["startedAt"] = training.StartedAt!.Value.UtcDateTime
-            .ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)
-    };
+        var data = new Dictionary<string, string>
+        {
+            ["type"] = Type,
+            ["trainingId"] = training.Id.ToString(),
+            ["startedAt"] = training.StartedAt!.Value.UtcDateTime
+                .ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)
+        };
+
+        if (others is { Count: > 0 })
+            data["trainingIds"] = string.Join(",", others.Select(x => x.Id).Prepend(training.Id));
+
+        return data;
+    }
+
+    // "Ana Anić" or, for a session, "Ana Anić, Marko Marić".
+    private static string ClientNames(Training training, IReadOnlyCollection<Training>? others)
+        => string.Join(", ", (others ?? []).Select(x => x.ClientName).Prepend(training.ClientName)
+            .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
 
     /// <summary>
     /// iOS: a notification of the category with the "End training" action.
     /// Android: data only, so the app always shows it itself, with the action
     /// (a notification payload would be shown by the system without it).
     /// </summary>
-    public static Message MessageFor(Training training, Device device)
+    /// <param name="others">The other trainings of its session (clients training at the same time).</param>
+    public static Message MessageFor(Training training, Device device, IReadOnlyCollection<Training>? others = null)
     {
-        var text = Text(device.Language, training.Name, training.ClientName);
-        var data = Data(training);
+        var text = Text(device.Language, training.Name, ClientNames(training, others));
+        var data = Data(training, others);
 
         if (string.Equals(device.Platform, "android", StringComparison.OrdinalIgnoreCase))
         {
