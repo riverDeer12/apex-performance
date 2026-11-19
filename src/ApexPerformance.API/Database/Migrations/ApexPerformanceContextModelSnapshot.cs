@@ -2771,6 +2771,9 @@ namespace ApexPerformance.API.Database.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("PeriodStart");
 
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -2783,6 +2786,8 @@ namespace ApexPerformance.API.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("SessionId");
 
                     b.ToTable("Trainings", (string)null);
 

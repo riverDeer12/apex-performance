@@ -42,3 +42,18 @@ no longer matters: `isTimed` is still returned and accepted for older apps, the 
 repetitions (e.g. a plank): `value` is the longest such set in seconds (show it as min:s), `weight` the weight of
 that set (0 without weight). These held sets don't count for `MaxWeight` and `EstimatedOneRepMax`; sets with
 repetitions count for them whether or not they have a duration.
+
+## Sessions: clients training at the same time
+
+The apps' session form makes one training per client, all with one time. They share `sessionId` (a Guid the app
+generates once per session):
+
+- `POST /trainings` and `PUT /trainings/{id}` accept an optional `sessionId`. On `PUT`, a missing or null
+  `sessionId` keeps the training's session (older apps), `"00000000-0000-0000-0000-000000000000"` takes the
+  training out of its session.
+- Training responses have `sessionId` (null for a training on its own).
+- `GET /trainings/{id}/session`: the trainings of its session that the user may see, the training itself
+  included, oldest first. Trainings saved before `sessionId` are grouped by the same creator and the same start to
+  the second (`TrainingSessions.SameSession`, unit tested). A training on its own returns only itself; `404` when
+  the training isn't visible.
+- The end reminder of a session (docs/LIVE_ACTIVITY_PUSH.md) groups by `sessionId` when there is one.

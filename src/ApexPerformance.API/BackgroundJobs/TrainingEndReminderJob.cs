@@ -49,6 +49,12 @@ public class TrainingEndReminderJob
                 x.Client.FirstName + " " + x.Client.LastName, x.StartedAt, x.EndedAt, x.IsCompleted, x.IsDeleted))
             .FirstOrDefaultAsync();
 
+        var sessionId = await _context.Trainings
+            .IgnoreQueryFilters()
+            .Where(x => x.Id == trainingId)
+            .Select(x => x.SessionId)
+            .FirstOrDefaultAsync();
+
         if (!TrainingEndReminder.ShouldSend(training, startedAt, DateTimeOffset.UtcNow))
         {
             _logger.LogInformation("No end reminder for training {TrainingId}: it isn't running with that start any more.",
@@ -56,19 +62,23 @@ public class TrainingEndReminderJob
             return;
         }
 
-        // The other running trainings of the session: the coach's, with the same start.
+        // The other running trainings of the session: those with its session id,
+        // or (trainings saved before the id) the coach's with the same start.
         var start = training!.StartedAt!.Value;
         var from = start.AddSeconds(-1);
         var to = start.AddSeconds(1);
         var others = (await _context.Trainings
                 .AsNoTracking()
-                .Where(x => x.Id != trainingId && x.CreatedBy == coachUserId && !x.IsDeleted &&
+                .Where(x => x.Id != trainingId && !x.IsDeleted &&
                             x.StartedAt != null && x.EndedAt == null && !x.IsCompleted &&
-                            x.StartedAt >= from && x.StartedAt <= to)
+                            (sessionId != null
+                                ? x.SessionId == sessionId
+                                : x.SessionId == null && x.CreatedBy == coachUserId &&
+                                  x.StartedAt >= from && x.StartedAt <= to))
                 .Select(x => new TrainingEndReminder.Training(x.Id, x.Name,
                     x.Client.FirstName + " " + x.Client.LastName, x.StartedAt, x.EndedAt, x.IsCompleted, x.IsDeleted))
                 .ToListAsync())
-            .Where(x => TrainingEndReminder.SameSession(start, x.StartedAt))
+            .Where(x => sessionId != null || TrainingEndReminder.SameSession(start, x.StartedAt))
             .OrderBy(x => x.ClientName)
             .ToList();
 
